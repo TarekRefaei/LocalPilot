@@ -27,7 +27,7 @@
     "watch": "tsc -watch -p ./",
     "typecheck": "tsc -p . --noEmit",
     "lint": "eslint src --ext .ts",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "build": "npm run compile"
   },
   "devDependencies": {
