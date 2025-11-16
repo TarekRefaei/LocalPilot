@@ -1,0 +1,44 @@
+{
+  "name": "localpilot",
+  "displayName": "LocalPilot",
+  "description": "LocalPilot MVP v0.1",
+  "version": "0.0.1",
+  "publisher": "tarekrefaei",
+  "engines": {
+    "vscode": "^1.88.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:localpilot.helloWorld"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "localpilot.helloWorld",
+        "title": "LocalPilot: Hello World"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "typecheck": "tsc -p . --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "jest",
+    "build": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.12.7",
+    "@types/vscode": "^1.88.0",
+    "@typescript-eslint/eslint-plugin": "^7.10.0",
+    "@typescript-eslint/parser": "^7.10.0",
+    "eslint": "^8.57.0",
+    "jest": "^25.0.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.5.4"
+  }
+}

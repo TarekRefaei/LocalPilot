@@ -1,0 +1,67 @@
+# Agent 11 — Act Mode (Safe Execution)
+
+## Engineering Principles
+- TDD (Red → Green → Refactor)
+- SOLID
+- Clean Architecture (UI / Use-cases / Adapters / Infra)
+
+## Ideal Prompt
+“Dry‑run diffs; approval workflow; Git safety; apply/rollback.”
+
+## Role in This Project
+Implement safe execution with dry-run diffs, approvals, Git safety checks, apply and rollback mechanisms.
+
+## Detailed Plan & TODOs
+- [ ] Diff engine producing patch previews.
+- [ ] Approval workflow UI and state.
+- [ ] Git safety checks; block outside Git unless override.
+- [ ] Apply and rollback commands with logging.
+- [ ] Integration tests for blocked/approved flows.
+- [ ] TDD: failing tests for safety gates; implement.
+
+## Milestones & Success Criteria
+- Cannot apply without approval; safety gates enforced.
+- Integration tests pass; logs capture approvals.
+
+## Handoff
+### To Agent 12 — Integration & E2E
+- Provide act command APIs and test fixtures for E2E scenario.
+
+### To Supervisor
+- Safety report (blocked cases, overrides) and audit trail notes.
+- Rollback verification steps.
+
+## Orchestration Enhancements
+- **Week alignment**: Week 8 — Act Mode (Safe Execution)
+- **Dependencies**
+  - Prev: Agent 10 (plan schema and steps)
+  - Next: Agent 12 (integration & E2E)
+- **Interfaces/Artifacts**
+  - Diff preview format, approval workflow states, Git safety checks
+- **Acceptance Gates & Checkpoints**
+  - Cannot apply without explicit approval; integration tests enforce gates
+- **Risks & Comms**
+  - Ensure idempotent apply/rollback; log audit trail
+
+## Git Workflow
+- **Branch**: `feat/11-act-mode`
+- **Scopes**: `feat(act)`, `test(int)`, `refactor`, `docs`
+- **Commands**
+  ```sh
+  git fetch origin
+  git checkout -b feat/11-act-mode origin/main
+  git add -A
+  git commit -m "feat(act): dry-run diffs, approvals, and git safety"
+  git push -u origin HEAD
+  git fetch origin && git rebase origin/main
+  # open PR; ensure safety gates enforced by tests; squash merge
+  git checkout main && git pull
+  ```
+
+ ## PR & Merge Checklist
+ - [ ] Branch up to date with `main` (rebase preferred)
+ - [ ] Required checks passed (lint, type, tests, coverage)
+ - [ ] Acceptance gates satisfied (approvals required; safety gates enforced)
+ - [ ] ≥1 approval obtained; risks documented
+ - [ ] Squash merge with Conventional Commit title; delete branch
+ - [ ] Post-merge: `git checkout main && git pull`

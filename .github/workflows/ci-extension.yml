@@ -1,0 +1,35 @@
+name: CI Extension
+
+on:
+  push:
+    paths:
+      - 'extension/**'
+      - '.github/workflows/ci-extension.yml'
+  pull_request:
+    paths:
+      - 'extension/**'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        node: [20]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install
+        working-directory: extension
+        run: npm install
+      - name: Typecheck
+        working-directory: extension
+        run: npm run typecheck
+      - name: Lint
+        working-directory: extension
+        run: npm run lint
+      - name: Tests
+        working-directory: extension
+        run: npm test --if-present

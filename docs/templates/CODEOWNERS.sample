@@ -1,0 +1,5 @@
+# Place this as .github/CODEOWNERS when repo is initialized
+*       @maintainer1 @maintainer2
+/extension/   @ts-owner
+/backend/     @py-owner
+/docs/        @docs-owner

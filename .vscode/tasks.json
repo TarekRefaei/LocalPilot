@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Extension: Build",
+      "type": "shell",
+      "command": "npm run compile",
+      "options": { "cwd": "${workspaceFolder}/extension" },
+      "group": "build"
+    },
+    {
+      "label": "Backend: Run",
+      "type": "shell",
+      "command": "python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: Test",
+      "type": "shell",
+      "command": "pytest",
+      "options": { "cwd": "${workspaceFolder}/backend" }
+    }
+  ]
+}
