@@ -28,15 +28,18 @@ Establish the monorepo foundation, strict quality gates, local dev ergonomics, a
 - [x] Scripts exist for lint/type/test; strict TS and Python linters enforced. (npm/pytest tasks)
 - [x] Baseline tests implemented and passing locally; coverage thresholds configured in CI.
 
-## Handoff
-### To Agent 02 — Extension Views & Commands
-- [x] Extension project boots in debug with sample activation test passing. (Launch: "Run Extension")
-- [x] Scripts, tasks, launch, and structure documented. (See root `README.md` and `.vscode`)
+## Handoff Documents
+Links:
+- [Agent 01 Handoff — Extension Views & Commands](../handoff/Agent_01_Handoff.md)
+- [Supervisor Summary — Agent 01](../handoff/Supervisor_Summary_Agent_01.md)
 
-### To Supervisor
-- [x] CI configured and triggered; coverage artifacts uploaded in workflows. (See Actions)
-- [x] Scripts/configs summarized in README; coverage enabled for both projects.
-- [x] Decisions: strict TS/ESLint, Prettier, Ruff+Black, pytest-cov, npm/pip caching.
+### To Agent 02 — Extension Views & Commands
+- Extension project boots in debug with sample activation test passing.
+- Document scripts, tasks, launch configs, folder structure.
+
+### To Supervisor Documents
+- Summary of CI status, scripts, configs, and initial coverage.
+- Risks/decisions log (tooling choices) and next steps.
 
 ## Orchestration Enhancements
 - **Week alignment**: Week 1 — Foundations & Bootstrap
