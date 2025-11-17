@@ -32,4 +32,6 @@ jobs:
         run: ruff check . --fix
       - name: Tests
         working-directory: backend
-        run: pytest
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+        run: pytest -q
