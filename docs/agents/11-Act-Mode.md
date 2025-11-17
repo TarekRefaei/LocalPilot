@@ -1,4 +1,5 @@
 # Agent 11 — Act Mode (Safe Execution)
+[Kickoff prompt](./Agent_Prompts.md#agent-11)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

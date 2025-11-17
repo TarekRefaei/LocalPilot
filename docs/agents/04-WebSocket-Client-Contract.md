@@ -1,5 +1,7 @@
 # Agent 04 — WebSocket Client & Contract
 
+[Kickoff prompt](./Agent_Prompts.md#agent-04)
+ 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)
 - SOLID

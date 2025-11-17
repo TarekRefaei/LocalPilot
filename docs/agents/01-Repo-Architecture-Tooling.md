@@ -1,4 +1,5 @@
 # Agent 01 — Repo Architecture & Tooling
+[Kickoff prompt](./Agent_Prompts.md#agent-01)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

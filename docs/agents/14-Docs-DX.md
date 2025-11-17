@@ -1,4 +1,5 @@
 # Agent 14 — Docs & DX
+[Kickoff prompt](./Agent_Prompts.md#agent-14)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

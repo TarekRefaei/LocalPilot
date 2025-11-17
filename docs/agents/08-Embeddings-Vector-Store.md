@@ -1,4 +1,5 @@
 # Agent 08 — Embeddings & Vector Store
+[Kickoff prompt](./Agent_Prompts.md#agent-08)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

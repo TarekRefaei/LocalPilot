@@ -1,5 +1,7 @@
 # Agent 06 — Indexing: Discovery & Docs
-
+ 
+[Kickoff prompt](./Agent_Prompts.md#agent-06)
+ 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)
 - SOLID

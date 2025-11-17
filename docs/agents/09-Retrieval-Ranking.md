@@ -1,4 +1,5 @@
 # Agent 09 — Retrieval & Ranking
+[Kickoff prompt](./Agent_Prompts.md#agent-09)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

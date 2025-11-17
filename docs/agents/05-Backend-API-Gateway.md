@@ -1,5 +1,7 @@
 # Agent 05 — Backend API Gateway (Python)
 
+[Kickoff prompt](./Agent_Prompts.md#agent-05)
+
 ## Engineering Principles
 - TDD (Red → Green → Refactor)
 - SOLID

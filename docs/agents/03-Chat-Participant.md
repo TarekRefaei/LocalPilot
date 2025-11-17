@@ -1,4 +1,5 @@
 # Agent 03 — Chat Participant
+[Kickoff prompt](./Agent_Prompts.md#agent-03)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

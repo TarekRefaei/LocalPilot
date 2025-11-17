@@ -1,4 +1,5 @@
 # Agent 02 — Extension Views & Commands
+[Kickoff prompt](./Agent_Prompts.md#agent-02)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

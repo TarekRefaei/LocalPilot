@@ -1,4 +1,5 @@
 # Agent 10 — Plan Mode
+[Kickoff prompt](./Agent_Prompts.md#agent-10)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

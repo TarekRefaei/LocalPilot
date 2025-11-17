@@ -1,4 +1,5 @@
 # Agent 12 — Integration & E2E
+[Kickoff prompt](./Agent_Prompts.md#agent-12)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

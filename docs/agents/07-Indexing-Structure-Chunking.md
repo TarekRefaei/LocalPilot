@@ -1,4 +1,5 @@
 # Agent 07 — Indexing: Structure & Chunking
+[Kickoff prompt](./Agent_Prompts.md#agent-07)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)

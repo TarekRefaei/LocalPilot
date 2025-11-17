@@ -1,4 +1,5 @@
 # Agent 13 — Testing & Coverage
+[Kickoff prompt](./Agent_Prompts.md#agent-13)
 
 ## Engineering Principles
 - TDD (Red → Green → Refactor)
