@@ -37,4 +37,4 @@ jobs:
         run: npm run compile
       - name: Tests
         working-directory: extension
-        run: npm test --if-present
+        run: npm run test:ci --if-present

@@ -41,4 +41,4 @@ jobs:
         working-directory: backend
         env:
           PYTHONPATH: ${{ github.workspace }}/backend
-        run: pytest -q
+        run: pytest -q --cov=app --cov-report=term-missing --cov-fail-under=60
