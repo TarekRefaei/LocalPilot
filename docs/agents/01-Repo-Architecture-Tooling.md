@@ -13,29 +13,30 @@
 Establish the monorepo foundation, strict quality gates, local dev ergonomics, and CI pipelines for TypeScript (extension) and Python (backend).
 
 ## Detailed Plan & TODOs
-- [ ] Monorepo layout: `extension/` (TS), `backend/` (Python), shared `/.vscode/` and `.github/`.
-- [ ] TypeScript strict config: `tsconfig.json` with `strict: true`, path aliases.
-- [ ] Jest setup for TS units; coverage threshold baseline.
-- [ ] ESLint + Prettier with scripts: `lint`, `format`, `typecheck`, `test`.
-- [ ] Python `pyproject.toml` with Ruff/Flake8 + Black; Pytest config and scripts.
-- [ ] VS Code: tasks and launch configs (extension debug, backend debug) on Windows.
-- [ ] CI: GitHub Actions for TS and Python on Windows + Linux; cache deps; run lint/type/test.
-- [ ] Pre-commit hooks (optional) for format/lint.
-- [ ] TDD: add failing smoke tests (extension activates; backend health 200), implement to pass, refactor.
+- [x] Monorepo layout: `extension/`, `backend/`, shared `/.vscode/`, `.github/`. (Done)
+- [x] TypeScript strict config with path aliases. (Files: `extension/tsconfig.json`)
+- [x] Jest setup with coverage thresholds. (Files: `extension/jest.config.js`; tests added)
+- [x] ESLint + Prettier with scripts. (Files: `extension/.eslintrc.json`, `package.json`, `.prettierrc.json`)
+- [x] Python formatting/linting (Black/Ruff) and Pytest config. (Files: `backend/pyproject.toml`, `backend/ruff.toml`, `pytest.ini`)
+- [x] VS Code tasks and launch (extension debug, backend debugpy) on Windows. (Files: `.vscode/tasks.json`, `.vscode/launch.json`)
+- [x] CI on Windows+Linux with caching; run typecheck/lint/tests; upload coverage artifacts. (Files: `.github/workflows/ci-*`)
+- [x] Pre-commit hooks (optional). (File: `.pre-commit-config.yaml`)
+- [x] TDD smoke tests: extension activates; backend health 200. (Files: `extension/__tests__/extension.test.ts`, `backend/tests/test_health.py`)
 
 ## Milestones & Success Criteria
-- CI green across platforms.
-- Scripts exist for lint/type/test; strict TS and Python linters enforced.
-- Baseline tests implemented and passing locally and on CI.
+- [ ] CI green across platforms. (Triggered on branch `chore/ci-quality-gates`; awaiting runs)
+- [x] Scripts exist for lint/type/test; strict TS and Python linters enforced. (npm/pytest tasks)
+- [x] Baseline tests implemented and passing locally; coverage thresholds configured in CI.
 
 ## Handoff
 ### To Agent 02 — Extension Views & Commands
-- Extension project boots in debug with sample activation test passing.
-- Document scripts, tasks, launch configs, folder structure.
+- [x] Extension project boots in debug with sample activation test passing. (Launch: "Run Extension")
+- [x] Scripts, tasks, launch, and structure documented. (See root `README.md` and `.vscode`)
 
 ### To Supervisor
-- Summary of CI status, scripts, configs, and initial coverage.
-- Risks/decisions log (tooling choices) and next steps.
+- [x] CI configured and triggered; coverage artifacts uploaded in workflows. (See Actions)
+- [x] Scripts/configs summarized in README; coverage enabled for both projects.
+- [x] Decisions: strict TS/ESLint, Prettier, Ruff+Black, pytest-cov, npm/pip caching.
 
 ## Orchestration Enhancements
 - **Week alignment**: Week 1 — Foundations & Bootstrap
@@ -43,17 +44,17 @@ Establish the monorepo foundation, strict quality gates, local dev ergonomics, a
   - Prev: None
   - Next: Agent 02 (extension scaffolding), Agent 05 (backend scaffolding)
 - **Interfaces/Artifacts**
-  - Monorepo layout, strict TS/Python configs, CI workflows, VS Code tasks/launch
-  - Baseline smoke tests (extension activates; backend health 200)
+  - [x] Monorepo layout, strict TS/Python configs, CI workflows, VS Code tasks/launch
+  - [x] Baseline smoke tests (extension activates; backend health 200)
 - **Acceptance Gates & Checkpoints**
-  - CI green on Windows/Linux; lint/type/test scripts present and enforced
-  - Coverage baseline established and reported in CI
+  - [ ] CI green on Windows/Linux; lint/type/test scripts present and enforced (CI triggered)
+  - [x] Coverage baseline configured and reported (text + artifacts) in CI workflows
 - **Risks & Comms**
-  - Pin VS Code engine version; ensure Windows developer onboarding tested
+  - [x] Pin VS Code engine version (extension `engines.vscode` ≥ 1.88); Windows onboarding validated
   - Daily: share failing tests first; list blockers on CI or tooling
 
 ## Git Workflow
-- **Branch**: `feat/01-tooling-monorepo`
+- **Branch**: `feat/01-tooling-monorepo` (Executed using `chore/ci-quality-gates`)
 - **Scopes**: `build`, `ci`, `chore(tooling)`
 - **Commands**
   ```sh
@@ -67,10 +68,11 @@ Establish the monorepo foundation, strict quality gates, local dev ergonomics, a
   # squash-merge when checks pass, then:
   git checkout main && git pull
   ```
+  Status: Implemented on branch `chore/ci-quality-gates` and pushed; PR can be opened when ready.
 
  ## PR & Merge Checklist
  - [ ] Branch up to date with `main` (rebase preferred)
- - [ ] Required checks passed (lint, type, tests, coverage)
+ - [ ] Required checks passed (lint, type, tests, coverage) — pending CI run completion
  - [ ] Acceptance gates satisfied (see above for this agent)
  - [ ] ≥1 approval obtained; risks documented
  - [ ] Squash merge with Conventional Commit title; delete branch
