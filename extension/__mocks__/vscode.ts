@@ -3,7 +3,7 @@ type Disposable = { dispose: () => void };
 const registry: Record<string, Function> = {};
 
 export const window = {
-  showInformationMessage: jest.fn(() => Promise.resolve(undefined))
+  showInformationMessage: jest.fn(() => Promise.resolve(undefined)),
 };
 
 export const commands = {
@@ -11,5 +11,5 @@ export const commands = {
     registry[command] = callback;
     return { dispose() {} };
   }),
-  __getRegistered: () => registry
+  __getRegistered: () => registry,
 };
