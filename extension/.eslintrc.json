@@ -2,6 +2,19 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
-  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-  "env": { "node": true, "es2021": true }
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-type-checked",
+    "plugin:@typescript-eslint/stylistic-type-checked"
+  ],
+  "env": { "node": true, "es2021": true },
+  "parserOptions": { "project": true },
+  "ignorePatterns": ["out", "node_modules"],
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.spec.ts"],
+      "env": { "jest": true }
+    }
+  ]
 }
