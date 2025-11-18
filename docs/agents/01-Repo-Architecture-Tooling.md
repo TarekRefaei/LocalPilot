@@ -24,7 +24,7 @@ Establish the monorepo foundation, strict quality gates, local dev ergonomics, a
 - [x] TDD smoke tests: extension activates; backend health 200. (Files: `extension/__tests__/extension.test.ts`, `backend/tests/test_health.py`)
 
 ## Milestones & Success Criteria
-- [ ] CI green across platforms. (Triggered on branch `chore/ci-quality-gates`; awaiting runs)
+- [x] CI green across platforms. (Green on PR #1 for Windows & Ubuntu)
 - [x] Scripts exist for lint/type/test; strict TS and Python linters enforced. (npm/pytest tasks)
 - [x] Baseline tests implemented and passing locally; coverage thresholds configured in CI.
 
@@ -50,7 +50,7 @@ Links:
   - [x] Monorepo layout, strict TS/Python configs, CI workflows, VS Code tasks/launch
   - [x] Baseline smoke tests (extension activates; backend health 200)
 - **Acceptance Gates & Checkpoints**
-  - [ ] CI green on Windows/Linux; lint/type/test scripts present and enforced (CI triggered)
+  - [x] CI green on Windows/Linux; lint/type/test scripts present and enforced (PR #1 checks passed)
   - [x] Coverage baseline configured and reported (text + artifacts) in CI workflows
 - **Risks & Comms**
   - [x] Pin VS Code engine version (extension `engines.vscode` ≥ 1.88); Windows onboarding validated
@@ -71,12 +71,12 @@ Links:
   # squash-merge when checks pass, then:
   git checkout main && git pull
   ```
-  Status: Implemented on branch `chore/ci-quality-gates` and pushed; PR can be opened when ready.
+  Status: Implemented on branch `chore/ci-quality-gates`; PR #1 opened.
 
- ## PR & Merge Checklist
- - [ ] Branch up to date with `main` (rebase preferred)
- - [ ] Required checks passed (lint, type, tests, coverage) — pending CI run completion
- - [ ] Acceptance gates satisfied (see above for this agent)
- - [ ] ≥1 approval obtained; risks documented
- - [ ] Squash merge with Conventional Commit title; delete branch
- - [ ] Post-merge: `git checkout main && git pull`
+## PR & Merge Checklist
+- [x] Branch up to date with `main` (rebase preferred)
+- [x] Required checks passed (lint, type, tests, coverage) — green on PR #1
+- [x] Acceptance gates satisfied (see above for this agent)
+- [ ] ≥1 approval obtained; risks documented
+- [ ] Squash merge with Conventional Commit title; delete branch
+- [ ] Post-merge: `git checkout main && git pull`
