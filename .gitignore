@@ -1,0 +1,27 @@
+# Node
+node_modules/
+**/dist/
+**/build/
+extension/out/
+extension/coverage/
+coverage/
+
+# Python
+backend/.venv/
+**/__pycache__/
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.idea/
+# Keep .vscode in repo for tasks/launch
+
+# Logs
+*.log
+
+# Env
+.env
+.env.*
