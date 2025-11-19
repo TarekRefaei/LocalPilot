@@ -35,7 +35,12 @@ jobs:
       - name: Compile
         working-directory: extension
         run: npm run compile
-      - name: Integration Tests
+      - name: Integration Tests (Linux)
+        if: runner.os == 'Linux'
+        working-directory: extension
+        run: xvfb-run -a npm run test:integration --if-present
+      - name: Integration Tests (Windows)
+        if: runner.os == 'Windows'
         working-directory: extension
         run: npm run test:integration --if-present
       - name: Tests

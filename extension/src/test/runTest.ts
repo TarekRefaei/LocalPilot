@@ -14,7 +14,8 @@ async function main() {
     try {
       fs.rmSync(linkPath, { recursive: true, force: true });
     } catch {}
-    fs.symlinkSync(realDevPath, linkPath, 'junction');
+    const linkType: fs.symlink.Type = process.platform === 'win32' ? 'junction' : 'dir';
+    fs.symlinkSync(realDevPath, linkPath, linkType);
 
     const extensionDevelopmentPath = linkPath;
     const extensionTestsPath = path.join(linkPath, 'out', 'test', 'suite', 'index');
