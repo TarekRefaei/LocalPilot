@@ -35,6 +35,9 @@ jobs:
       - name: Compile
         working-directory: extension
         run: npm run compile
+      - name: Integration Tests
+        working-directory: extension
+        run: npm run test:integration --if-present
       - name: Tests
         working-directory: extension
         run: npm run test:ci --if-present

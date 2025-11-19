@@ -11,14 +11,77 @@
     "Other"
   ],
   "main": "./out/extension.js",
-  "activationEvents": [
-    "onCommand:localpilot.helloWorld"
-  ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "localpilot",
+          "title": "LocalPilot",
+          "icon": "resources/icon-localpilot.svg"
+        }
+      ]
+    },
+    "views": {
+      "localpilot": [
+        {
+          "id": "localpilot.views.plans",
+          "name": "Plans",
+          "icon": "resources/icons/plans.svg"
+        },
+        {
+          "id": "localpilot.views.act",
+          "name": "Act",
+          "icon": "resources/icons/act.svg"
+        },
+        {
+          "id": "localpilot.views.indexing",
+          "name": "Indexing",
+          "icon": "resources/icons/indexing.svg"
+        },
+        {
+          "id": "localpilot.views.status",
+          "name": "Status",
+          "icon": "resources/icons/status.svg"
+        }
+      ]
+    },
     "commands": [
+      { "command": "localpilot.helloWorld", "title": "LocalPilot: Hello World", "category": "LocalPilot" },
+      { "command": "localpilot.showViews", "title": "LocalPilot: Show Views", "category": "LocalPilot" },
+      { "command": "localpilot.focusChatInput", "title": "LocalPilot: Focus Chat Input", "category": "LocalPilot" },
+      { "command": "localpilot.chat.transferToPlan", "title": "LocalPilot: Transfer to Plan", "category": "LocalPilot" },
+      { "command": "localpilot.plan.create", "title": "LocalPilot: Create Plan", "category": "LocalPilot" },
+      { "command": "localpilot.plan.update", "title": "LocalPilot: Update Plan", "category": "LocalPilot" },
+      { "command": "localpilot.plan.delete", "title": "LocalPilot: Delete Plan", "category": "LocalPilot" },
+      { "command": "localpilot.act.dryRun", "title": "LocalPilot: Dry Run", "category": "LocalPilot" },
+      { "command": "localpilot.act.approve", "title": "LocalPilot: Approve", "category": "LocalPilot" },
+      { "command": "localpilot.act.apply", "title": "LocalPilot: Apply Changes", "category": "LocalPilot" },
+      { "command": "localpilot.act.rollback", "title": "LocalPilot: Rollback", "category": "LocalPilot" },
+      { "command": "localpilot.index.start", "title": "LocalPilot: Start Indexing", "category": "LocalPilot" },
+      { "command": "localpilot.index.stop", "title": "LocalPilot: Stop Indexing", "category": "LocalPilot" },
+      { "command": "localpilot.model.swap", "title": "LocalPilot: Swap Model", "category": "LocalPilot" }
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "localpilot.showViews", "when": "true" },
+        { "command": "localpilot.focusChatInput", "when": "true" }
+      ],
+      "view/title": [
+        { "command": "localpilot.plan.create", "when": "view == localpilot.views.plans", "group": "navigation@1" },
+        { "command": "localpilot.index.start", "when": "view == localpilot.views.indexing && !localpilot.indexing.running", "group": "navigation@1" },
+        { "command": "localpilot.index.stop", "when": "view == localpilot.views.indexing && localpilot.indexing.running", "group": "navigation@1" }
+      ]
+    },
+    "keybindings": [
       {
-        "command": "localpilot.helloWorld",
-        "title": "LocalPilot: Hello World"
+        "command": "localpilot.showViews",
+        "key": "ctrl+alt+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "localpilot.focusChatInput",
+        "key": "ctrl+alt+c",
+        "when": "editorTextFocus"
       }
     ]
   },
@@ -32,20 +95,24 @@
     "format:check": "prettier --check .",
     "test": "jest --passWithNoTests",
     "test:ci": "jest --ci",
+    "test:integration": "npm run compile && tsc -p ./tsconfig.integration.json && node ./out/test/runTest.js",
     "build": "npm run compile"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.7",
+    "@types/mocha": "^10.0.6",
     "@types/vscode": "^1.88.0",
     "@typescript-eslint/eslint-plugin": "^7.10.0",
     "@typescript-eslint/parser": "^7.10.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint": "^8.57.0",
+    "mocha": "^10.6.0",
     "jest": "^29.7.0",
     "prettier": "^3.3.3",
     "ts-jest": "^29.1.1",
+    "@vscode/test-electron": "^2.5.2",
     "typescript": "~5.5.4"
   }
 }

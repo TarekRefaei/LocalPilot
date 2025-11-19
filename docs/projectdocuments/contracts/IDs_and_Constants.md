@@ -3,7 +3,8 @@
 Authoritative IDs, command names, and topics used across extension and backend. Update here first; reference in agent docs and code.
 
 ## Views and Participants
-- View container id: `localpilot.views`
+- View container id: `localpilot`
+  - Note: VS Code requires container ids to match `[a-zA-Z0-9_-]+`. We use `localpilot` for the container while keeping view ids under `localpilot.views.*`.
 - Views (proposed ids):
   - Plans: `localpilot.views.plans`
   - Act: `localpilot.views.act`
