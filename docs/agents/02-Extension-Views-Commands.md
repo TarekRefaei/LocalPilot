@@ -13,26 +13,37 @@
 Deliver the VS Code Views container and four TreeViews with commands, icons, context, and tests.
 
 ## Detailed Plan & TODOs
-- [ ] Scaffold `localpilot.views` container; register in `package.json`.
-- [ ] Implement TreeDataProviders: `Plans`, `Act`, `Indexing`, `Status`.
-- [ ] Register commands, contexts, icons, keybindings; "Show LocalPilot views".
-- [ ] State management service interface (SOLID) independent of UI.
-- [ ] Unit tests for providers (Jest) and integration tests (@vscode/test-electron).
-- [ ] Accessibility: labels, descriptions, context help.
-- [ ] TDD: write failing provider tests first; implement; refactor.
+- [x] Scaffold `localpilot` container; register in `package.json` and wire focus command.
+- [x] Implement TreeDataProviders: `Plans`, `Act`, `Indexing`, `Status`.
+- [x] Register commands, contexts, icons, keybindings; "Show LocalPilot views".
+- [x] State management service interface (SOLID) independent of UI.
+- [x] Unit tests for providers (Jest) and integration tests (@vscode/test-electron).
+- [x] Accessibility: labels, descriptions, context help.
+- [x] TDD: write failing provider tests first; implement; refactor.
 
 ## Milestones & Success Criteria
 - Views render and update; commands visible and callable.
 - Tests for providers and command wiring pass in CI.
 
-## Handoff
+Status: MET (local + CI workflows wired)
+
+## Handoff documents
 ### To Agent 03 — Chat Participant
 - Document view IDs/contexts and command IDs used by Chat actions.
 - Provide sample events for `Plans` insertion.
 
+See: `docs/handoff/Agent_02_Handoff.md`
+- Interfaces & Contracts section lists final view/command IDs and context keys.
+- Sample Plans insertion event detailed under "Sample Events & Sequences".
+
 ### To Supervisor
 - Demo steps to verify views and commands.
 - Test report with coverage for UI providers.
+
+See: `docs/handoff/Agent_02_Handoff.md`
+- Validation & Demos lists demo steps (Show Views, verify container, commands, Indexing toggles).
+- Test results: unit and integration tests; coverage snapshot included.
+- CI: `.github/workflows/ci-extension.yml` and `.github/workflows/ci-backend.yml` run on Windows/Ubuntu.
 
 ## Orchestration Enhancements
 - **Week alignment**: Week 1 — Foundations & Bootstrap

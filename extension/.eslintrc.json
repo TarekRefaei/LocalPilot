@@ -11,7 +11,7 @@
   ],
   "env": { "node": true, "es2021": true },
   "parserOptions": { "project": ["tsconfig.json", "tsconfig.eslint.json"] },
-  "ignorePatterns": ["out", "node_modules"],
+  "ignorePatterns": ["out", "node_modules", "src/test"],
   "overrides": [
     {
       "files": ["**/*.test.ts", "**/*.spec.ts"],

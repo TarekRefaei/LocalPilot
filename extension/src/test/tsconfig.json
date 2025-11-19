@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.integration.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["node", "vscode", "mocha"],
+    "moduleResolution": "node",
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"]
+}
