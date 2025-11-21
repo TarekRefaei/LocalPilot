@@ -25,11 +25,11 @@ Provide a resilient WS client and stable shared message contracts for extension-
 - Reconnect works; messages routed to subscribers.
 - Unit tests pass; contract types compile strictly.
 
-## Handoff
-### To Agent 05 — Backend API Gateway
+## Handoff documents
+### To Agent 05 — Backend API Gateway document (follow docs\agents\_templates\Agent_Handoff_Template.md)
 - Share the envelope spec and topics; provide client test harness.
 
-### To Supervisor
+### To Supervisor document
 - Contracts documented; stability/latency observations recorded.
 - Risk notes for cross-version compatibility.
 
