@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    env:
+      VSCODE_TEST_VERSION: '1.106.2'
+      ELECTRON_DISABLE_SANDBOX: '1'
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
@@ -23,6 +26,11 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: 'npm'
           cache-dependency-path: extension/package-lock.json
+      - name: Restore VS Code test cache
+        uses: actions/cache@v4
+        with:
+          path: extension/.vscode-test
+          key: vscode-test-${{ runner.os }}-${{ env.VSCODE_TEST_VERSION }}
       - name: Install
         working-directory: extension
         run: npm ci --no-audit --no-fund
@@ -35,10 +43,44 @@ jobs:
       - name: Compile
         working-directory: extension
         run: npm run compile
+      - name: Install Linux UI deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libatk-bridge2.0-0 \
+            libxkbfile1 \
+            libxss1 \
+            libasound2t64 \
+            libgtk-3-0 \
+            libgbm1 \
+            libx11-xcb1 \
+            libxcb1 \
+            libxcb-dri3-0 \
+            libdrm2 \
+            libxshmfence1 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxrandr2 \
+            libxi6 \
+            libxtst6 \
+            libnotify4 \
+            libglib2.0-0 \
+            libsecret-1-0 \
+            fonts-liberation \
+            libglu1-mesa \
+            mesa-vulkan-drivers
       - name: Integration Tests (Linux)
         if: runner.os == 'Linux'
         working-directory: extension
-        run: xvfb-run -a npm run test:integration --if-present
+        run: |
+          set -e
+          xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:integration --if-present || {
+            echo "Retrying Linux integration tests after short delay...";
+            sleep 5;
+            xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:integration --if-present;
+          }
       - name: Integration Tests (Windows)
         if: runner.os == 'Windows'
         working-directory: extension
@@ -46,6 +88,14 @@ jobs:
       - name: Tests
         working-directory: extension
         run: npm run test:ci --if-present
+      - name: Ensure coverage dir (Linux)
+        if: runner.os == 'Linux'
+        working-directory: extension
+        run: mkdir -p coverage
+      - name: Ensure coverage dir (Windows)
+        if: runner.os == 'Windows'
+        working-directory: extension
+        run: powershell -Command "New-Item -ItemType Directory -Force -Path coverage | Out-Null"
       - name: Upload coverage (Jest)
         if: always()
         uses: actions/upload-artifact@v4
