@@ -49,7 +49,7 @@ jobs:
       - name: Integration Tests (Linux)
         if: runner.os == 'Linux'
         working-directory: extension
-        run: xvfb-run -a npm run test:integration --if-present
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:integration --if-present
       - name: Integration Tests (Windows)
         if: runner.os == 'Windows'
         working-directory: extension
@@ -57,6 +57,14 @@ jobs:
       - name: Tests
         working-directory: extension
         run: npm run test:ci --if-present
+      - name: Ensure coverage dir (Linux)
+        if: runner.os == 'Linux'
+        working-directory: extension
+        run: mkdir -p coverage
+      - name: Ensure coverage dir (Windows)
+        if: runner.os == 'Windows'
+        working-directory: extension
+        run: powershell -Command "New-Item -ItemType Directory -Force -Path coverage | Out-Null"
       - name: Upload coverage (Jest)
         if: always()
         uses: actions/upload-artifact@v4
