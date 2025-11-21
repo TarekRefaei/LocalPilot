@@ -1,19 +1,54 @@
+"""
+LocalPilot Backend - FastAPI application.
+Exposes REST and WebSocket APIs for the VS Code extension.
+"""
+
 import asyncio
 import logging
+from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-logger = logging.getLogger('localpilot.backend')
-app = FastAPI()
+from app.core.config import settings
+from app.core.logging import setup_logging, get_logger
+from app.api import health, websocket
+
+# Setup logging
+setup_logging()
+logger = get_logger("localpilot.backend")
+
+# Create FastAPI app
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    debug=settings.debug,
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None,
+)
 
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+# Startup and shutdown events
+@app.on_event("startup")
+async def startup_event() -> None:
+    """Initialize on startup."""
+    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
+    health.set_startup_time(datetime.utcnow())
 
 
+@app.on_event("shutdown")
+async def shutdown_event() -> None:
+    """Cleanup on shutdown."""
+    logger.info("Shutting down backend")
+
+
+# Include routers
+app.include_router(health.router, tags=["health"])
+app.include_router(websocket.router, tags=["websocket"])
+
+
+# Legacy endpoints for compatibility
 class ChatRequest(BaseModel):
     prompt: str
     model: str | None = None

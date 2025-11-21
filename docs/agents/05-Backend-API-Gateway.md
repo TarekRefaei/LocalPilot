@@ -25,11 +25,11 @@ Deliver FastAPI-based REST and WS endpoints with Pydantic schemas, logging, conf
 - Health and config endpoints pass tests.
 - WS topics accept/emit messages with schema validation.
 
-## Handoff
-### To Agent 06 — Indexing: Discovery & Docs
+## Handoff documents
+### To Agent 06 — Indexing: Discovery & Docs documentdocument (follow docs\agents\_templates\Agent_Handoff_Template.md)
 - Document endpoints and topics used for indexing events.
 
-### To Supervisor
+### To Supervisor document
 - API docs (OpenAPI) generated; test report and coverage.
 - Deployment notes for local dev on Windows.
 

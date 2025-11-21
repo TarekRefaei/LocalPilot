@@ -7,4 +7,5 @@ def test_health():
     client = TestClient(app)
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json().get("status") == "ok"
+    # Health endpoint now returns "healthy" status
+    assert r.json().get("status") == "healthy"
