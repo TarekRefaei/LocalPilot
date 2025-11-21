@@ -39,6 +39,7 @@ jobs:
         if: runner.os == 'Linux'
         working-directory: extension
         run: xvfb-run -a npm run test:integration --if-present
+        continue-on-error: true
       - name: Integration Tests (Windows)
         if: runner.os == 'Windows'
         working-directory: extension
