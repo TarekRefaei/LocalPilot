@@ -19,10 +19,15 @@ Implement planning models, CRUD UI, persistence, and conversion from Chat into P
 - [ ] Acceptance criteria model with file refs.
 - [ ] Unit and integration tests for Plan components.
 - [ ] TDD: failing CRUD tests first; implement.
+- [ ] Wire TreeDataProviders (Plans/Act/Indexing/Status) to `LocalPilotState` via DI; subscribe to `onDidChange` and refresh.
+- [ ] Update commands to mutate `LocalPilotState`: `plan.{create,update,delete}` and `index.{start,stop}` (preserve `setContext` toggles).
+- [ ] Add unit tests for provider-state refresh and state/context synchronization.
 
 ## Milestones & Success Criteria
 - Full CRUD works; keyboard navigation and persistence validated.
 - Tests ≥ 80% for Plan components.
+- Providers refresh on `LocalPilotState` changes; Plans view reflects create/update/delete.
+- Indexing menu + view reflect `getIndexingRunning()` and context toggles.
 
 ## Handoff
 ### To Agent 11 — Act Mode
@@ -35,12 +40,15 @@ Implement planning models, CRUD UI, persistence, and conversion from Chat into P
 ## Orchestration Enhancements
 - **Week alignment**: Week 7 — Plans View
 - **Dependencies**
-  - Prev: Agent 03 (from-Chat transfer), Agent 09 (retrieval API)
+  - Prev: Agent 02 (views/commands), Agent 03 (from-Chat transfer), Agent 09 (retrieval API)
   - Next: Agent 11 (Act Mode)
 - **Interfaces/Artifacts**
+  - View IDs: `localpilot.views.{plans,act,indexing,status}`
+  - Command IDs: `localpilot.showViews`, `localpilot.focusChatInput`, `localpilot.chat.transferToPlan`, `localpilot.plan.{create,update,delete}`, `localpilot.act.{dryRun,approve,apply,rollback}`, `localpilot.index.{start,stop}`, `localpilot.model.swap`
   - Plan schema, acceptance criteria with file refs, persistence API
 - **Acceptance Gates & Checkpoints**
   - CRUD + keyboard navigation + persistence tested (≥ 80%)
+  - Provider-state refresh verified by tests; Indexing context→state sync works
 - **Risks & Comms**
   - Ensure model changes are backward compatible with stored plans
 

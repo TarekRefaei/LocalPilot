@@ -11,7 +11,35 @@
     "Other"
   ],
   "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:localpilot.views.chat"
+  ],
   "contributes": {
+    "configuration": {
+      "title": "LocalPilot",
+      "properties": {
+        "localpilot.backend.baseUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:8000",
+          "description": "Base URL of the LocalPilot backend (FastAPI)."
+        },
+        "localpilot.model": {
+          "type": "string",
+          "default": "local",
+          "description": "Selected chat model identifier."
+        }
+      }
+    },
+    "chatParticipants": [
+      {
+        "id": "localpilot",
+        "name": "localpilot",
+        "fullName": "LocalPilot",
+        "description": "Local, private AI coding assistant",
+        "isSticky": true
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -23,6 +51,12 @@
     },
     "views": {
       "localpilot": [
+        {
+          "id": "localpilot.views.chat",
+          "name": "Chat",
+          "type": "webview",
+          "icon": "resources/icons/status.svg"
+        },
         {
           "id": "localpilot.views.plans",
           "name": "Plans",

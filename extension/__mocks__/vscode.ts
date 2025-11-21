@@ -11,6 +11,9 @@ export const window = {
     treeProviders[viewId] = provider;
     return { dispose() {} };
   }),
+  registerWebviewViewProvider: jest.fn((_viewId: string, _provider: any, _options?: any): Disposable => {
+    return { dispose() {} };
+  }),
 };
 
 export const commands = {
@@ -53,3 +56,14 @@ export class EventEmitter<T = void> {
     this.listeners = [];
   }
 }
+
+export const Uri = {
+  joinPath: (..._args: any[]) => ({})
+} as any;
+
+export const chat = {
+  createChatParticipant: jest.fn((_id: string, _handler: Function) => ({
+    iconPath: undefined,
+    dispose() {}
+  })),
+};

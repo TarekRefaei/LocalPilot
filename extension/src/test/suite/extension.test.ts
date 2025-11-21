@@ -31,4 +31,25 @@ suite('LocalPilot Integration', () => {
   test('can focus LocalPilot view container', async () => {
     await vscode.commands.executeCommand('workbench.view.extension.localpilot');
   });
+
+  test('Transfer to Plan command inserts a draft into state', async () => {
+    const ext = vscode.extensions.getExtension('tarekrefaei.localpilot');
+    assert.ok(ext, 'Extension not found');
+    const api: any = await ext.activate();
+    const before = api.state.getPlans();
+    await vscode.commands.executeCommand('localpilot.chat.transferToPlan', { title: 'Demo Plan' });
+    const after = api.state.getPlans();
+    assert.ok(after.length === before.length + 1, 'Plan was not inserted');
+    assert.ok(after.some((p: any) => p.title === 'Demo Plan'));
+  });
+
+  test('Indexing start/stop commands synchronize state', async () => {
+    const ext = vscode.extensions.getExtension('tarekrefaei.localpilot');
+    assert.ok(ext, 'Extension not found');
+    const api: any = await ext.activate();
+    await vscode.commands.executeCommand('localpilot.index.start');
+    assert.strictEqual(api.state.getIndexingRunning(), true);
+    await vscode.commands.executeCommand('localpilot.index.stop');
+    assert.strictEqual(api.state.getIndexingRunning(), false);
+  });
 });

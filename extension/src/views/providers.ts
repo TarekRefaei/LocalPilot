@@ -1,14 +1,29 @@
 import * as vscode from 'vscode';
+import type { LocalPilotState } from '../services/state';
 
 export class PlansTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private state: LocalPilotState | undefined;
+
+  constructor(state?: LocalPilotState) {
+    this.state = state;
+    this.state?.onDidChange(() => this._onDidChangeTreeData.fire());
+  }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return element;
   }
 
   getChildren(): vscode.ProviderResult<vscode.TreeItem[]> {
+    const plans = this.state?.getPlans() ?? [];
+    if (plans.length > 0) {
+      return plans.map((p) => {
+        const it = new vscode.TreeItem(p.title, vscode.TreeItemCollapsibleState.None);
+        it.contextValue = 'plans.item';
+        return it;
+      });
+    }
     const item = new vscode.TreeItem('No plans yet', vscode.TreeItemCollapsibleState.None);
     item.tooltip = 'No plans yet';
     item.description = 'Create a plan from chat or the command palette';
@@ -37,16 +52,24 @@ export class ActTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeI
 export class IndexingTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private state: LocalPilotState | undefined;
+
+  constructor(state?: LocalPilotState) {
+    this.state = state;
+    this.state?.onDidChange(() => this._onDidChangeTreeData.fire());
+  }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return element;
   }
 
   getChildren(): vscode.ProviderResult<vscode.TreeItem[]> {
-    const item = new vscode.TreeItem('Idle', vscode.TreeItemCollapsibleState.None);
-    item.tooltip = 'Indexing is idle';
-    item.description = 'Start indexing to scan the workspace';
-    item.contextValue = 'indexing.idle';
+    const running = this.state?.getIndexingRunning() ?? false;
+    const label = running ? 'Running' : 'Idle';
+    const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+    item.tooltip = running ? 'Indexing in progress' : 'Indexing is idle';
+    item.description = running ? 'Scanning workspace…' : 'Start indexing to scan the workspace';
+    item.contextValue = running ? 'indexing.running' : 'indexing.idle';
     return [item];
   }
 }

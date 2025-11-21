@@ -25,12 +25,12 @@ Implement the Chat participant that streams responses, formats markdown, and pus
 - Chat streams responses; “Transfer to Plan” inserts draft successfully.
 - Integration tests pass on CI.
 
-## Handoff
-### To Agent 04 — WebSocket Client & Contract
+## Handoff Documents
+### To Agent 04 — WebSocket Client & Contract Document 
 - Document message schemas used by Chat, placeholders for retrieval requests.
 - Provide mock adapters used in tests.
 
-### To Supervisor
+### To Supervisor Document
 - Demo script and test results for Chat participant behavior.
 - Known limitations list until retrieval is integrated.
 

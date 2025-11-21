@@ -1,6 +1,7 @@
 export const VIEW_CONTAINER_ID = 'localpilot';
 
 export const VIEW_IDS = {
+  chat: 'localpilot.views.chat',
   plans: 'localpilot.views.plans',
   act: 'localpilot.views.act',
   indexing: 'localpilot.views.indexing',
