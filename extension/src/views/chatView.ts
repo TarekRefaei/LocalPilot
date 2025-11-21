@@ -27,8 +27,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       await streamChatFromBackend(prompt, this.currentAbort.signal, {
         onChunk: (text) => void webview.postMessage({ type: 'stream', markdown: text }),
         onEnd: () => void webview.postMessage({ type: 'endAssistant' }),
-        onError: () => {
-          // Fallback to demo content if backend fails
+        onError: (err) => {
+          // Show error message and fallback to demo content
+          const errMsg = err instanceof Error ? err.message : String(err);
+          void webview.postMessage({
+            type: 'stream',
+            markdown: `\n\n⚠️ **Backend Error**: ${errMsg}\n\nFalling back to demo response...\n\n`,
+          });
           void this.streamInlineResponse(prompt);
         },
       });

@@ -1,5 +1,18 @@
 import * as vscode from 'vscode';
 
+const LOG_PREFIX = '[LocalPilot Chat]';
+
+function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown): void {
+  const msg = `${LOG_PREFIX} ${message}`;
+  if (level === 'error') {
+    console.error(msg, data);
+  } else if (level === 'warn') {
+    console.warn(msg, data);
+  } else {
+    console.log(msg, data);
+  }
+}
+
 export interface StreamCallbacks {
   onStart?: () => void;
   onChunk?: (text: string) => void;
@@ -22,6 +35,7 @@ export async function streamChatFromBackend(
   const model = String(cfg.get('model') ?? 'local');
 
   const url = `${baseUrl.replace(/\/$/, '')}/chat/echo`;
+  log('info', `Starting stream to ${url} with model=${model}`);
   try {
     cbs.onStart?.();
     const res = await fetch(url, {
@@ -31,7 +45,9 @@ export async function streamChatFromBackend(
       signal: abort,
     });
     if (!res.ok || !res.body) {
-      throw new Error(`Bad response: ${res.status}`);
+      const msg = `Backend returned ${res.status}`;
+      log('error', msg);
+      throw new Error(msg);
     }
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -44,6 +60,7 @@ export async function streamChatFromBackend(
         cbs.onChunk?.(chunk);
       }
     } while (!finished);
+    log('info', 'Stream completed successfully');
     cbs.onEnd?.();
   } catch (err) {
     if (
@@ -52,8 +69,11 @@ export async function streamChatFromBackend(
       'name' in err &&
       (err as { name?: string }).name === 'AbortError'
     ) {
+      log('info', 'Stream aborted by user');
       return;
     }
+    const errMsg = err instanceof Error ? err.message : String(err);
+    log('error', `Stream failed: ${errMsg}`);
     cbs.onError?.(err);
   }
 }
