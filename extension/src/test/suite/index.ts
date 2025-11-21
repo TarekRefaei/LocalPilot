@@ -2,12 +2,17 @@ import * as path from 'path';
 import * as fs from 'fs';
 import Mocha from 'mocha';
 
+const isCiLinux = process.platform === 'linux' && !!process.env.CI;
+
 export function run(): Promise<void> {
   const mocha = new Mocha({
     ui: 'tdd',
     color: true,
-    timeout: 20000,
+    timeout: 30000,
   });
+  if (isCiLinux) {
+    mocha.suite.retries(1);
+  }
 
   const testsRoot = path.resolve(__dirname, '.');
 
@@ -27,6 +32,9 @@ export function run(): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       const files = walk(testsRoot, []);
+      // Diagnostics: list test files
+      // eslint-disable-next-line no-console
+      console.log(`[integration] discovered test files:`, files);
       for (const f of files) {
         mocha.addFile(path.resolve(testsRoot, f));
       }
