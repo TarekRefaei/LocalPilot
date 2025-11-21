@@ -1,7 +1,8 @@
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-import asyncio
 
 app = FastAPI()
 
