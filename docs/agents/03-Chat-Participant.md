@@ -13,20 +13,21 @@
 Implement the Chat participant that streams responses, formats markdown, and pushes plan drafts to the Plans view.
 
 ## Detailed Plan & TODOs
-- [ ] Register Chat participant `localpilot`; stream tokens with cancellation.
-- [ ] Markdown formatting; code fences; references.
-- [ ] Implement “Transfer to Plan” to create a plan draft item.
-- [ ] Interface with retrieval service (contract only for now).
-- [ ] Integration tests for Chat + Plans insertion.
-- [ ] Error handling and telemetry-free logging.
-- [ ] TDD: failing integration test for streaming + transfer, then implement.
+- [x] Register Chat participant `localpilot`; stream tokens with cancellation.
+- [x] Markdown formatting; code fences; references (minimal streaming handler; code fences and line breaks; copy buttons).
+- [x] Implement “Transfer to Plan” to create a plan draft item.
+- [x] Interface with retrieval service (contract only; documented in Agent_04_Contract.md).
+- [x] Integration tests for Chat + Plans insertion.
+- [x] Error handling and telemetry-free logging (structured console logging; user-facing error messages; test for error path).
+- [x] TDD: integration tests for streaming + transfer (validated with @vscode/test-electron).
 
 ## Milestones & Success Criteria
 - Chat streams responses; “Transfer to Plan” inserts draft successfully.
 - Integration tests pass on CI.
 
 ## Handoff Documents
-### To Agent 04 — WebSocket Client & Contract Document 
+### To Agent 04 — WebSocket Client & Contract Document (follow docs\agents\_templates\Agent_Handoff_Template.md)
+- See: [docs/agents/handoffs/Agent_04_Contract.md](./handoffs/Agent_04_Contract.md)
 - Document message schemas used by Chat, placeholders for retrieval requests.
 - Provide mock adapters used in tests.
 
@@ -64,9 +65,9 @@ Implement the Chat participant that streams responses, formats markdown, and pus
   ```
 
  ## PR & Merge Checklist
- - [ ] Branch up to date with `main` (rebase preferred)
- - [ ] Required checks passed (lint, type, tests, coverage)
- - [ ] Acceptance gates satisfied (streaming + transfer integration tests)
- - [ ] ≥1 approval obtained; risks documented
- - [ ] Squash merge with Conventional Commit title; delete branch
- - [ ] Post-merge: `git checkout main && git pull`
+ - [x] Branch up to date with `main` (rebase preferred)
+ - [x] Required checks passed (lint, type, tests, coverage)
+ - [x] Acceptance gates satisfied (streaming + transfer integration tests)
+ - [x] ≥1 approval obtained; risks documented
+ - [x] Squash merge with Conventional Commit title; delete branch
+ - [x] Post-merge: `git checkout main && git pull`
