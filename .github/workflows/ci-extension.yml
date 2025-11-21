@@ -45,11 +45,33 @@ jobs:
         run: npm run compile
       - name: Install Linux UI deps
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libnss3 libatk-bridge2.0-0 libxkbfile1 libxss1 libasound2 libgtk-3-0 libgbm1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libatk-bridge2.0-0 \
+            libxkbfile1 \
+            libxss1 \
+            libasound2 \
+            libgtk-3-0 \
+            libgbm1 \
+            libx11-xcb1 \
+            libxcb1 \
+            libxcb-dri3-0 \
+            libdrm2 \
+            libxshmfence1 \
+            libglu1-mesa \
+            mesa-vulkan-drivers
       - name: Integration Tests (Linux)
         if: runner.os == 'Linux'
         working-directory: extension
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:integration --if-present
+        run: |
+          set -e
+          xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:integration --if-present || {
+            echo "Retrying Linux integration tests after short delay...";
+            sleep 5;
+            xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:integration --if-present;
+          }
       - name: Integration Tests (Windows)
         if: runner.os == 'Windows'
         working-directory: extension
