@@ -60,6 +60,15 @@ jobs:
             libxcb-dri3-0 \
             libdrm2 \
             libxshmfence1 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxrandr2 \
+            libxi6 \
+            libxtst6 \
+            libnotify4 \
+            libglib2.0-0 \
+            libsecret-1-0 \
+            fonts-liberation \
             libglu1-mesa \
             mesa-vulkan-drivers
       - name: Integration Tests (Linux)
