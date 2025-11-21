@@ -15,8 +15,10 @@ from app.models.envelope import (
     HandshakePayload,
     HeartbeatAckPayload,
     HeartbeatPayload,
+    IndexingStartPayload,
     WebSocketEnvelope,
 )
+from app.services.indexing.orchestrator import IndexingOrchestrator
 from app.services.ws_manager import ConnectionManager
 
 logger = logging.getLogger(__name__)
@@ -69,6 +71,26 @@ async def websocket_endpoint(
             # Handle heartbeat
             elif envelope.event == "heartbeat":
                 await handle_heartbeat(client_id, envelope)
+
+            # Indexing start: validate and kick off orchestrator, then broadcast
+            elif envelope.event == "indexing.start":
+                try:
+                    payload = IndexingStartPayload(**envelope.data)
+                    # Start orchestrator in background
+                    orchestrator = IndexingOrchestrator(manager)
+                    # Fire-and-forget
+                    import asyncio as _asyncio
+
+                    _asyncio.create_task(
+                        orchestrator.run(
+                            workspace_path=payload.workspace_path,
+                            options=payload.options or {},
+                        )
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to start indexing: {e}")
+                # Always broadcast the original event to all clients (tests rely on this)
+                await manager.broadcast(envelope.model_dump())
 
             # Route other events to all clients (broadcast)
             else:

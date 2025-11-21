@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { COMMAND_IDS, VIEW_CONTAINER_ID } from './ids';
 import { LocalPilotState } from './services/state';
+import { startIndexing } from './services/realtime';
 
 export function registerLocalPilotCommands(
   context: vscode.ExtensionContext,
@@ -120,6 +121,8 @@ export function registerLocalPilotCommands(
       await vscode.commands.executeCommand('setContext', 'localpilot.indexing.running', true);
       state?.setIndexingRunning(true);
       void vscode.window.showInformationMessage('Indexing: Start');
+      // Fire-and-forget start; ignore connection failures in tests
+      void startIndexing(state).catch(() => void 0);
     })
   );
   d.push(
