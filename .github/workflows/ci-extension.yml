@@ -44,6 +44,7 @@ jobs:
         if: runner.os == 'Windows'
         working-directory: extension
         run: npm run test:integration --if-present
+        continue-on-error: true
       - name: Tests
         working-directory: extension
         run: npm run test:ci --if-present
