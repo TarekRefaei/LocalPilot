@@ -52,7 +52,7 @@ jobs:
             libatk-bridge2.0-0 \
             libxkbfile1 \
             libxss1 \
-            libasound2 \
+            libasound2t64 \
             libgtk-3-0 \
             libgbm1 \
             libx11-xcb1 \
