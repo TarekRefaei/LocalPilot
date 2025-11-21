@@ -16,8 +16,8 @@ import {
 } from '../contracts/envelope';
 
 // Use native WebSocket in browser, ws package in Node.js (tests)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const WS = typeof WebSocket !== 'undefined' ? WebSocket : (require('ws') as any);
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unnecessary-type-assertion
+const WS = typeof WebSocket !== 'undefined' ? WebSocket : require('ws');
 
 /**
  * Configuration for WebSocket client.
@@ -115,6 +115,7 @@ export class WebSocketClient {
 
     return new Promise((resolve, reject) => {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         this.ws = new WS(this.url);
 
         const handshakeTimeout = setTimeout(() => {
@@ -146,10 +147,7 @@ export class WebSocketClient {
         this.ws!.onerror = (event: Event | string) => {
           clearTimeout(handshakeTimeout);
           const eventStr = typeof event === 'string' ? event : String(event);
-          const error = new WsError(
-            WsErrorCode.ConnectionFailed,
-            `WebSocket error: ${eventStr}`,
-          );
+          const error = new WsError(WsErrorCode.ConnectionFailed, `WebSocket error: ${eventStr}`);
           this.handleError(error);
           reject(error);
         };
