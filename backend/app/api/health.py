@@ -4,15 +4,16 @@ Health check and status endpoints.
 
 import logging
 from datetime import datetime
+
 from fastapi import APIRouter, HTTPException
 
 from app.core.config import settings
 from app.models.health import (
+    ConfigResponse,
     HealthResponse,
     OllamaHealthResponse,
-    ConfigResponse,
-    ServiceStatus,
     ResourceUsage,
+    ServiceStatus,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ async def health_check() -> HealthResponse:
         )
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        raise HTTPException(status_code=503, detail="Service unavailable")
+        raise HTTPException(status_code=503, detail="Service unavailable") from e
 
 
 @router.get("/health/ollama", response_model=OllamaHealthResponse)
@@ -114,7 +115,7 @@ async def ollama_health() -> OllamaHealthResponse:
         )
     except Exception as e:
         logger.error(f"Ollama health check failed: {e}")
-        raise HTTPException(status_code=503, detail="Ollama unavailable")
+        raise HTTPException(status_code=503, detail="Ollama unavailable") from e
 
 
 @router.get("/config", response_model=ConfigResponse)

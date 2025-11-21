@@ -2,7 +2,8 @@
 Health check and status models.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -10,7 +11,7 @@ class ServiceStatus(BaseModel):
     """Status of a service."""
 
     status: str  # "connected", "ready", "error"
-    details: Optional[Dict[str, Any]] = None
+    details: dict[str, Any] | None = None
 
 
 class ResourceUsage(BaseModel):
@@ -28,7 +29,7 @@ class HealthResponse(BaseModel):
     status: str  # "healthy", "degraded", "unhealthy"
     version: str
     uptime_seconds: int
-    services: Dict[str, ServiceStatus]
+    services: dict[str, ServiceStatus]
     resources: ResourceUsage
     timestamp: str
 
@@ -38,8 +39,8 @@ class OllamaHealthResponse(BaseModel):
 
     status: str
     host: str
-    version: Optional[str] = None
-    models: Optional[list[Dict[str, Any]]] = None
+    version: str | None = None
+    models: list[dict[str, Any]] | None = None
 
 
 class ConfigResponse(BaseModel):

@@ -3,11 +3,11 @@ Structured logging configuration for LocalPilot backend.
 Supports JSON and text formats.
 """
 
-import logging
 import json
+import logging
 import sys
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from app.core.config import settings
 
@@ -17,7 +17,7 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         """Format log record as JSON."""
-        log_data: Dict[str, Any] = {
+        log_data: dict[str, Any] = {
             "timestamp": datetime.utcnow().isoformat(),
             "level": record.levelname,
             "logger": record.name,

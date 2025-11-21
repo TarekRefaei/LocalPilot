@@ -4,7 +4,7 @@ WebSocket connection manager for handling client connections and message routing
 
 import json
 import logging
-from typing import Callable, Dict, Set
+
 from fastapi import WebSocket
 
 logger = logging.getLogger(__name__)
@@ -14,8 +14,8 @@ class ConnectionManager:
     """Manages WebSocket connections and message routing."""
 
     def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
-        self.subscriptions: Dict[str, Set[str]] = {}  # event -> set of client_ids
+        self.active_connections: dict[str, WebSocket] = {}
+        self.subscriptions: dict[str, set[str]] = {}  # event -> set of client_ids
 
     async def connect(self, client_id: str, websocket: WebSocket) -> None:
         """Accept and register a new WebSocket connection."""

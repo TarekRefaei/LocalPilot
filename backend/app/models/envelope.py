@@ -3,10 +3,11 @@ WebSocket envelope and message contracts.
 Aligned with TypeScript contracts in extension/src/contracts/envelope.ts
 """
 
-from typing import Any, Optional, Dict
-from pydantic import BaseModel, Field
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class WebSocketEnvelope(BaseModel):
@@ -43,7 +44,7 @@ class ErrorData(BaseModel):
 
     message: str
     code: str
-    details: Optional[Dict[str, Any]] = None
+    details: dict[str, Any] | None = None
 
 
 class HandshakePayload(BaseModel):
@@ -51,7 +52,7 @@ class HandshakePayload(BaseModel):
 
     version: str
     clientId: str
-    workspace: Optional[str] = None
+    workspace: str | None = None
 
 
 class HandshakeAckPayload(BaseModel):
@@ -82,7 +83,7 @@ class IndexingStartPayload(BaseModel):
     """Start indexing event payload."""
 
     workspace_path: str
-    options: Optional[Dict[str, Any]] = None
+    options: dict[str, Any] | None = None
 
 
 class IndexingProgressPayload(BaseModel):
@@ -94,7 +95,7 @@ class IndexingProgressPayload(BaseModel):
     total_phases: int
     current_file: int
     total_files: int
-    current_file_path: Optional[str] = None
+    current_file_path: str | None = None
     percentage: float
     estimated_time_remaining_seconds: int
     message: str
@@ -105,9 +106,9 @@ class IndexingCompletePayload(BaseModel):
 
     indexing_id: str
     duration_seconds: int
-    statistics: Dict[str, Any]
-    project_summary: Optional[str] = None
-    failed_files: Optional[list[Dict[str, Any]]] = None
+    statistics: dict[str, Any]
+    project_summary: str | None = None
+    failed_files: list[dict[str, Any]] | None = None
 
 
 class ChatMessagePayload(BaseModel):
@@ -115,8 +116,8 @@ class ChatMessagePayload(BaseModel):
 
     session_id: str
     message: str
-    context: Optional[Dict[str, Any]] = None
-    options: Optional[Dict[str, Any]] = None
+    context: dict[str, Any] | None = None
+    options: dict[str, Any] | None = None
 
 
 class ChatStreamChunkPayload(BaseModel):
@@ -131,8 +132,8 @@ class PlanGeneratePayload(BaseModel):
     """Plan generation event payload."""
 
     source: str
-    chat_session_id: Optional[str] = None
-    plan_suggestion: Optional[Dict[str, Any]] = None
+    chat_session_id: str | None = None
+    plan_suggestion: dict[str, Any] | None = None
     workspace_path: str
 
 
@@ -141,7 +142,7 @@ class ActStartPayload(BaseModel):
 
     plan_id: str
     workspace_path: str
-    options: Optional[Dict[str, Any]] = None
+    options: dict[str, Any] | None = None
 
 
 class VramWarningPayload(BaseModel):
@@ -151,5 +152,5 @@ class VramWarningPayload(BaseModel):
     current_usage_gb: float
     total_vram_gb: float
     usage_percentage: float
-    loaded_models: list[Dict[str, Any]]
+    loaded_models: list[dict[str, Any]]
     recommendation: str

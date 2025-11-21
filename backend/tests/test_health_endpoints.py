@@ -2,12 +2,9 @@
 Tests for health check and configuration endpoints.
 """
 
-import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from app.main import app
-from app.api import health
 
 client = TestClient(app)
 
@@ -53,7 +50,7 @@ class TestHealthEndpoint:
         assert "ollama" in services
         assert "vector_db" in services
 
-        for service_name, service_data in services.items():
+        for _service_name, service_data in services.items():
             assert "status" in service_data
             assert service_data["status"] in ["connected", "ready", "error"]
 

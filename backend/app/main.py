@@ -4,16 +4,15 @@ Exposes REST and WebSocket APIs for the VS Code extension.
 """
 
 import asyncio
-import logging
 from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.core.config import settings
-from app.core.logging import setup_logging, get_logger
 from app.api import health, websocket
+from app.core.config import settings
+from app.core.logging import get_logger, setup_logging
 
 # Setup logging
 setup_logging()

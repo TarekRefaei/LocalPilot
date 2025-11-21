@@ -2,8 +2,6 @@
 Tests for WebSocket endpoint with handshake, heartbeat, and message routing.
 """
 
-import json
-import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app

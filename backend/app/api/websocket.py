@@ -6,14 +6,16 @@ Handles handshake, heartbeat, and message routing.
 import json
 import logging
 from datetime import datetime
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+
 from app.models.envelope import (
-    WebSocketEnvelope,
-    HandshakePayload,
-    HandshakeAckPayload,
-    HeartbeatPayload,
-    HeartbeatAckPayload,
     ErrorData,
+    HandshakeAckPayload,
+    HandshakePayload,
+    HeartbeatAckPayload,
+    HeartbeatPayload,
+    WebSocketEnvelope,
 )
 from app.services.ws_manager import ConnectionManager
 
@@ -90,7 +92,7 @@ async def handle_handshake(client_id: str, envelope: WebSocketEnvelope) -> None:
     """
     try:
         # Validate handshake payload
-        payload = HandshakePayload(**envelope.data)
+        HandshakePayload(**envelope.data)
 
         # Create handshake acknowledgement
         ack_payload = HandshakeAckPayload(
