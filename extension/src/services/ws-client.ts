@@ -15,6 +15,10 @@ import {
   generateUUID,
 } from '../contracts/envelope';
 
+// Use native WebSocket in browser, ws package in Node.js (tests)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const WS = typeof WebSocket !== 'undefined' ? WebSocket : (require('ws') as any);
+
 /**
  * Configuration for WebSocket client.
  */
@@ -111,7 +115,7 @@ export class WebSocketClient {
 
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(this.url);
+        this.ws = new WS(this.url);
 
         const handshakeTimeout = setTimeout(() => {
           const error = new WsError(WsErrorCode.HandshakeFailed, 'Handshake timeout');
@@ -119,11 +123,11 @@ export class WebSocketClient {
           reject(error);
         }, this.config.handshakeTimeoutMs);
 
-        this.ws.onopen = () => {
+        this.ws!.onopen = () => {
           this.sendHandshake();
         };
 
-        this.ws.onmessage = (event: Event) => {
+        this.ws!.onmessage = (event: Event) => {
           const message = this.parseMessage((event as MessageEvent).data as string);
           if (!message) return;
 
@@ -139,15 +143,18 @@ export class WebSocketClient {
           }
         };
 
-        this.ws.onerror = (event: Event | string) => {
+        this.ws!.onerror = (event: Event | string) => {
           clearTimeout(handshakeTimeout);
           const eventStr = typeof event === 'string' ? event : String(event);
-          const error = new WsError(WsErrorCode.ConnectionFailed, `WebSocket error: ${eventStr}`);
+          const error = new WsError(
+            WsErrorCode.ConnectionFailed,
+            `WebSocket error: ${eventStr}`,
+          );
           this.handleError(error);
           reject(error);
         };
 
-        this.ws.onclose = () => {
+        this.ws!.onclose = () => {
           clearTimeout(handshakeTimeout);
           if (!this.isManualDisconnect) {
             this.attemptReconnect();
