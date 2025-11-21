@@ -15,7 +15,26 @@ async function main() {
       fs.rmSync(linkPath, { recursive: true, force: true });
     } catch {}
     const linkType: fs.symlink.Type = process.platform === 'win32' ? 'junction' : 'dir';
-    fs.symlinkSync(realDevPath, linkPath, linkType);
+    try {
+      fs.symlinkSync(realDevPath, linkPath, linkType);
+    } catch (err) {
+      // Fall back to copy if symlink/junction is not permitted
+      const copyDir = (src: string, dest: string) => {
+        fs.mkdirSync(dest, { recursive: true });
+        for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+          const s = path.join(src, entry.name);
+          const d = path.join(dest, entry.name);
+          if (entry.isDirectory()) {
+            copyDir(s, d);
+          } else if (entry.isFile()) {
+            fs.copyFileSync(s, d);
+          }
+        }
+      };
+      copyDir(realDevPath, linkPath);
+    }
+    // Allow filesystem to settle
+    await new Promise((r) => setTimeout(r, 100));
 
     const extensionDevelopmentPath = linkPath;
     const extensionTestsPath = path.join(linkPath, 'out', 'test', 'suite', 'index');
