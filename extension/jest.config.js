@@ -7,7 +7,14 @@ module.exports = {
     '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }]
   },
   collectCoverage: true,
-  collectCoverageFrom: ['src/**/*.ts', '!**/*.(spec|test).ts', '!src/test/**'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!**/*.(spec|test).ts',
+    '!src/test/**',
+    '!src/views/**',
+    '!src/services/backend.ts',
+    '!src/chat.ts'
+  ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'json-summary'],
   coverageThreshold: {

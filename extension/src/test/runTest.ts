@@ -20,11 +20,36 @@ async function main() {
     const extensionDevelopmentPath = linkPath;
     const extensionTestsPath = path.join(linkPath, 'out', 'test', 'suite', 'index');
 
-    await runTests({
+    const version = process.env.VSCODE_TEST_VERSION || '1.106.2';
+    const vscodeExecutablePath = process.env.VSCODE_TEST_EXE;
+    const vscodeExecutableDir = process.env.VSCODE_TEST_DIR;
+    const options: Parameters<typeof runTests>[0] = {
       extensionDevelopmentPath,
       extensionTestsPath,
-      launchArgs: ['--disable-extensions']
-    });
+      launchArgs: ['--disable-extensions'],
+    };
+    const candidatePaths: string[] = [];
+    if (vscodeExecutablePath) {
+      candidatePaths.push(vscodeExecutablePath);
+    }
+    if (vscodeExecutableDir) {
+      candidatePaths.push(path.join(vscodeExecutableDir, 'Code.exe'));
+    }
+    // Reuse cached download under repo if present
+    const archiveDirName = `vscode-win32-x64-archive-${version}`;
+    candidatePaths.push(path.join(realDevPath, '.vscode-test', archiveDirName, 'Code.exe'));
+    candidatePaths.push(path.join(linkPath, '.vscode-test', archiveDirName, 'Code.exe'));
+
+    for (const p of candidatePaths) {
+      try {
+        if (p && fs.existsSync(p)) {
+          (options as any).vscodeExecutablePath = p;
+          break;
+        }
+      } catch {}
+    }
+
+    await runTests(options);
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('Failed to run integration tests', err);

@@ -29,6 +29,31 @@
   - Format check: `npm run format:check` (or auto-fix: `npm run format`)
   - Test (coverage): `npm run test:ci`
   - Debug: VS Code launch config “Run Extension” (uses `extensionHost`)
+
+## Chat Webview
+
+- Start backend
+  - `cd backend`
+  - `.venv\\Scripts\\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`
+- Run the extension and open the LocalPilot container (Activity Bar → LocalPilot → Chat)
+- Features
+  - Streaming markdown from backend `/chat/echo` with Stop/Regenerate controls
+  - Recent tasks chips (persisted)
+  - Model badge (click to pick model)
+  - Message actions
+    - User: Resend, Delete
+    - Assistant: Copy, Delete, Copy code per code block
+  - Transfer to Plan reveals the Plans view
+
+### Settings
+
+- `localpilot.backend.baseUrl` (default `http://127.0.0.1:8000`)
+- `localpilot.model` (default `local`)
+
+### Shortcuts
+
+- LocalPilot: Show Views → `ctrl+alt+l`
+- LocalPilot: Focus Chat Input → `ctrl+alt+c`
  
 - VS Code tasks
   - Backend: Run → starts uvicorn

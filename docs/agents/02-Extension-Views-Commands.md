@@ -27,22 +27,27 @@ Deliver the VS Code Views container and four TreeViews with commands, icons, con
 
 Status: MET (local + CI workflows wired)
 
-## Handoff documents
+## Handoff
 ### To Agent 03 — Chat Participant
 - Document view IDs/contexts and command IDs used by Chat actions.
 - Provide sample events for `Plans` insertion.
 
-See: `docs/handoff/Agent_02_Handoff.md`
-- Interfaces & Contracts section lists final view/command IDs and context keys.
-- Sample Plans insertion event detailed under "Sample Events & Sequences".
+Use templates:
+- [Agent Handoff Template](./_templates/Agent_Handoff_Template.md)
+- [Supervisor Summary Template](./_templates/Supervisor_Summary_Template.md)
+
+### To Agent 10 — Plan Mode
+- Wire TreeDataProviders (Plans/Act/Indexing/Status) to `LocalPilotState` via DI; refresh on state changes.
+- Update commands to mutate `LocalPilotState` (`plan.{create,update,delete}`, `index.{start,stop}`) in addition to `setContext`.
+- Add unit tests for provider-state refresh and state/context synchronization.
 
 ### To Supervisor
 - Demo steps to verify views and commands.
 - Test report with coverage for UI providers.
 
-See: `docs/handoff/Agent_02_Handoff.md`
-- Validation & Demos lists demo steps (Show Views, verify container, commands, Indexing toggles).
-- Test results: unit and integration tests; coverage snapshot included.
+Use templates:
+- [Agent Handoff Template](./_templates/Agent_Handoff_Template.md)
+- [Supervisor Summary Template](./_templates/Supervisor_Summary_Template.md)
 - CI: `.github/workflows/ci-extension.yml` and `.github/workflows/ci-backend.yml` run on Windows/Ubuntu.
 
 ## Orchestration Enhancements
@@ -52,7 +57,7 @@ See: `docs/handoff/Agent_02_Handoff.md`
   - Next: Agent 03 (Chat participant actions), Agent 10 (Plan Mode)
 - **Interfaces/Artifacts**
   - View IDs: `localpilot.views.{plans,act,indexing,status}`
-  - Command IDs: document exact IDs used by Chat and Plans
+  - Command IDs: `localpilot.showViews`, `localpilot.focusChatInput`, `localpilot.chat.transferToPlan`, `localpilot.plan.{create,update,delete}`, `localpilot.act.{dryRun,approve,apply,rollback}`, `localpilot.index.{start,stop}`, `localpilot.model.swap`
   - Provider contracts and states independent of UI (SOLID)
 - **Acceptance Gates & Checkpoints**
   - Views render and update; commands visible
