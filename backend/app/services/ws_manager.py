@@ -35,9 +35,7 @@ class ConnectionManager:
         """Send a message to a specific client."""
         if client_id in self.active_connections:
             try:
-                await self.active_connections[client_id].send_text(
-                    json.dumps(message)
-                )
+                await self.active_connections[client_id].send_text(json.dumps(message))
             except Exception as e:
                 logger.error(f"Error sending message to {client_id}: {e}")
 
@@ -63,9 +61,7 @@ class ConnectionManager:
         for client_id in subscribers:
             if client_id in self.active_connections:
                 try:
-                    await self.active_connections[client_id].send_text(
-                        json.dumps(message)
-                    )
+                    await self.active_connections[client_id].send_text(json.dumps(message))
                 except Exception as e:
                     logger.error(f"Error sending to {client_id}: {e}")
                     disconnected_clients.append(client_id)

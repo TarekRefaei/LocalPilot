@@ -81,6 +81,7 @@ class TestHealthEndpoint:
 
         # Small delay
         import time
+
         time.sleep(0.1)
 
         response2 = client.get("/health")
