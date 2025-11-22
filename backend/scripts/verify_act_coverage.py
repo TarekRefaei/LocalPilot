@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 COVERAGE_XML = Path(__file__).resolve().parents[1] / "coverage.xml"
-ACT_DIR_SNIPPET = str(Path("app") / "services" / "act")
+ACT_DIR_SNIPPET = "services/act/"
 THRESHOLD = 85.0
 
 
