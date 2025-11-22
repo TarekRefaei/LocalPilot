@@ -14,10 +14,7 @@ export function isApplyAllowed(
   return inGitRepo && !hasUncommittedChanges;
 }
 
-export function isSafeCreate(
-  filePath: string,
-  opts: { safeCreates: boolean }
-): boolean {
+export function isSafeCreate(filePath: string, opts: { safeCreates: boolean }): boolean {
   if (!opts.safeCreates) return false;
   const p = filePath.replace(/\\/g, '/');
   const lower = p.toLowerCase();
@@ -33,9 +30,7 @@ export function isSafeCreate(
 
   // tests/** or __tests__/** with *.test.* or *.spec.*
   const isTestsDir =
-    lower.startsWith('tests/') ||
-    lower.startsWith('__tests__/') ||
-    lower.includes('/__tests__/');
+    lower.startsWith('tests/') || lower.startsWith('__tests__/') || lower.includes('/__tests__/');
   if (isTestsDir) {
     return /\.(test|spec)\./.test(lower);
   }
@@ -60,8 +55,8 @@ export function truncateUnifiedDiff(
 
   let inFile = false;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? '';
+  for (const lineRaw of lines) {
+    const line = lineRaw ?? '';
 
     // Start of a new file diff (best-effort detection)
     if (line.startsWith('diff --git ') || line.startsWith('--- ') || line.startsWith('Index: ')) {

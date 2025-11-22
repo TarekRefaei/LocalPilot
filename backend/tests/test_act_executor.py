@@ -11,20 +11,38 @@ class FakeGit:
         self.commits = []
         self.resets = []
 
-    def is_repo(self) -> bool: return True
-    def has_uncommitted_changes(self) -> bool: return False
-    def current_branch(self) -> str: return "main"
-    def current_commit(self) -> str: return "abcdef"
-    def create_branch(self, name: str) -> None: self.created.append(name)
-    def checkout(self, name: str) -> None: self.checkouts.append(name)
-    def add_all(self) -> None: self.added += 1
-    def commit(self, message: str) -> None: self.commits.append(message)
-    def reset_hard(self, ref: str) -> None: self.resets.append(ref)
+    def is_repo(self) -> bool:
+        return True
+
+    def has_uncommitted_changes(self) -> bool:
+        return False
+
+    def current_branch(self) -> str:
+        return "main"
+
+    def current_commit(self) -> str:
+        return "abcdef"
+
+    def create_branch(self, name: str) -> None:
+        self.created.append(name)
+
+    def checkout(self, name: str) -> None:
+        self.checkouts.append(name)
+
+    def add_all(self) -> None:
+        self.added += 1
+
+    def commit(self, message: str) -> None:
+        self.commits.append(message)
+
+    def reset_hard(self, ref: str) -> None:
+        self.resets.append(ref)
 
 
 def test_apply_writes_files_and_audit(tmp_path: Path, monkeypatch):
     # prepare
     from app.core import config as cfg
+
     monkeypatch.setattr(cfg.settings, "act_apply_safety", "strict", raising=False)
 
     git = FakeGit()

@@ -17,16 +17,16 @@ def main() -> int:
     total_lines = 0
     covered_lines = 0
 
-    for pkg in root.findall('.//packages/package'):
-        for cls in pkg.findall('classes/class'):
-            filename = cls.get('filename') or ''
-            if ACT_DIR_SNIPPET not in filename.replace('\\', '/'):
+    for pkg in root.findall(".//packages/package"):
+        for cls in pkg.findall("classes/class"):
+            filename = cls.get("filename") or ""
+            if ACT_DIR_SNIPPET not in filename.replace("\\", "/"):
                 continue
-            lines = cls.find('lines')
+            lines = cls.find("lines")
             if lines is None:
                 continue
-            for line in lines.findall('line'):
-                hits = int(line.get('hits') or '0')
+            for line in lines.findall("line"):
+                hits = int(line.get("hits") or "0")
                 total_lines += 1
                 if hits > 0:
                     covered_lines += 1

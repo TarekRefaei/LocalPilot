@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { WebSocketClient } from './ws-client';
+import type { WebSocketEnvelope } from '../contracts/envelope';
 
 let client: WebSocketClient | null = null;
 let connected = false;
@@ -8,43 +9,79 @@ interface IndexingState {
   setIndexingRunning(v: boolean): void;
 }
 
+interface ApprovalOperation {
+  path: string;
+  type: string;
+  diff: string;
+  additions: number;
+  deletions: number;
+  requiresApproval: boolean;
+}
+
+interface ApprovalPreview {
+  operations: ApprovalOperation[];
+  autoApprovedPaths: string[];
+  requiresReviewCount: number;
+}
+
+function isApprovalPreview(x: unknown): x is ApprovalPreview {
+  if (typeof x !== 'object' || x === null) return false;
+  const r = x as Record<string, unknown>;
+  const ops = Array.isArray(r.operations)
+    ? r.operations.every(
+        (o) =>
+          !!o &&
+          typeof (o as ApprovalOperation).path === 'string' &&
+          typeof (o as ApprovalOperation).type === 'string' &&
+          typeof (o as ApprovalOperation).diff === 'string'
+      )
+    : false;
+  const auto = Array.isArray(r.autoApprovedPaths)
+    ? (r.autoApprovedPaths as unknown[]).every((p) => typeof p === 'string')
+    : false;
+  const rev = typeof r.requiresReviewCount === 'number';
+  return ops && auto && rev;
+}
+
 export function actDryRun(payload: Record<string, unknown>): Promise<void> {
   if (isTestEnv()) return Promise.resolve();
   return ensureConnected()
     .then((ws) => {
       // One-shot subscription for approval preview
-      const off = ws.subscribe('act.request_approval', async (evt: any) => {
-        try {
-          const ops = Array.isArray(evt?.operations) ? evt.operations : [];
-          const reviewCount = Number(evt?.requiresReviewCount ?? 0);
-          const autoCount = Array.isArray(evt?.autoApprovedPaths) ? evt.autoApprovedPaths.length : 0;
-          const choice = await vscode.window.showInformationMessage(
+      const off = ws.subscribe('act.request_approval', (envelope: WebSocketEnvelope) => {
+        const preview: ApprovalPreview = isApprovalPreview(envelope?.data)
+          ? envelope.data
+          : { operations: [], autoApprovedPaths: [], requiresReviewCount: 0 };
+        const ops = preview.operations;
+        const reviewCount = preview.requiresReviewCount;
+        const autoCount = preview.autoApprovedPaths.length;
+
+        void vscode.window
+          .showInformationMessage(
             `Dry-run ready: ${ops.length} ops, ${reviewCount} need approval, ${autoCount} auto-approved. Apply now?`,
             { modal: true },
             'Apply',
             'Cancel'
-          );
-          if (choice === 'Apply') {
-            // Reuse payload where possible
-            const apply = {
-              ...payload,
-              approved: true,
-              message: 'Apply approved operations',
-            } as Record<string, unknown>;
-            try {
-              ws.send('act.apply', apply);
-            } catch {
-              void vscode.window.showWarningMessage('Act: Apply failed to send');
+          )
+          .then((choice) => {
+            if (choice === 'Apply') {
+              const apply = {
+                ...payload,
+                approved: true,
+                message: 'Apply approved operations',
+              } as Record<string, unknown>;
+              try {
+                ws.send('act.apply', apply);
+              } catch {
+                void vscode.window.showWarningMessage('Act: Apply failed to send');
+              }
             }
-          }
-        } finally {
-          // Unsubscribe if client supports it; otherwise ignore
-          try {
-            if (typeof off === 'function') off();
-          } catch {
-            // noop
-          }
-        }
+            try {
+              if (typeof off === 'function') off();
+            } catch {
+              // noop
+            }
+          });
       });
 
       try {

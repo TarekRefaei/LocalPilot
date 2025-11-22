@@ -33,7 +33,9 @@ def _is_safe_create(path: str) -> bool:
     return False
 
 
-def categorize_operations(ops: Iterable[FileOperation]) -> Tuple[List[FileOperation], List[FileOperation]]:
+def categorize_operations(
+    ops: Iterable[FileOperation],
+) -> Tuple[List[FileOperation], List[FileOperation]]:
     auto: List[FileOperation] = []
     review: List[FileOperation] = []
 

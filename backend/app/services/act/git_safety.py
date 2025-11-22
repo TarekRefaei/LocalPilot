@@ -47,9 +47,13 @@ class GitSafetyService:
 
         if mode == "strict":
             if not in_repo:
-                raise GitSafetyError("Workspace is not a Git repository. Initialize Git or change applySafety.")
+                raise GitSafetyError(
+                    "Workspace is not a Git repository. Initialize Git or change applySafety."
+                )
             if dirty:
-                raise GitSafetyError("Workspace has uncommitted changes. Commit or stash before applying.")
+                raise GitSafetyError(
+                    "Workspace has uncommitted changes. Commit or stash before applying."
+                )
         elif mode == "git-optional":
             if in_repo and dirty:
                 raise GitSafetyError("Uncommitted changes present. Clean working tree required.")

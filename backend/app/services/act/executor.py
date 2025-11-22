@@ -50,7 +50,9 @@ class ActExecutor:
                 raise ValueError(f"Unknown operation type: {op.type}")
             diff = unified_diff(op.path, before, after)
             summary = summarize_diff(op.path, diff)
-            previews.append(OperationPreview(path=op.path, type=op.type, diff=diff, summary=summary))
+            previews.append(
+                OperationPreview(path=op.path, type=op.type, diff=diff, summary=summary)
+            )
         return previews
 
     def apply(
@@ -67,7 +69,7 @@ class ActExecutor:
         # Build audit diff while applying
         audit_chunks: List[str] = []
         for op in ops:
-            path = (root / op.path)
+            path = root / op.path
             path.parent.mkdir(parents=True, exist_ok=True)
             before_text = ""
             if path.exists() and path.is_file():

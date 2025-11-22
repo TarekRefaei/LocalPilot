@@ -32,7 +32,12 @@ def summarize_diff(path: str, diff_text: str) -> DiffSummary:
         if not line:
             continue
         # skip headers
-        if line.startswith("+++") or line.startswith("---") or line.startswith("@@") or line.startswith("diff "):
+        if (
+            line.startswith("+++")
+            or line.startswith("---")
+            or line.startswith("@@")
+            or line.startswith("diff ")
+        ):
             continue
         if line.startswith("+"):
             additions += 1

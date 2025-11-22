@@ -112,10 +112,13 @@ async def websocket_endpoint(
                     root = Path(payload.workspace_path)
                     exe = ActExecutor(_make_git_safety(root))
                     # Compute previews
-                    previews = exe.dry_run(root, [
-                        ExecOp(type=op.type, path=op.path, content=op.content)
-                        for op in payload.operations
-                    ])
+                    previews = exe.dry_run(
+                        root,
+                        [
+                            ExecOp(type=op.type, path=op.path, content=op.content)
+                            for op in payload.operations
+                        ],
+                    )
                     # Categorize requiresApproval
                     ops_for_approval = [
                         ApproveOp(type=p.type, path=p.path, diff=p.diff, content=None)
@@ -138,25 +141,40 @@ async def websocket_endpoint(
                         autoApprovedPaths=sorted(list(auto_set)),
                         requiresReviewCount=len(review),
                     )
-                    await manager.send_personal(client_id, WebSocketEnvelope(
-                        event="act.request_approval",
-                        data=result.model_dump(),
-                        correlationId=envelope.correlationId,
-                    ).model_dump())
+                    await manager.send_personal(
+                        client_id,
+                        WebSocketEnvelope(
+                            event="act.request_approval",
+                            data=result.model_dump(),
+                            correlationId=envelope.correlationId,
+                        ).model_dump(),
+                    )
                 except Exception as e:
                     logger.error(f"act.request_approval failed: {e}")
-                    await manager.send_personal(client_id, create_error_envelope(
-                        "act.error", "ACT_DRYRUN_FAILED", str(e), correlationId=envelope.correlationId
-                    ).model_dump())
+                    await manager.send_personal(
+                        client_id,
+                        create_error_envelope(
+                            "act.error",
+                            "ACT_DRYRUN_FAILED",
+                            str(e),
+                            correlationId=envelope.correlationId,
+                        ).model_dump(),
+                    )
 
             # Act: apply approved operations
             elif envelope.event == "act.apply":
                 try:
                     payload = ApplyPayload(**envelope.data)
                     if not payload.approved:
-                        await manager.send_personal(client_id, create_error_envelope(
-                            "act.error", "ACT_APPROVAL_REQUIRED", "Apply requires approval.", correlationId=envelope.correlationId
-                        ).model_dump())
+                        await manager.send_personal(
+                            client_id,
+                            create_error_envelope(
+                                "act.error",
+                                "ACT_APPROVAL_REQUIRED",
+                                "Apply requires approval.",
+                                correlationId=envelope.correlationId,
+                            ).model_dump(),
+                        )
                         continue
                     root = Path(payload.workspace_path)
                     exe = ActExecutor(_make_git_safety(root))
@@ -165,27 +183,44 @@ async def websocket_endpoint(
                         todo_id=payload.todo_id,
                         message=payload.message,
                         root=root,
-                        ops=[ExecOp(type=o.type, path=o.path, content=o.content) for o in payload.operations],
+                        ops=[
+                            ExecOp(type=o.type, path=o.path, content=o.content)
+                            for o in payload.operations
+                        ],
                     )
                     result = ApplyResult(
                         written=[str(p) for p in written],
                         todo_id=payload.todo_id,
                         plan_id=payload.plan_id,
                     )
-                    await manager.broadcast(WebSocketEnvelope(
-                        event="act.apply_result",
-                        data=result.model_dump(),
-                        correlationId=envelope.correlationId,
-                    ).model_dump())
+                    await manager.broadcast(
+                        WebSocketEnvelope(
+                            event="act.apply_result",
+                            data=result.model_dump(),
+                            correlationId=envelope.correlationId,
+                        ).model_dump()
+                    )
                 except GitSafetyError as e:
-                    await manager.send_personal(client_id, create_error_envelope(
-                        "act.error", "ACT_SAFETY_BLOCKED", str(e), correlationId=envelope.correlationId
-                    ).model_dump())
+                    await manager.send_personal(
+                        client_id,
+                        create_error_envelope(
+                            "act.error",
+                            "ACT_SAFETY_BLOCKED",
+                            str(e),
+                            correlationId=envelope.correlationId,
+                        ).model_dump(),
+                    )
                 except Exception as e:
                     logger.error(f"act.apply failed: {e}")
-                    await manager.send_personal(client_id, create_error_envelope(
-                        "act.error", "ACT_APPLY_FAILED", str(e), correlationId=envelope.correlationId
-                    ).model_dump())
+                    await manager.send_personal(
+                        client_id,
+                        create_error_envelope(
+                            "act.error",
+                            "ACT_APPLY_FAILED",
+                            str(e),
+                            correlationId=envelope.correlationId,
+                        ).model_dump(),
+                    )
 
             # Act: rollback last commit
             elif envelope.event == "act.rollback":
@@ -193,16 +228,24 @@ async def websocket_endpoint(
                     # No payload schema yet; rollback last by default
                     exe = ActExecutor(_make_git_safety(Path.cwd()))
                     exe.rollback_last()
-                    await manager.broadcast(WebSocketEnvelope(
-                        event="act.apply_result",
-                        data={"written": [], "todo_id": "", "plan_id": ""},
-                        correlationId=envelope.correlationId,
-                    ).model_dump())
+                    await manager.broadcast(
+                        WebSocketEnvelope(
+                            event="act.apply_result",
+                            data={"written": [], "todo_id": "", "plan_id": ""},
+                            correlationId=envelope.correlationId,
+                        ).model_dump()
+                    )
                 except Exception as e:
                     logger.error(f"act.rollback failed: {e}")
-                    await manager.send_personal(client_id, create_error_envelope(
-                        "act.error", "ACT_ROLLBACK_FAILED", str(e), correlationId=envelope.correlationId
-                    ).model_dump())
+                    await manager.send_personal(
+                        client_id,
+                        create_error_envelope(
+                            "act.error",
+                            "ACT_ROLLBACK_FAILED",
+                            str(e),
+                            correlationId=envelope.correlationId,
+                        ).model_dump(),
+                    )
 
             # Route other events to all clients (broadcast)
             else:

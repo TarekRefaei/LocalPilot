@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class OperationRequest(BaseModel):
-    type: Literal['create', 'modify', 'delete']
+    type: Literal["create", "modify", "delete"]
     path: str
     content: Optional[str] = None
 
