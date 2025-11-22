@@ -130,6 +130,79 @@ class IndexingOrchestrator:
             # Build symbol and import maps
             symbol_map, import_map = SymbolImportMapBuilder.build(code_chunks)
 
+            # Phase 5: Embeddings & Vector Store
+            await self._emit_progress(
+                indexing_id,
+                phase="EMBEDDINGS",
+                phase_number=5,
+                total_phases=5,
+                current_file=0,
+                total_files=len(code_chunks),
+                current_file_path=None,
+                percentage=80.0,
+                message="Starting embeddings generation...",
+            )
+
+            # Initialize embedding services (lazy import to avoid circular dependency)
+            from app.services.rag.embedding_executor import EmbeddingExecutor
+            from app.services.rag.embedding_service import EmbeddingService
+            from app.services.rag.vector_store import VectorStore
+
+            embedding_service = EmbeddingService(
+                ollama_base_url="http://localhost:11434",
+                batch_size=32,
+            )
+            vector_store = VectorStore(
+                persist_directory=str(Path(workspace_path) / ".localpilot" / "vectordb"),
+                collection_name="localpilot_codebase",
+            )
+            embedding_executor = EmbeddingExecutor(
+                embedding_service=embedding_service,
+                vector_store=vector_store,
+                batch_size=32,
+            )
+
+            # Define progress callback for embeddings
+            def embedding_progress_callback(event: dict[str, Any]) -> None:
+                if event.get("status") == "in_progress":
+                    percentage = event.get("percentage", 80.0)
+                    batch_num = event.get("batch_number", 0)
+                    total_batches = event.get("total_batches", 1)
+                    await_coro = self._emit_progress(
+                        indexing_id,
+                        phase="EMBEDDINGS",
+                        phase_number=5,
+                        total_phases=5,
+                        current_file=event.get("chunks_processed", 0),
+                        total_files=event.get("total_chunks", len(code_chunks)),
+                        current_file_path=None,
+                        percentage=80.0 + (percentage * 0.2),  # 80-100%
+                        message=f"Embedding batch {batch_num}/{total_batches}",
+                    )
+                    # Schedule coroutine to run
+                    import asyncio
+
+                    asyncio.create_task(await_coro)
+
+            # Execute embeddings
+            embedding_result = await embedding_executor.execute(
+                code_chunks,
+                progress_callback=embedding_progress_callback,
+            )
+
+            embedded_count = embedding_result.get("embedded_chunks", 0)
+            await self._emit_progress(
+                indexing_id,
+                phase="EMBEDDINGS",
+                phase_number=5,
+                total_phases=5,
+                current_file=len(code_chunks),
+                total_files=len(code_chunks),
+                current_file_path=None,
+                percentage=100.0,
+                message=f"Generated embeddings for {embedded_count} chunks",
+            )
+
             # Update cache with file hashes
             records: list[FileHashRecord] = []
             for p in dres.files:
@@ -149,6 +222,8 @@ class IndexingOrchestrator:
                 "avg_chunk_tokens": chunk_metrics.get("avg_tokens", 0),
                 "total_symbols": symbol_map.to_dict()["total_symbols"],
                 "total_imports": import_map.to_dict()["total_imports"],
+                "embedded_chunks": embedding_result.get("embedded_chunks", 0),
+                "embedding_failed_chunks": embedding_result.get("failed_chunks", 0),
                 "added": len(added),
                 "modified": len(modified),
                 "deleted": len(deleted),

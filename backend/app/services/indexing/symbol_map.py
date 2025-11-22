@@ -8,7 +8,6 @@ import relationships for retrieval context.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
 from .chunking import CodeChunk
@@ -200,9 +199,7 @@ class SymbolImportMapBuilder:
         return symbol_map, import_map
 
     @staticmethod
-    def validate_determinism(
-        chunks1: list[CodeChunk], chunks2: list[CodeChunk]
-    ) -> bool:
+    def validate_determinism(chunks1: list[CodeChunk], chunks2: list[CodeChunk]) -> bool:
         """Validate that chunking is deterministic across runs.
 
         Compares two runs and checks:
@@ -216,7 +213,7 @@ class SymbolImportMapBuilder:
         if len(chunks1) != len(chunks2):
             return False
 
-        for c1, c2 in zip(chunks1, chunks2):
+        for c1, c2 in zip(chunks1, chunks2, strict=True):
             if (
                 c1.file_path != c2.file_path
                 or c1.start_line != c2.start_line

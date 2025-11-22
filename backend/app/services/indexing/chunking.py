@@ -17,10 +17,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 try:
     from tree_sitter import Language, Node, Parser
+
     HAS_TREE_SITTER = True
 except ImportError:
     HAS_TREE_SITTER = False
@@ -65,7 +66,7 @@ class TreeSitterParser:
         except Exception as e:
             print(f"Warning: Tree-sitter initialization: {e}")
 
-    def parse_file(self, filepath: Path, language: str) -> Optional[Node]:
+    def parse_file(self, filepath: Path, language: str) -> Node | None:
         """Parse file with Tree-sitter and return AST root node."""
         if not HAS_TREE_SITTER or language not in self.parsers:
             return None
@@ -79,7 +80,7 @@ class TreeSitterParser:
             print(f"Error parsing {filepath} ({language}): {e}")
             return None
 
-    def get_language_from_ext(self, filepath: Path) -> Optional[str]:
+    def get_language_from_ext(self, filepath: Path) -> str | None:
         """Detect language from file extension."""
         return self.ext_to_lang.get(filepath.suffix.lower())
 
@@ -97,9 +98,7 @@ class SemanticChunker:
         """Initialize chunker with parser."""
         self.parser = TreeSitterParser()
 
-    def chunk_file(
-        self, filepath: Path, language: str, workspace_path: str
-    ) -> list[CodeChunk]:
+    def chunk_file(self, filepath: Path, language: str, workspace_path: str) -> list[CodeChunk]:
         """Chunk a file into semantic units with metadata.
 
         Strategy: Deterministic lexical chunking based on language-specific patterns.
@@ -109,13 +108,9 @@ class SemanticChunker:
         """
         return self._chunk_lexical(filepath, workspace_path, language)
 
-    def _chunk_typescript(
-        self, filepath: Path, ast: Node, workspace_path: str
-    ) -> list[CodeChunk]:
+    def _chunk_typescript(self, filepath: Path, ast: Node, workspace_path: str) -> list[CodeChunk]:
         """Chunk TypeScript/JavaScript using AST-first strategy."""
 
-        content = filepath.read_text(encoding="utf-8")
-        lines = content.split("\n")
         chunks: list[CodeChunk] = []
 
         # Extract top-level declarations
@@ -149,9 +144,7 @@ class SemanticChunker:
 
             # Large node: split by methods/nested declarations
             elif node.type == "class_declaration":
-                sub_chunks = self._split_class_declaration(
-                    node, filepath, workspace_path, imports
-                )
+                sub_chunks = self._split_class_declaration(node, filepath, workspace_path, imports)
                 chunks.extend(sub_chunks)
 
             else:
@@ -172,12 +165,9 @@ class SemanticChunker:
 
         return chunks
 
-    def _chunk_python(
-        self, filepath: Path, ast: Node, workspace_path: str
-    ) -> list[CodeChunk]:
+    def _chunk_python(self, filepath: Path, ast: Node, workspace_path: str) -> list[CodeChunk]:
         """Chunk Python using AST-first strategy."""
 
-        content = filepath.read_text(encoding="utf-8")
         chunks: list[CodeChunk] = []
 
         # Get top-level definitions (functions, classes)
@@ -210,9 +200,7 @@ class SemanticChunker:
 
             elif node.type == "class_definition":
                 # Split class into methods
-                sub_chunks = self._split_python_class(
-                    node, filepath, workspace_path, imports
-                )
+                sub_chunks = self._split_python_class(node, filepath, workspace_path, imports)
                 chunks.extend(sub_chunks)
             else:
                 chunk = CodeChunk(
@@ -231,9 +219,7 @@ class SemanticChunker:
 
         return chunks
 
-    def _chunk_lexical(
-        self, filepath: Path, workspace_path: str, language: str
-    ) -> list[CodeChunk]:
+    def _chunk_lexical(self, filepath: Path, workspace_path: str, language: str) -> list[CodeChunk]:
         """Lexical chunking: deterministic, language-aware code splitting.
 
         Strategy:
@@ -266,7 +252,7 @@ class SemanticChunker:
                     content=chunk_text,
                     file_path=str(filepath.relative_to(workspace_path)),
                     start_line=start_line + 1,  # Convert to 1-indexed
-                    end_line=end_line + 1,      # Convert to 1-indexed
+                    end_line=end_line + 1,  # Convert to 1-indexed
                     language=language,
                     chunk_type=decl_type,
                     tokens=chunk_tokens,
@@ -312,9 +298,7 @@ class SemanticChunker:
             # TypeScript/JavaScript patterns
             if language in ["typescript", "jsx", "tsx", "javascript"]:
                 # Function declaration
-                func_match = re.match(
-                    r"^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(", line
-                )
+                func_match = re.match(r"^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(", line)
                 if func_match:
                     start = i
                     name = func_match.group(1)
@@ -325,7 +309,9 @@ class SemanticChunker:
                         continue
 
                 # Arrow function / const assignment
-                arrow_match = re.match(r"^\s*(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*\(?", line)
+                arrow_match = re.match(
+                    r"^\s*(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*\(?", line
+                )
                 if arrow_match and "=>" in line:
                     start = i
                     name = arrow_match.group(1)
@@ -663,7 +649,7 @@ class SemanticChunker:
                 for subchild in child.children:
                     if subchild.type == "string":
                         module_text = self._get_node_text(subchild, filepath)
-                        module_name = module_text.strip('\'"')
+                        module_name = module_text.strip("'\"")
                         if module_name:
                             imports.append(module_name)
 
