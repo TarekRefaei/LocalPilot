@@ -170,7 +170,6 @@ class SemanticChunker:
     def _chunk_python(self, filepath: Path, ast: Node, workspace_path: str) -> list[CodeChunk]:
         """Chunk Python using AST-first strategy."""
 
-        content = filepath.read_text(encoding="utf-8")
         chunks: list[CodeChunk] = []
 
         # Get top-level definitions (functions, classes)
