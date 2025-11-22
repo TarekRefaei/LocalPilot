@@ -181,6 +181,7 @@ class IndexingOrchestrator:
                     )
                     # Schedule coroutine to run
                     import asyncio
+
                     asyncio.create_task(await_coro)
 
             # Execute embeddings
