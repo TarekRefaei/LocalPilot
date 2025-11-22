@@ -406,6 +406,7 @@ def create_error_envelope(
         correlationId=correlationId or "",
     )
 
+
 def make_git_safety(root: Path):
     import subprocess  # local import to avoid unused at module level
 
