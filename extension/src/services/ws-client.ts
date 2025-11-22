@@ -395,7 +395,10 @@ export class WebSocketClient {
    * Private: Handle errors.
    */
   private handleError(error: Error): void {
-    this.emit('error', error);
+    // Only emit 'error' if there are listeners; otherwise Node EventEmitter will throw
+    if (this.emitter.listenerCount('error') > 0) {
+      this.emit('error', error);
+    }
   }
 
   /**

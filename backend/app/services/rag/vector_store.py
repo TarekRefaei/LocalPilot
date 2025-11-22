@@ -15,6 +15,7 @@ from typing import Any
 
 import chromadb
 from chromadb.config import Settings
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)

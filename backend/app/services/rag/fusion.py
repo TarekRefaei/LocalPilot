@@ -126,7 +126,7 @@ class ResultFusion:
                 score_map[doc_id]["scores"]["summary"] = score
 
         # Calculate fused scores
-        for doc_id, result in score_map.items():
+        for _doc_id, result in score_map.items():
             scores = result["scores"]
             fused_score = (
                 scores.get("semantic", 0.0) * self.semantic_weight

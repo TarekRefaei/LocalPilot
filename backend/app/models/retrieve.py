@@ -2,8 +2,6 @@
 Retrieval request/response models for the /retrieve endpoint.
 """
 
-from typing import Any
-
 from pydantic import BaseModel, Field
 
 
@@ -34,12 +32,18 @@ class RetrieveResult(BaseModel):
     content: str = Field(..., description="Chunk content")
     start_line: int = Field(..., description="Start line number in source file")
     end_line: int = Field(..., description="End line number in source file")
-    symbols: list[str] = Field(default_factory=list, description="Symbols (functions, classes) in chunk")
-    score: float | None = Field(None, description="Final diversity-adjusted score (omitted when debug=false)")
+    symbols: list[str] = Field(
+        default_factory=list, description="Symbols (functions, classes) in chunk"
+    )
+    score: float | None = Field(
+        None, description="Final diversity-adjusted score (omitted when debug=false)"
+    )
     diversity_adjusted_score: float | None = Field(
         None, description="Diversity penalty applied (omitted when debug=false)"
     )
-    scores: ScoreBreakdown | None = Field(None, description="Score breakdown (omitted when debug=false)")
+    scores: ScoreBreakdown | None = Field(
+        None, description="Score breakdown (omitted when debug=false)"
+    )
 
 
 class RetrieveRequest(BaseModel):

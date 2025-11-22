@@ -87,6 +87,11 @@
       { "command": "localpilot.plan.create", "title": "LocalPilot: Create Plan", "category": "LocalPilot" },
       { "command": "localpilot.plan.update", "title": "LocalPilot: Update Plan", "category": "LocalPilot" },
       { "command": "localpilot.plan.delete", "title": "LocalPilot: Delete Plan", "category": "LocalPilot" },
+      { "command": "localpilot.plan.step.add", "title": "LocalPilot: Add Step", "category": "LocalPilot" },
+      { "command": "localpilot.plan.step.toggle", "title": "LocalPilot: Toggle Step", "category": "LocalPilot" },
+      { "command": "localpilot.plan.step.moveUp", "title": "LocalPilot: Move Step Up", "category": "LocalPilot" },
+      { "command": "localpilot.plan.step.moveDown", "title": "LocalPilot: Move Step Down", "category": "LocalPilot" },
+      { "command": "localpilot.plan.step.delete", "title": "LocalPilot: Delete Step", "category": "LocalPilot" },
       { "command": "localpilot.act.dryRun", "title": "LocalPilot: Dry Run", "category": "LocalPilot" },
       { "command": "localpilot.act.approve", "title": "LocalPilot: Approve", "category": "LocalPilot" },
       { "command": "localpilot.act.apply", "title": "LocalPilot: Apply Changes", "category": "LocalPilot" },
@@ -104,6 +109,13 @@
         { "command": "localpilot.plan.create", "when": "view == localpilot.views.plans", "group": "navigation@1" },
         { "command": "localpilot.index.start", "when": "view == localpilot.views.indexing && !localpilot.indexing.running", "group": "navigation@1" },
         { "command": "localpilot.index.stop", "when": "view == localpilot.views.indexing && localpilot.indexing.running", "group": "navigation@1" }
+      ],
+      "view/item/context": [
+        { "command": "localpilot.plan.step.toggle", "when": "view == localpilot.views.plans && viewItem == plans.step", "group": "inline@1" },
+        { "command": "localpilot.plan.step.add", "when": "view == localpilot.views.plans && viewItem == plans.plan", "group": "navigation@1" },
+        { "command": "localpilot.plan.step.moveUp", "when": "view == localpilot.views.plans && viewItem == plans.step", "group": "navigation@2" },
+        { "command": "localpilot.plan.step.moveDown", "when": "view == localpilot.views.plans && viewItem == plans.step", "group": "navigation@3" },
+        { "command": "localpilot.plan.step.delete", "when": "view == localpilot.views.plans && viewItem == plans.step", "group": "navigation@4" }
       ]
     },
     "keybindings": [

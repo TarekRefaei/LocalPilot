@@ -5,9 +5,7 @@ Tests the complete retrieval pipeline with realistic code fixtures.
 Validates precision@5 >= 0.80 on fixture set.
 """
 
-import asyncio
-import sys
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -15,7 +13,6 @@ from app.services.rag.embedding_service import EmbeddingService
 from app.services.rag.metrics import EvaluationHarness, MetricsCalculator
 from app.services.rag.retriever import MultiLevelRetriever
 from app.services.rag.vector_store import VectorStore
-
 
 # Test fixtures: realistic code snippets with relevance judgments
 TEST_FIXTURES = [
@@ -133,7 +130,13 @@ TEST_FIXTURES = [
     },
     {
         "query": "How to handle API requests?",
-        "relevant_ids": {"api_001", "api_002", "middleware_001", "middleware_002", "middleware_003"},
+        "relevant_ids": {
+            "api_001",
+            "api_002",
+            "middleware_001",
+            "middleware_002",
+            "middleware_003",
+        },
         "chunks": [
             {
                 "id": "api_001",
@@ -381,7 +384,9 @@ class TestRetrieverIntegration:
         assert mock_vector_store.search.called
 
     @pytest.mark.asyncio
-    async def test_retrieve_with_context(self, retriever, mock_vector_store, mock_embedding_service):
+    async def test_retrieve_with_context(
+        self, retriever, mock_vector_store, mock_embedding_service
+    ):
         """Test retrieval with user context."""
         # Setup mocks
         mock_embedding_service.embed_query.return_value = [0.1] * 1024
@@ -498,9 +503,9 @@ class TestRetrievalFixtures:
 
         # Verify average precision@5 >= 0.80
         agg = harness.aggregate_metrics()
-        assert agg["avg_precision_at_5"] >= 0.80, (
-            f"Average Precision@5 {agg['avg_precision_at_5']} < 0.80"
-        )
+        assert (
+            agg["avg_precision_at_5"] >= 0.80
+        ), f"Average Precision@5 {agg['avg_precision_at_5']} < 0.80"
 
 
 class TestRetrievalBm25AndCaching:

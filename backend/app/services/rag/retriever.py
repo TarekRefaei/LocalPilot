@@ -10,20 +10,20 @@ Implements 4-level retrieval strategy:
 Results are fused and re-ranked with diversity penalty.
 """
 
-import logging
-from typing import Any
 import hashlib
 import json
+import logging
 import re
 import time
+from typing import Any
 
 from rank_bm25 import BM25Okapi
 
+from . import retrieval_metrics
+from .cache import QueryCache
 from .embedding_service import EmbeddingService
 from .fusion import DiversityRanker, ResultFusion
 from .vector_store import VectorStore
-from .cache import QueryCache
-from . import retrieval_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +94,7 @@ class MultiLevelRetriever:
         symbol_results = await self._level2_symbol_search(query)
 
         # Level 3: Semantic Vector Search (PRIMARY)
-        semantic_results = await self._level3_semantic_search(
-            query, user_context, top_k=top_k * 2
-        )
+        semantic_results = await self._level3_semantic_search(query, user_context, top_k=top_k * 2)
 
         # Level 4: Keyword/Lexical Search (ablatable)
         keyword_results: list[dict[str, Any]] = []

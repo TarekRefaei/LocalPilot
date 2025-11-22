@@ -25,7 +25,7 @@ export function createChatHandler(state: LocalPilotState): vscode.ChatRequestHan
       stream.button({
         command: COMMAND_IDS.chatTransferToPlan,
         title: 'Transfer to Plan',
-        arguments: [{ title }],
+        arguments: [{ title, prompt }],
       });
     } finally {
       sub?.dispose?.();

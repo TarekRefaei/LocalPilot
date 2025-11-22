@@ -3,6 +3,7 @@ target-version = "py311"
 
 [lint]
 select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]  # Line too long (test data strings)
 
 [lint.isort]
 known-first-party = ["app"]

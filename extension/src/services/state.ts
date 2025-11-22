@@ -1,11 +1,35 @@
 import * as vscode from 'vscode';
+import type { Plan } from '../models/plan';
+import { createPlan } from '../models/plan';
+
+function isPlanV2(x: unknown): x is Plan {
+  return (
+    typeof x === 'object' &&
+    x !== null &&
+    'steps' in (x as Record<string, unknown>) &&
+    'acceptance' in (x as Record<string, unknown>) &&
+    'version' in (x as Record<string, unknown>)
+  );
+}
+
+interface LegacyPlan {
+  id: string | number;
+  title: string;
+}
+function isLegacyPlan(x: unknown): x is LegacyPlan {
+  if (typeof x !== 'object' || x === null) return false;
+  const r = x as Record<string, unknown>;
+  const hasId = 'id' in r && (typeof r.id === 'string' || typeof r.id === 'number');
+  const hasTitle = 'title' in r && typeof r.title === 'string';
+  return hasId && hasTitle;
+}
 
 export interface LocalPilotState {
   readonly onDidChange: vscode.Event<void>;
-  getPlans(): readonly { id: string; title: string }[];
+  getPlans(): readonly Plan[];
   getIndexingRunning(): boolean;
   getRecentPrompts(): readonly string[];
-  setPlans(plans: { id: string; title: string }[]): void;
+  setPlans(plans: Plan[]): void;
   setIndexingRunning(value: boolean): void;
   setRecentPrompts(list: string[]): void;
 }
@@ -14,11 +38,11 @@ export class InMemoryState implements LocalPilotState {
   private _onDidChange = new vscode.EventEmitter<void>();
   readonly onDidChange = this._onDidChange.event;
 
-  private plans: { id: string; title: string }[] = [];
+  private plans: Plan[] = [];
   private indexingRunning = false;
   private recentPrompts: string[] = [];
 
-  getPlans(): readonly { id: string; title: string }[] {
+  getPlans(): readonly Plan[] {
     return this.plans;
   }
 
@@ -26,7 +50,7 @@ export class InMemoryState implements LocalPilotState {
     return this.indexingRunning;
   }
 
-  setPlans(plans: { id: string; title: string }[]): void {
+  setPlans(plans: Plan[]): void {
     this.plans = [...plans];
     this._onDidChange.fire();
   }
@@ -55,7 +79,20 @@ export class MementoState extends InMemoryState {
   constructor(memento: vscode.Memento) {
     super();
     this.m = memento;
-    const plans = (this.m.get<{ id: string; title: string }[]>(this.K_PLANS) ?? []).filter(Boolean);
+    const rawPlans = (this.m.get<unknown>(this.K_PLANS) ?? []) as unknown[];
+    const plans: Plan[] = Array.isArray(rawPlans)
+      ? (() => {
+          const out: Plan[] = [];
+          for (const entry of rawPlans) {
+            if (isPlanV2(entry)) {
+              out.push(entry);
+            } else if (isLegacyPlan(entry)) {
+              out.push(createPlan({ id: String(entry.id), title: entry.title }));
+            }
+          }
+          return out;
+        })()
+      : [];
     const indexing = !!this.m.get<boolean>(this.K_INDEXING);
     const recent = (this.m.get<string[]>(this.K_RECENT) ?? []).filter(Boolean);
     super.setPlans(plans);
@@ -63,7 +100,7 @@ export class MementoState extends InMemoryState {
     super.setRecentPrompts(recent);
   }
 
-  override setPlans(plans: { id: string; title: string }[]): void {
+  override setPlans(plans: Plan[]): void {
     super.setPlans(plans);
     void this.m.update(this.K_PLANS, plans);
   }

@@ -4,7 +4,6 @@ Exposes the MultiLevelRetriever via REST API with debug gating.
 """
 
 import logging
-from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
@@ -70,7 +69,9 @@ async def retrieve(request: RetrieveRequest) -> RetrieveResponse:
         if not query:
             raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-        logger.info(f"Retrieve request: query='{query}', top_k={request.top_k}, debug={request.debug}")
+        logger.info(
+            f"Retrieve request: query='{query}', top_k={request.top_k}, debug={request.debug}"
+        )
 
         # Get retriever instance
         retriever = await get_retriever()

@@ -2,8 +2,6 @@
 Unit tests for result fusion and diversity ranking.
 """
 
-import pytest
-
 from app.services.rag.fusion import DiversityRanker, ResultFusion
 
 

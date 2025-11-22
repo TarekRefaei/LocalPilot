@@ -227,25 +227,13 @@ class MetricsCalculator:
             precision_at_10=MetricsCalculator.calculate_precision_at_k(
                 retrieved_ids, relevant_ids, k=10
             ),
-            recall_at_5=MetricsCalculator.calculate_recall_at_k(
-                retrieved_ids, relevant_ids, k=5
-            ),
-            recall_at_10=MetricsCalculator.calculate_recall_at_k(
-                retrieved_ids, relevant_ids, k=10
-            ),
+            recall_at_5=MetricsCalculator.calculate_recall_at_k(retrieved_ids, relevant_ids, k=5),
+            recall_at_10=MetricsCalculator.calculate_recall_at_k(retrieved_ids, relevant_ids, k=10),
             mrr=MetricsCalculator.calculate_mrr(retrieved_ids, relevant_ids),
-            ndcg_at_5=MetricsCalculator.calculate_ndcg_at_k(
-                retrieved_ids, relevant_ids, k=5
-            ),
-            ndcg_at_10=MetricsCalculator.calculate_ndcg_at_k(
-                retrieved_ids, relevant_ids, k=10
-            ),
-            map_at_5=MetricsCalculator.calculate_map_at_k(
-                retrieved_ids, relevant_ids, k=5
-            ),
-            map_at_10=MetricsCalculator.calculate_map_at_k(
-                retrieved_ids, relevant_ids, k=10
-            ),
+            ndcg_at_5=MetricsCalculator.calculate_ndcg_at_k(retrieved_ids, relevant_ids, k=5),
+            ndcg_at_10=MetricsCalculator.calculate_ndcg_at_k(retrieved_ids, relevant_ids, k=10),
+            map_at_5=MetricsCalculator.calculate_map_at_k(retrieved_ids, relevant_ids, k=5),
+            map_at_10=MetricsCalculator.calculate_map_at_k(retrieved_ids, relevant_ids, k=10),
             num_relevant=len(relevant_ids),
             num_retrieved=len(retrieved_ids),
         )
@@ -276,14 +264,10 @@ class EvaluationHarness:
 
         return {
             "num_queries": num_queries,
-            "avg_precision_at_5": sum(r.precision_at_5 for r in self.results)
-            / num_queries,
-            "avg_precision_at_10": sum(r.precision_at_10 for r in self.results)
-            / num_queries,
-            "avg_recall_at_5": sum(r.recall_at_5 for r in self.results)
-            / num_queries,
-            "avg_recall_at_10": sum(r.recall_at_10 for r in self.results)
-            / num_queries,
+            "avg_precision_at_5": sum(r.precision_at_5 for r in self.results) / num_queries,
+            "avg_precision_at_10": sum(r.precision_at_10 for r in self.results) / num_queries,
+            "avg_recall_at_5": sum(r.recall_at_5 for r in self.results) / num_queries,
+            "avg_recall_at_10": sum(r.recall_at_10 for r in self.results) / num_queries,
             "avg_mrr": sum(r.mrr for r in self.results) / num_queries,
             "avg_ndcg_at_5": sum(r.ndcg_at_5 for r in self.results) / num_queries,
             "avg_ndcg_at_10": sum(r.ndcg_at_10 for r in self.results) / num_queries,
