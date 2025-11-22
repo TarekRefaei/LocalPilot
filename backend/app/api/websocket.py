@@ -195,7 +195,7 @@ async def websocket_endpoint(
                         ],
                     )
                     result = ApplyResult(
-                        written=[str(p) for p in written],
+                        written=[p.as_posix() for p in written],
                         todo_id=payload.todo_id,
                         plan_id=payload.plan_id,
                     )
