@@ -111,8 +111,6 @@ class SemanticChunker:
     def _chunk_typescript(self, filepath: Path, ast: Node, workspace_path: str) -> list[CodeChunk]:
         """Chunk TypeScript/JavaScript using AST-first strategy."""
 
-        content = filepath.read_text(encoding="utf-8")
-        lines = content.split("\n")
         chunks: list[CodeChunk] = []
 
         # Extract top-level declarations
