@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, List, Tuple
 
-from app.services.act.diff_engine import unified_diff, summarize_diff, DiffSummary
-from app.services.act.git_safety import GitSafetyService, GitSafetyContext
+from app.services.act.diff_engine import DiffSummary, summarize_diff, unified_diff
+from app.services.act.git_safety import GitSafetyContext, GitSafetyService
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,8 @@ class ActExecutor:
     def __init__(self, git_safety: GitSafetyService):
         self.git_safety = git_safety
 
-    def dry_run(self, root: Path, ops: Iterable[OperationRequest]) -> List[OperationPreview]:
-        previews: List[OperationPreview] = []
+    def dry_run(self, root: Path, ops: Iterable[OperationRequest]) -> list[OperationPreview]:
+        previews: list[OperationPreview] = []
         root = Path(root)
         for op in ops:
             file_path = (root / op.path).resolve()
@@ -62,12 +62,12 @@ class ActExecutor:
         message: str,
         root: Path,
         ops: Iterable[OperationRequest],
-    ) -> Tuple[GitSafetyContext, List[Path]]:
+    ) -> tuple[GitSafetyContext, list[Path]]:
         ctx = self.git_safety.prepare_workspace(plan_id)
-        written: List[Path] = []
+        written: list[Path] = []
         root = Path(root)
         # Build audit diff while applying
-        audit_chunks: List[str] = []
+        audit_chunks: list[str] = []
         for op in ops:
             path = root / op.path
             path.parent.mkdir(parents=True, exist_ok=True)

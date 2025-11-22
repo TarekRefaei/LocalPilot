@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, List, Tuple
 
 from app.core.config import settings
 
@@ -35,9 +35,9 @@ def _is_safe_create(path: str) -> bool:
 
 def categorize_operations(
     ops: Iterable[FileOperation],
-) -> Tuple[List[FileOperation], List[FileOperation]]:
-    auto: List[FileOperation] = []
-    review: List[FileOperation] = []
+) -> tuple[list[FileOperation], list[FileOperation]]:
+    auto: list[FileOperation] = []
+    review: list[FileOperation] = []
 
     allow_safe = bool(settings.act_autoapprove_safe_creates)
 

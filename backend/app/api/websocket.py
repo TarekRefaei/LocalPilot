@@ -3,14 +3,22 @@ WebSocket endpoint for real-time communication.
 Handles handshake, heartbeat, and message routing.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime
+from pathlib import Path
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
-from pathlib import Path
-import subprocess
 
+from app.models.act import (
+    ApplyPayload,
+    ApplyResult,
+    ApprovalOperation,
+    DryRunPayload,
+    DryRunResult,
+)
 from app.models.envelope import (
     ErrorData,
     HandshakeAckPayload,
@@ -20,18 +28,16 @@ from app.models.envelope import (
     IndexingStartPayload,
     WebSocketEnvelope,
 )
-from app.services.indexing.orchestrator import IndexingOrchestrator
-from app.services.act.executor import ActExecutor, OperationRequest as ExecOp
-from app.services.act.git_safety import GitSafetyService, GitSafetyError
-from app.services.act.approval import FileOperation as ApproveOp, categorize_operations
-from app.models.act import (
-    DryRunPayload,
-    ApplyPayload,
-    OperationRequest,
-    ApprovalOperation,
-    DryRunResult,
-    ApplyResult,
+from app.services.act.approval import (
+    FileOperation as ApproveOp,
 )
+from app.services.act.approval import (
+    categorize_operations,
+)
+from app.services.act.executor import ActExecutor
+from app.services.act.executor import OperationRequest as ExecOp
+from app.services.act.git_safety import GitSafetyError, GitSafetyService
+from app.services.indexing.orchestrator import IndexingOrchestrator
 from app.services.ws_manager import ConnectionManager
 
 logger = logging.getLogger(__name__)
@@ -110,7 +116,7 @@ async def websocket_endpoint(
                 try:
                     payload = DryRunPayload(**envelope.data)
                     root = Path(payload.workspace_path)
-                    exe = ActExecutor(_make_git_safety(root))
+                    exe = ActExecutor(make_git_safety(root))
                     # Compute previews
                     previews = exe.dry_run(
                         root,
@@ -177,7 +183,7 @@ async def websocket_endpoint(
                         )
                         continue
                     root = Path(payload.workspace_path)
-                    exe = ActExecutor(_make_git_safety(root))
+                    exe = ActExecutor(make_git_safety(root))
                     ctx, written = exe.apply(
                         plan_id=payload.plan_id,
                         todo_id=payload.todo_id,
@@ -226,7 +232,7 @@ async def websocket_endpoint(
             elif envelope.event == "act.rollback":
                 try:
                     # No payload schema yet; rollback last by default
-                    exe = ActExecutor(_make_git_safety(Path.cwd()))
+                    exe = ActExecutor(make_git_safety(Path.cwd()))
                     exe.rollback_last()
                     await manager.broadcast(
                         WebSocketEnvelope(
@@ -399,3 +405,56 @@ def create_error_envelope(
         data=error_data.model_dump(),
         correlationId=correlationId or "",
     )
+
+def make_git_safety(root: Path):
+    import subprocess  # local import to avoid unused at module level
+
+    class _GitAdapter:
+        def __init__(self, cwd: Path):
+            self.cwd = cwd
+
+        def _run(self, *args: str) -> tuple[int, str]:
+            try:
+                out = subprocess.run(
+                    ["git", *args],
+                    cwd=str(self.cwd),
+                    check=False,
+                    text=True,
+                    capture_output=True,
+                )
+                return out.returncode, (out.stdout or out.stderr)
+            except Exception as e:  # pragma: no cover
+                return 1, str(e)
+
+        def is_repo(self) -> bool:
+            code, _ = self._run("rev-parse", "--is-inside-work-tree")
+            return code == 0
+
+        def has_uncommitted_changes(self) -> bool:
+            code, out = self._run("status", "--porcelain")
+            return code == 0 and bool(out.strip())
+
+        def current_branch(self) -> str:
+            _, out = self._run("rev-parse", "--abbrev-ref", "HEAD")
+            return out.strip() or "HEAD"
+
+        def current_commit(self) -> str:
+            _, out = self._run("rev-parse", "HEAD")
+            return out.strip()
+
+        def create_branch(self, name: str) -> None:
+            self._run("branch", name)
+
+        def checkout(self, name: str) -> None:
+            self._run("checkout", name)
+
+        def add_all(self) -> None:
+            self._run("add", "-A")
+
+        def commit(self, message: str) -> None:
+            self._run("commit", "-m", message)
+
+        def reset_hard(self, ref: str) -> None:
+            self._run("reset", "--hard", ref)
+
+    return GitSafetyService(_GitAdapter(root))

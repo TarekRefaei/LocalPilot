@@ -1,4 +1,4 @@
-from app.services.act.diff_engine import unified_diff, summarize_diff
+from app.services.act.diff_engine import summarize_diff, unified_diff
 
 
 def test_unified_diff_and_summary_simple():

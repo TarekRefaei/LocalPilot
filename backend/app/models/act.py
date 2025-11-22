@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal
+
 from pydantic import BaseModel
 
 
 class OperationRequest(BaseModel):
     type: Literal["create", "modify", "delete"]
     path: str
-    content: Optional[str] = None
+    content: str | None = None
 
 
 class DryRunPayload(BaseModel):

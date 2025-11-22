@@ -1,4 +1,6 @@
-from app.services.act.git_safety import GitSafetyService, GitSafetyError
+import pytest
+
+from app.services.act.git_safety import GitSafetyError, GitSafetyService
 
 
 class FakeGit:
@@ -44,11 +46,8 @@ def test_strict_blocks_outside_git(monkeypatch):
     monkeypatch.setattr(cfg.settings, "act_apply_safety", "strict", raising=False)
 
     svc = GitSafetyService(FakeGit(repo=False, dirty=False))
-    try:
+    with pytest.raises(GitSafetyError):
         svc.ensure_safe_to_apply()
-        assert False, "should have raised"
-    except GitSafetyError:
-        assert True
 
 
 def test_git_optional_allows_outside_git(monkeypatch):
@@ -66,11 +65,8 @@ def test_dirty_tree_blocked_in_strict(monkeypatch):
     monkeypatch.setattr(cfg.settings, "act_apply_safety", "strict", raising=False)
 
     svc = GitSafetyService(FakeGit(repo=True, dirty=True))
-    try:
+    with pytest.raises(GitSafetyError):
         svc.ensure_safe_to_apply()
-        assert False
-    except GitSafetyError:
-        assert True
 
 
 def test_prepare_workspace_creates_branch_in_repo(monkeypatch):
