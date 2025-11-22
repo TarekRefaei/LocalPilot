@@ -23,7 +23,7 @@ Design the retrieval pipeline with multi-level strategies and fusion/reranking f
 - Precision@5 ≥ 0.80 on fixture set.
 - Integration tests pass on CI; metrics logged.
 
-## Handoff
+## Handoff documents
 ### To Agent 10 — Plan Mode
 - Expose retrieval API used by Chat and Plan synthesis.
 
