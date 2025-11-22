@@ -13,8 +13,10 @@ from app.models.envelope import (
 from app.services.ws_manager import ConnectionManager
 
 from .cache import FileHashCache, FileHashRecord
+from .chunking import ChunkingExecutor
 from .discovery import DiscoveryExecutor
 from .documentation import DocumentationExtractor
+from .symbol_map import SymbolImportMapBuilder
 
 
 class IndexingOrchestrator:
@@ -29,6 +31,7 @@ class IndexingOrchestrator:
             discovery = DiscoveryExecutor()
             doc = DocumentationExtractor()
             cache = FileHashCache(workspace_path)
+            chunking = ChunkingExecutor()
 
             await self._emit_progress(
                 indexing_id,
@@ -97,6 +100,37 @@ class IndexingOrchestrator:
                     message=f"Extracted docstrings: {f.name}",
                 )
 
+            # Phase 4: Semantic Chunking
+            await self._emit_progress(
+                indexing_id,
+                phase="CHUNKING",
+                phase_number=4,
+                total_phases=5,
+                current_file=0,
+                total_files=len(dres.files),
+                current_file_path=None,
+                percentage=50.0,
+                message="Starting semantic code chunking...",
+            )
+
+            code_chunks, chunk_metrics = await chunking.execute(workspace_path, dres.files)
+
+            await self._emit_progress(
+                indexing_id,
+                phase="CHUNKING",
+                phase_number=4,
+                total_phases=5,
+                current_file=len(dres.files),
+                total_files=len(dres.files),
+                current_file_path=None,
+                percentage=80.0,
+                message=f"Created {len(code_chunks)} semantic chunks with symbol/import maps",
+            )
+
+            # Build symbol and import maps
+            symbol_map, import_map = SymbolImportMapBuilder.build(code_chunks)
+
+            # Update cache with file hashes
             records: list[FileHashRecord] = []
             for p in dres.files:
                 rel = cache.normalize_path(Path(workspace_path).resolve(), p)
@@ -110,6 +144,11 @@ class IndexingOrchestrator:
                 "files_by_type": dres.files_by_type,
                 "project_type": dres.project_type,
                 "docs_chunks": total_docs,
+                "code_chunks": len(code_chunks),
+                "chunk_types": chunk_metrics.get("chunk_types", {}),
+                "avg_chunk_tokens": chunk_metrics.get("avg_tokens", 0),
+                "total_symbols": symbol_map.to_dict()["total_symbols"],
+                "total_imports": import_map.to_dict()["total_imports"],
                 "added": len(added),
                 "modified": len(modified),
                 "deleted": len(deleted),
@@ -119,6 +158,9 @@ class IndexingOrchestrator:
             await self._emit_complete(indexing_id, duration, stats)
 
         except Exception as e:
+            import traceback
+
+            traceback.print_exc()
             duration = int((datetime.utcnow() - started).total_seconds())
             stats = {"error": str(e)}
             await self._emit_complete(indexing_id, duration, stats)
