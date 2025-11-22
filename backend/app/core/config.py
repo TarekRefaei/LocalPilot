@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     # Vector DB
     vector_db_path: str = "./data/chroma"
 
+    act_apply_safety: str = "strict"
+    act_autoapprove_safe_creates: bool = True
+    act_autoapprove_config_files: bool = False
+    act_approval_timeout_seconds: int = 300
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

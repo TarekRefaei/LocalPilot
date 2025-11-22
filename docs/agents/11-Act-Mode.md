@@ -13,16 +13,22 @@
 Implement safe execution with dry-run diffs, approvals, Git safety checks, apply and rollback mechanisms.
 
 ## Detailed Plan & TODOs
-- [ ] Diff engine producing patch previews.
-- [ ] Approval workflow UI and state.
-- [ ] Git safety checks; block outside Git unless override.
-- [ ] Apply and rollback commands with logging.
-- [ ] Integration tests for blocked/approved flows.
-- [ ] TDD: failing tests for safety gates; implement.
+- [x] Diff engine producing patch previews.
+- [x] Approval workflow UI and state.
+- [x] Git safety checks; block outside Git unless override.
+- [x] Apply and rollback commands with logging.
+- [x] Integration tests for blocked/approved flows.
+- [x] TDD: failing tests for safety gates; implement.
 
 ## Milestones & Success Criteria
 - Cannot apply without approval; safety gates enforced.
 - Integration tests pass; logs capture approvals.
+
+## Finalized Settings & Policies
+- Apply safety mode: `localpilot.act.applySafety` = `strict` (default) | `git-optional` | `unsafe` (env: `ACT_APPLY_SAFETY`).
+- Auto-approve safe creates: `localpilot.act.autoApprove.safeCreates` = true for `docs/**` (.md/.mdx/.txt/.rst), `tests/**` or `__tests__/**` (*.test.*, *.spec.*), `.localpilot/**`; config auto-approve disabled by default (`localpilot.act.autoApprove.configFiles` = false).
+- Diff format: Unified diff; UI preview truncated to 300 lines/file and 2000 total; full diffs persisted to `.localpilot/audit`.
+- Approval timeout: `localpilot.act.approvalTimeoutSeconds` = 300 (5 min; 0 disables). On timeout, re-diff required.
 
 ## Handoff
 ### To Agent 12 — Integration & E2E

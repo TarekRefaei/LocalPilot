@@ -8,6 +8,8 @@ import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from pathlib import Path
+import subprocess
 
 from app.models.envelope import (
     ErrorData,
@@ -19,6 +21,17 @@ from app.models.envelope import (
     WebSocketEnvelope,
 )
 from app.services.indexing.orchestrator import IndexingOrchestrator
+from app.services.act.executor import ActExecutor, OperationRequest as ExecOp
+from app.services.act.git_safety import GitSafetyService, GitSafetyError
+from app.services.act.approval import FileOperation as ApproveOp, categorize_operations
+from app.models.act import (
+    DryRunPayload,
+    ApplyPayload,
+    OperationRequest,
+    ApprovalOperation,
+    DryRunResult,
+    ApplyResult,
+)
 from app.services.ws_manager import ConnectionManager
 
 logger = logging.getLogger(__name__)
@@ -91,6 +104,105 @@ async def websocket_endpoint(
                     logger.error(f"Failed to start indexing: {e}")
                 # Always broadcast the original event to all clients (tests rely on this)
                 await manager.broadcast(envelope.model_dump())
+
+            # Act: request approval (dry-run)
+            elif envelope.event == "act.request_approval":
+                try:
+                    payload = DryRunPayload(**envelope.data)
+                    root = Path(payload.workspace_path)
+                    exe = ActExecutor(_make_git_safety(root))
+                    # Compute previews
+                    previews = exe.dry_run(root, [
+                        ExecOp(type=op.type, path=op.path, content=op.content)
+                        for op in payload.operations
+                    ])
+                    # Categorize requiresApproval
+                    ops_for_approval = [
+                        ApproveOp(type=p.type, path=p.path, diff=p.diff, content=None)
+                        for p in previews
+                    ]
+                    auto, review = categorize_operations(ops_for_approval)
+                    auto_set = {o.path for o in auto}
+                    result = DryRunResult(
+                        operations=[
+                            ApprovalOperation(
+                                path=p.path,
+                                type=p.type,
+                                diff=p.diff,
+                                additions=p.summary.additions,
+                                deletions=p.summary.deletions,
+                                requiresApproval=(p.path not in auto_set),
+                            )
+                            for p in previews
+                        ],
+                        autoApprovedPaths=sorted(list(auto_set)),
+                        requiresReviewCount=len(review),
+                    )
+                    await manager.send_personal(client_id, WebSocketEnvelope(
+                        event="act.request_approval",
+                        data=result.model_dump(),
+                        correlationId=envelope.correlationId,
+                    ).model_dump())
+                except Exception as e:
+                    logger.error(f"act.request_approval failed: {e}")
+                    await manager.send_personal(client_id, create_error_envelope(
+                        "act.error", "ACT_DRYRUN_FAILED", str(e), correlationId=envelope.correlationId
+                    ).model_dump())
+
+            # Act: apply approved operations
+            elif envelope.event == "act.apply":
+                try:
+                    payload = ApplyPayload(**envelope.data)
+                    if not payload.approved:
+                        await manager.send_personal(client_id, create_error_envelope(
+                            "act.error", "ACT_APPROVAL_REQUIRED", "Apply requires approval.", correlationId=envelope.correlationId
+                        ).model_dump())
+                        continue
+                    root = Path(payload.workspace_path)
+                    exe = ActExecutor(_make_git_safety(root))
+                    ctx, written = exe.apply(
+                        plan_id=payload.plan_id,
+                        todo_id=payload.todo_id,
+                        message=payload.message,
+                        root=root,
+                        ops=[ExecOp(type=o.type, path=o.path, content=o.content) for o in payload.operations],
+                    )
+                    result = ApplyResult(
+                        written=[str(p) for p in written],
+                        todo_id=payload.todo_id,
+                        plan_id=payload.plan_id,
+                    )
+                    await manager.broadcast(WebSocketEnvelope(
+                        event="act.apply_result",
+                        data=result.model_dump(),
+                        correlationId=envelope.correlationId,
+                    ).model_dump())
+                except GitSafetyError as e:
+                    await manager.send_personal(client_id, create_error_envelope(
+                        "act.error", "ACT_SAFETY_BLOCKED", str(e), correlationId=envelope.correlationId
+                    ).model_dump())
+                except Exception as e:
+                    logger.error(f"act.apply failed: {e}")
+                    await manager.send_personal(client_id, create_error_envelope(
+                        "act.error", "ACT_APPLY_FAILED", str(e), correlationId=envelope.correlationId
+                    ).model_dump())
+
+            # Act: rollback last commit
+            elif envelope.event == "act.rollback":
+                try:
+                    # No payload schema yet; rollback last by default
+                    exe = ActExecutor(_make_git_safety(Path.cwd()))
+                    exe.rollback_last()
+                    await manager.broadcast(WebSocketEnvelope(
+                        event="act.apply_result",
+                        data={"written": [], "todo_id": "", "plan_id": ""},
+                        correlationId=envelope.correlationId,
+                    ).model_dump())
+                except Exception as e:
+                    logger.error(f"act.rollback failed: {e}")
+                    await manager.send_personal(client_id, create_error_envelope(
+                        "act.error", "ACT_ROLLBACK_FAILED", str(e), correlationId=envelope.correlationId
+                    ).model_dump())
 
             # Route other events to all clients (broadcast)
             else:

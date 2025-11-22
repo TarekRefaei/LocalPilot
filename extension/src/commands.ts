@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { COMMAND_IDS, VIEW_CONTAINER_ID } from './ids';
 import { LocalPilotState } from './services/state';
-import { startIndexing } from './services/realtime';
+import { startIndexing, actDryRun, actApprove, actApply, actRollback } from './services/realtime';
 import { createPlan, createStep, Plan } from './models/plan';
 import { parsePlanDraft } from './services/planParser';
 
@@ -248,21 +248,25 @@ export function registerLocalPilotCommands(
   d.push(
     vscode.commands.registerCommand(COMMAND_IDS.actDryRun, () => {
       void vscode.window.showInformationMessage('Act: Dry Run');
+      void actDryRun({ executionId: String(Date.now()) }).catch(() => void 0);
     })
   );
   d.push(
     vscode.commands.registerCommand(COMMAND_IDS.actApprove, () => {
       void vscode.window.showInformationMessage('Act: Approve');
+      void actApprove({ executionId: String(Date.now()) }).catch(() => void 0);
     })
   );
   d.push(
     vscode.commands.registerCommand(COMMAND_IDS.actApply, () => {
       void vscode.window.showInformationMessage('Act: Apply');
+      void actApply({ executionId: String(Date.now()) }).catch(() => void 0);
     })
   );
   d.push(
     vscode.commands.registerCommand(COMMAND_IDS.actRollback, () => {
       void vscode.window.showInformationMessage('Act: Rollback');
+      void actRollback({ executionId: String(Date.now()) }).catch(() => void 0);
     })
   );
 

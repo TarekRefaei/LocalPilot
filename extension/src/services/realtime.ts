@@ -8,6 +8,93 @@ interface IndexingState {
   setIndexingRunning(v: boolean): void;
 }
 
+export function actDryRun(payload: Record<string, unknown>): Promise<void> {
+  if (isTestEnv()) return Promise.resolve();
+  return ensureConnected()
+    .then((ws) => {
+      // One-shot subscription for approval preview
+      const off = ws.subscribe('act.request_approval', async (evt: any) => {
+        try {
+          const ops = Array.isArray(evt?.operations) ? evt.operations : [];
+          const reviewCount = Number(evt?.requiresReviewCount ?? 0);
+          const autoCount = Array.isArray(evt?.autoApprovedPaths) ? evt.autoApprovedPaths.length : 0;
+          const choice = await vscode.window.showInformationMessage(
+            `Dry-run ready: ${ops.length} ops, ${reviewCount} need approval, ${autoCount} auto-approved. Apply now?`,
+            { modal: true },
+            'Apply',
+            'Cancel'
+          );
+          if (choice === 'Apply') {
+            // Reuse payload where possible
+            const apply = {
+              ...payload,
+              approved: true,
+              message: 'Apply approved operations',
+            } as Record<string, unknown>;
+            try {
+              ws.send('act.apply', apply);
+            } catch {
+              void vscode.window.showWarningMessage('Act: Apply failed to send');
+            }
+          }
+        } finally {
+          // Unsubscribe if client supports it; otherwise ignore
+          try {
+            if (typeof off === 'function') off();
+          } catch {
+            // noop
+          }
+        }
+      });
+
+      try {
+        ws.send('act.request_approval', payload);
+      } catch {
+        void vscode.window.showWarningMessage('Act: Dry-run request failed');
+      }
+    })
+    .then(() => void 0);
+}
+
+export function actApprove(payload: Record<string, unknown>): Promise<void> {
+  if (isTestEnv()) return Promise.resolve();
+  return ensureConnected()
+    .then((ws) => {
+      try {
+        ws.send('act.approve', payload);
+      } catch {
+        void vscode.window.showWarningMessage('Act: Approve failed');
+      }
+    })
+    .then(() => void 0);
+}
+
+export function actApply(payload: Record<string, unknown>): Promise<void> {
+  if (isTestEnv()) return Promise.resolve();
+  return ensureConnected()
+    .then((ws) => {
+      try {
+        ws.send('act.apply', payload);
+      } catch {
+        void vscode.window.showWarningMessage('Act: Apply failed');
+      }
+    })
+    .then(() => void 0);
+}
+
+export function actRollback(payload: Record<string, unknown>): Promise<void> {
+  if (isTestEnv()) return Promise.resolve();
+  return ensureConnected()
+    .then((ws) => {
+      try {
+        ws.send('act.rollback', payload);
+      } catch {
+        void vscode.window.showWarningMessage('Act: Rollback failed');
+      }
+    })
+    .then(() => void 0);
+}
+
 function isTestEnv(): boolean {
   // Jest sets JEST_WORKER_ID; VS Code tests may set VSCODE_TEST
   if (typeof process === 'undefined') return false;
