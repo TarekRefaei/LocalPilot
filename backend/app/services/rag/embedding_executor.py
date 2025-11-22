@@ -5,10 +5,10 @@ Orchestrates embedding generation and vector store upsert for code chunks.
 Emits progress events via WebSocket.
 """
 
-import asyncio
 import logging
 import time
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from ..indexing.chunking import CodeChunk
 from .embedding_service import EmbeddingService
@@ -58,7 +58,7 @@ class EmbeddingExecutor:
     async def execute(
         self,
         chunks: list[CodeChunk],
-        progress_callback: Optional[Callable[[dict[str, Any]], None]] = None,
+        progress_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         """
         Execute Phase 5: embed chunks and upsert to vector store.
@@ -134,7 +134,7 @@ class EmbeddingExecutor:
         batch: list[CodeChunk],
         batch_num: int,
         total_batches: int,
-        progress_callback: Optional[Callable[[dict[str, Any]], None]],
+        progress_callback: Callable[[dict[str, Any]], None] | None,
     ) -> None:
         """
         Process a batch of chunks: embed and upsert.
@@ -156,7 +156,7 @@ class EmbeddingExecutor:
 
             # Prepare chunks for upsert
             upsert_chunks = []
-            for chunk, embedding in zip(batch, embeddings):
+            for chunk, embedding in zip(batch, embeddings, strict=True):
                 upsert_chunks.append(
                     {
                         "id": chunk.id,

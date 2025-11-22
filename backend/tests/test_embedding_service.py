@@ -11,7 +11,7 @@ Tests:
 """
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -61,7 +61,7 @@ class TestEmbeddingServiceBasics:
         text = "word1 word2 word3 " + "x" * (8192 * 4 + 100)
         truncated = embedding_service._truncate_text(text)
         # Should not end with partial word
-        assert not truncated.rstrip("...").endswith("x")
+        assert not truncated.rstrip(".").endswith("x")
 
 
 class TestEmbeddingServiceWithMocks:
@@ -107,8 +107,6 @@ class TestEmbeddingServiceWithMocks:
         documents = ["doc1", "doc2", "doc3"]
 
         with patch("requests.post") as mock_post:
-            mock_response = MagicMock()
-
             # Return different embeddings for each call
             def side_effect(*args, **kwargs):
                 response = MagicMock()
@@ -283,10 +281,10 @@ class TestEmbeddingServiceIntegration:
             mock_post.return_value = mock_response
 
             # Embed query
-            query_result = await embedding_service.embed_query("test query")
+            await embedding_service.embed_query("test query")
 
             # Embed documents
-            doc_result = await embedding_service.embed_documents(["doc1", "doc2"])
+            await embedding_service.embed_documents(["doc1", "doc2"])
 
             stats = embedding_service.get_statistics()
 

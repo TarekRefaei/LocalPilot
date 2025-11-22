@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 try:
     from tree_sitter import Language, Node, Parser
@@ -66,7 +66,7 @@ class TreeSitterParser:
         except Exception as e:
             print(f"Warning: Tree-sitter initialization: {e}")
 
-    def parse_file(self, filepath: Path, language: str) -> Optional[Node]:
+    def parse_file(self, filepath: Path, language: str) -> Node | None:
         """Parse file with Tree-sitter and return AST root node."""
         if not HAS_TREE_SITTER or language not in self.parsers:
             return None
@@ -80,7 +80,7 @@ class TreeSitterParser:
             print(f"Error parsing {filepath} ({language}): {e}")
             return None
 
-    def get_language_from_ext(self, filepath: Path) -> Optional[str]:
+    def get_language_from_ext(self, filepath: Path) -> str | None:
         """Detect language from file extension."""
         return self.ext_to_lang.get(filepath.suffix.lower())
 

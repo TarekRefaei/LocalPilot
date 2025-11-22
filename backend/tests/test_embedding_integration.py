@@ -27,7 +27,7 @@ from app.services.rag.vector_store import VectorStore
 # Skip all tests on Windows due to ChromaDB file locking during teardown
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32",
-    reason="ChromaDB file locking on Windows during cleanup (test infrastructure issue, not code bug)",
+    reason="ChromaDB file locking on Windows (test infrastructure issue)",
 )
 
 
@@ -108,12 +108,12 @@ class TestEmbeddingExecutor:
             mock_response.json.return_value = {"embedding": mock_embedding}
             mock_post.return_value = mock_response
 
-            result = await embedding_executor.execute(chunks)
+            exec_result = await embedding_executor.execute(chunks)
 
-            assert result["status"] == "completed"
-            assert result["embedded_chunks"] == 2
-            assert result["failed_chunks"] == 0
-            assert result["total_chunks"] == 2
+            assert exec_result["status"] == "completed"
+            assert exec_result["embedded_chunks"] == 2
+            assert exec_result["failed_chunks"] == 0
+            assert exec_result["total_chunks"] == 2
 
     @pytest.mark.asyncio
     async def test_execute_with_progress_callback(self, embedding_executor):
@@ -145,7 +145,7 @@ class TestEmbeddingExecutor:
             mock_response.json.return_value = {"embedding": mock_embedding}
             mock_post.return_value = mock_response
 
-            result = await embedding_executor.execute(chunks, progress_callback=progress_callback)
+            await embedding_executor.execute(chunks, progress_callback=progress_callback)
 
             # Should have progress events
             assert len(progress_events) > 0

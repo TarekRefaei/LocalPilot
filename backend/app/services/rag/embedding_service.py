@@ -11,7 +11,7 @@ Provides:
 import asyncio
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 
 import requests
 
@@ -142,9 +142,10 @@ class EmbeddingService:
                     f"({len(batch)} docs in {elapsed:.3f}s)"
                 )
 
+        avg_time = self._total_embed_time / max(self._embed_count, 1)
         logger.info(
             f"Embedded {len(documents)} documents in {total_batches} batches "
-            f"(total: {self._embed_count}, avg time: {self._total_embed_time / max(self._embed_count, 1):.3f}s)"
+            f"(total: {self._embed_count}, avg time: {avg_time:.3f}s)"
         )
 
         return all_embeddings
@@ -169,7 +170,7 @@ class EmbeddingService:
         embeddings = await self.embed_documents(contents)
 
         # Add embeddings to chunks
-        for chunk, embedding in zip(chunks, embeddings):
+        for chunk, embedding in zip(chunks, embeddings, strict=True):
             chunk["embedding"] = embedding
 
         return chunks

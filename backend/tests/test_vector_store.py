@@ -17,7 +17,6 @@ import asyncio
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -26,7 +25,7 @@ from app.services.rag.vector_store import VectorStore
 # Skip all tests on Windows due to ChromaDB file locking during teardown
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32",
-    reason="ChromaDB file locking on Windows during cleanup (test infrastructure issue, not code bug)",
+    reason="ChromaDB file locking on Windows (test infrastructure issue)",
 )
 
 
@@ -61,7 +60,7 @@ class TestVectorStoreBasics:
     def test_directory_creation(self, temp_vectordb):
         """Test that persist directory is created."""
         new_dir = Path(temp_vectordb) / "subdir" / "vectordb"
-        store = VectorStore(persist_directory=str(new_dir))
+        VectorStore(persist_directory=str(new_dir))
         assert new_dir.exists()
 
     @pytest.mark.asyncio

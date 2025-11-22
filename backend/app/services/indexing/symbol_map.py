@@ -8,7 +8,6 @@ import relationships for retrieval context.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
 from .chunking import CodeChunk
@@ -214,7 +213,7 @@ class SymbolImportMapBuilder:
         if len(chunks1) != len(chunks2):
             return False
 
-        for c1, c2 in zip(chunks1, chunks2):
+        for c1, c2 in zip(chunks1, chunks2, strict=True):
             if (
                 c1.file_path != c2.file_path
                 or c1.start_line != c2.start_line

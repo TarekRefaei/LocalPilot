@@ -8,7 +8,7 @@ Caches:
 
 import logging
 from collections import OrderedDict
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class QueryCache:
 
         logger.info(f"QueryCache initialized (max_size={max_size})")
 
-    def get_embedding(self, query: str) -> Optional[list[float]]:
+    def get_embedding(self, query: str) -> list[float] | None:
         """
         Get cached embedding for query.
 
@@ -75,7 +75,7 @@ class QueryCache:
 
         self._embedding_cache[query] = embedding
 
-    def get_search_results(self, query_vector_id: str) -> Optional[list[dict[str, Any]]]:
+    def get_search_results(self, query_vector_id: str) -> list[dict[str, Any]] | None:
         """
         Get cached search results for query vector.
 

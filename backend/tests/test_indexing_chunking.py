@@ -49,7 +49,7 @@ class TestSemanticChunkerDeterminism:
         # Validate: should be identical
         assert len(chunks1) == len(chunks2), "Chunk count must be deterministic"
 
-        for c1, c2 in zip(chunks1, chunks2):
+        for c1, c2 in zip(chunks1, chunks2, strict=True):
             assert c1.id == c2.id, "Chunk IDs must be deterministic"
             assert c1.start_line == c2.start_line, "Start lines must match"
             assert c1.end_line == c2.end_line, "End lines must match"

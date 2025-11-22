@@ -11,7 +11,7 @@ Provides:
 import logging
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import chromadb
 from chromadb.config import Settings
@@ -139,7 +139,7 @@ class VectorStore:
         self,
         query_embedding: list[float],
         top_k: int = 10,
-        filters: Optional[dict[str, Any]] = None,
+        filters: dict[str, Any] | None = None,
         min_score: float = 0.0,
     ) -> list[dict[str, Any]]:
         """

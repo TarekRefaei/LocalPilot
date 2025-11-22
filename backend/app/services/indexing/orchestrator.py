@@ -144,8 +144,8 @@ class IndexingOrchestrator:
             )
 
             # Initialize embedding services (lazy import to avoid circular dependency)
-            from app.services.rag.embedding_service import EmbeddingService
             from app.services.rag.embedding_executor import EmbeddingExecutor
+            from app.services.rag.embedding_service import EmbeddingService
             from app.services.rag.vector_store import VectorStore
 
             embedding_service = EmbeddingService(
@@ -166,6 +166,8 @@ class IndexingOrchestrator:
             def embedding_progress_callback(event: dict[str, Any]) -> None:
                 if event.get("status") == "in_progress":
                     percentage = event.get("percentage", 80.0)
+                    batch_num = event.get("batch_number", 0)
+                    total_batches = event.get("total_batches", 1)
                     await_coro = self._emit_progress(
                         indexing_id,
                         phase="EMBEDDINGS",
@@ -175,11 +177,10 @@ class IndexingOrchestrator:
                         total_files=event.get("total_chunks", len(code_chunks)),
                         current_file_path=None,
                         percentage=80.0 + (percentage * 0.2),  # 80-100%
-                        message=f"Embedding batch {event.get('batch_number', 0)}/{event.get('total_batches', 1)}",
+                        message=f"Embedding batch {batch_num}/{total_batches}",
                     )
                     # Schedule coroutine to run
                     import asyncio
-
                     asyncio.create_task(await_coro)
 
             # Execute embeddings
@@ -188,6 +189,7 @@ class IndexingOrchestrator:
                 progress_callback=embedding_progress_callback,
             )
 
+            embedded_count = embedding_result.get("embedded_chunks", 0)
             await self._emit_progress(
                 indexing_id,
                 phase="EMBEDDINGS",
@@ -197,7 +199,7 @@ class IndexingOrchestrator:
                 total_files=len(code_chunks),
                 current_file_path=None,
                 percentage=100.0,
-                message=f"Generated embeddings for {embedding_result.get('embedded_chunks', 0)} chunks",
+                message=f"Generated embeddings for {embedded_count} chunks",
             )
 
             # Update cache with file hashes
