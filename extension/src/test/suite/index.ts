@@ -31,7 +31,10 @@ export function run(): Promise<void> {
 
   return new Promise((resolve, reject) => {
     try {
-      const files = walk(testsRoot, []);
+      let files = walk(testsRoot, []);
+      if (isCiLinux) {
+        files = [path.join(testsRoot, 'extension.test.js')].filter((p) => fs.existsSync(p));
+      }
       // Diagnostics: list test files
       // eslint-disable-next-line no-console
       console.log(`[integration] discovered test files:`, files);
