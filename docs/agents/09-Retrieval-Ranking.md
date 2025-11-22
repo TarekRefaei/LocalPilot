@@ -24,10 +24,10 @@ Design the retrieval pipeline with multi-level strategies and fusion/reranking f
 - Integration tests pass on CI; metrics logged.
 
 ## Handoff documents
-### To Agent 10 — Plan Mode
+### To Agent 10 — Plan Mode document
 - Expose retrieval API used by Chat and Plan synthesis.
 
-### To Supervisor
+### To Supervisor document
 - Report on metrics, failure cases, and tuning recommendations.
 - Fixture catalog and reproducibility steps.
 

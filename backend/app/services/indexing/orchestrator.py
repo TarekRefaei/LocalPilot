@@ -153,7 +153,6 @@ class IndexingOrchestrator:
                 batch_size=32,
             )
             vector_store = VectorStore(
-                persist_directory=str(Path(workspace_path) / ".localpilot" / "vectordb"),
                 collection_name="localpilot_codebase",
             )
             embedding_executor = EmbeddingExecutor(

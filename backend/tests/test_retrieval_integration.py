@@ -501,3 +501,76 @@ class TestRetrievalFixtures:
         assert agg["avg_precision_at_5"] >= 0.80, (
             f"Average Precision@5 {agg['avg_precision_at_5']} < 0.80"
         )
+
+
+class TestRetrievalBm25AndCaching:
+    """Additional tests for BM25 level and caching integration."""
+
+    @pytest.mark.asyncio
+    async def test_bm25_keyword_level_contributes(self):
+        """BM25 keyword scoring should influence fused ordering when semantic ties exist."""
+        mock_vector_store = AsyncMock(spec=VectorStore)
+        mock_embedding_service = AsyncMock(spec=EmbeddingService)
+
+        mock_embedding_service.embed_query.return_value = [0.1] * 1024
+
+        # Two semantic candidates with equal semantic scores
+        mock_vector_store.search.return_value = [
+            {
+                "id": "doc_apple",
+                "content": "apple apple function",
+                "metadata": {"file_path": "a.py"},
+                "score": 0.5,
+            },
+            {
+                "id": "doc_banana",
+                "content": "banana function",
+                "metadata": {"file_path": "b.py"},
+                "score": 0.5,
+            },
+        ]
+        mock_vector_store.search_by_metadata.return_value = []
+
+        retriever = MultiLevelRetriever(
+            vector_store=mock_vector_store,
+            embedding_service=mock_embedding_service,
+        )
+
+        results = await retriever.retrieve("apple", top_k=2)
+
+        # Expect the document with stronger lexical match (apple) to rank higher after fusion
+        assert len(results) == 2
+        assert results[0]["id"] == "doc_apple"
+
+    @pytest.mark.asyncio
+    async def test_query_cache_prevents_redundant_calls(self):
+        """Repeated identical queries should hit cache for embedding and search."""
+        mock_vector_store = AsyncMock(spec=VectorStore)
+        mock_embedding_service = AsyncMock(spec=EmbeddingService)
+
+        mock_embedding_service.embed_query.return_value = [0.2] * 1024
+        mock_vector_store.search.return_value = [
+            {
+                "id": "doc1",
+                "content": "test content",
+                "metadata": {"file_path": "x.py"},
+                "score": 0.9,
+            }
+        ]
+        mock_vector_store.search_by_metadata.return_value = []
+
+        retriever = MultiLevelRetriever(
+            vector_store=mock_vector_store,
+            embedding_service=mock_embedding_service,
+        )
+
+        # First call populates cache
+        res1 = await retriever.retrieve("cacheable query", top_k=1)
+        # Second call should use cached embedding and cached search results
+        res2 = await retriever.retrieve("cacheable query", top_k=1)
+
+        assert len(res1) == 1 and len(res2) == 1
+        # embed_query should be called once total
+        assert mock_embedding_service.embed_query.call_count == 1
+        # vector_store.search should be called once total
+        assert mock_vector_store.search.call_count == 1

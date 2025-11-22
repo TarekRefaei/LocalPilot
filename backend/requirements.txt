@@ -9,3 +9,6 @@ tree-sitter>=0.21.0,<1.0
 tree-sitter-languages>=1.9.0,<2.0
 chromadb>=0.4.0,<1.0
 requests>=2.31.0,<3.0
+
+# Lexical BM25 scoring
+rank-bm25>=0.2.2,<1.0

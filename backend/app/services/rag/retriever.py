@@ -12,10 +12,18 @@ Results are fused and re-ranked with diversity penalty.
 
 import logging
 from typing import Any
+import hashlib
+import json
+import re
+import time
+
+from rank_bm25 import BM25Okapi
 
 from .embedding_service import EmbeddingService
 from .fusion import DiversityRanker, ResultFusion
 from .vector_store import VectorStore
+from .cache import QueryCache
+from . import retrieval_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +40,8 @@ class MultiLevelRetriever:
         keyword_weight: float = 0.15,
         summary_weight: float = 0.05,
         diversity_weight: float = 0.3,
+        query_cache: QueryCache | None = None,
+        enable_keyword_level: bool = True,
     ):
         """
         Initialize multi-level retriever.
@@ -44,6 +54,7 @@ class MultiLevelRetriever:
             keyword_weight: Weight for keyword/lexical search results
             summary_weight: Weight for project summary results
             diversity_weight: Weight for diversity penalty in re-ranking
+            enable_keyword_level: Flag to enable or disable keyword search level
         """
         self.vector_store = vector_store
         self.embedding_service = embedding_service
@@ -54,6 +65,8 @@ class MultiLevelRetriever:
             summary_weight=summary_weight,
         )
         self.ranker = DiversityRanker(diversity_weight=diversity_weight)
+        self.cache = query_cache or QueryCache(max_size=1000)
+        self.enable_keyword_level = enable_keyword_level
 
     async def retrieve(
         self,
@@ -85,8 +98,21 @@ class MultiLevelRetriever:
             query, user_context, top_k=top_k * 2
         )
 
-        # Level 4: Keyword/Lexical Search
-        keyword_results = await self._level4_keyword_search(query, top_k=10)
+        # Level 4: Keyword/Lexical Search (ablatable)
+        keyword_results: list[dict[str, Any]] = []
+        l4_ms = 0.0
+        if self.enable_keyword_level:
+            l4_start = time.time()
+            candidates = []
+            seen_ids: set[str] = set()
+            for r in semantic_results + symbol_results:
+                if r["id"] not in seen_ids:
+                    seen_ids.add(r["id"])
+                    candidates.append(r)
+            keyword_results = await self._level4_keyword_search(
+                query, candidates=candidates, top_k=10
+            )
+            l4_ms = (time.time() - l4_start) * 1000.0
 
         # Fuse results
         fused_results = self.fusion.fuse(
@@ -105,6 +131,23 @@ class MultiLevelRetriever:
             f"symbol={len(symbol_results)}, "
             f"keyword={len(keyword_results)})"
         )
+
+        try:
+            cache_stats = self.cache.get_statistics()
+            # Publish metrics for observability
+            retrieval_metrics.update(
+                l4_enabled=self.enable_keyword_level,
+                l4_ms=l4_ms,
+                cache_stats=cache_stats,
+            )
+            logger.debug(
+                f"L4_enabled={self.enable_keyword_level} l4_ms={l4_ms:.1f} "
+                f"cache_hit_rate={cache_stats.get('cache_hit_rate', 0.0):.2f} "
+                f"cache_hits={cache_stats.get('cache_hits', 0)} "
+                f"cache_misses={cache_stats.get('cache_misses', 0)}"
+            )
+        except Exception:
+            pass
 
         return final_results
 
@@ -198,15 +241,24 @@ class MultiLevelRetriever:
             List of semantic search results
         """
         try:
-            # Embed query
-            query_embedding = await self.embedding_service.embed_query(query)
+            cached_embedding = self.cache.get_embedding(query)
+            if cached_embedding is not None:
+                query_embedding = cached_embedding
+            else:
+                query_embedding = await self.embedding_service.embed_query(query)
+                self.cache.set_embedding(query, query_embedding)
 
-            # Search vector store
-            results = await self.vector_store.search(
-                query_embedding=query_embedding,
-                top_k=top_k,
-                min_score=0.3,  # Minimum similarity threshold
-            )
+            cache_key = self._make_search_cache_key(query_embedding, None, top_k)
+            cached_results = self.cache.get_search_results(cache_key)
+            if cached_results is not None:
+                results = cached_results
+            else:
+                results = await self.vector_store.search(
+                    query_embedding=query_embedding,
+                    top_k=top_k,
+                    min_score=0.3,
+                )
+                self.cache.set_search_results(cache_key, results)
 
             # Apply user context boosting if provided
             if user_context:
@@ -222,6 +274,7 @@ class MultiLevelRetriever:
     async def _level4_keyword_search(
         self,
         query: str,
+        candidates: list[dict[str, Any]] | None = None,
         top_k: int = 10,
     ) -> list[dict[str, Any]]:
         """
@@ -237,9 +290,67 @@ class MultiLevelRetriever:
         Returns:
             List of keyword search results
         """
-        # TODO: Implement BM25 keyword search
-        # For now, return empty list
-        return []
+        if not candidates:
+            return []
+
+        docs = []
+        id_order: list[str] = []
+        by_id: dict[str, dict[str, Any]] = {}
+
+        for r in candidates:
+            doc_id = r["id"]
+            if doc_id in by_id:
+                continue
+            text = r.get("content", "")
+            docs.append(self._tokenize(text))
+            id_order.append(doc_id)
+            by_id[doc_id] = r
+
+        if not docs:
+            return []
+
+        bm25 = BM25Okapi(docs)
+        query_tokens = self._tokenize(query)
+        scores_arr = bm25.get_scores(query_tokens)
+        # Avoid boolean evaluation of numpy arrays
+        scores_list = list(scores_arr)
+
+        if len(scores_list) == 0:
+            return []
+
+        max_score = float(max(scores_list))
+        if max_score <= 0.0:
+            return []
+
+        results: list[dict[str, Any]] = []
+        for idx, s in enumerate(scores_list):
+            norm = float(s) / float(max_score)
+            base = by_id[id_order[idx]]
+            results.append(
+                {
+                    "id": base["id"],
+                    "content": base.get("content", ""),
+                    "metadata": base.get("metadata", {}),
+                    "score": round(norm, 4),
+                }
+            )
+
+        results.sort(key=lambda x: x["score"], reverse=True)
+        return results[:top_k]
+
+    def _tokenize(self, text: str) -> list[str]:
+        tokens = re.findall(r"\b\w+\b", text.lower())
+        return tokens
+
+    def _make_search_cache_key(
+        self,
+        embedding: list[float],
+        filters: dict[str, Any] | None,
+        top_k: int,
+    ) -> str:
+        rounded = [round(x, 4) for x in embedding]
+        payload = json.dumps({"e": rounded, "f": filters or {}, "k": top_k}, sort_keys=True)
+        return hashlib.sha1(payload.encode("utf-8")).hexdigest()
 
     def _extract_symbols(self, query: str) -> list[str]:
         """

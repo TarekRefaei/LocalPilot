@@ -15,6 +15,7 @@ from typing import Any
 
 import chromadb
 from chromadb.config import Settings
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class VectorStore:
 
     def __init__(
         self,
-        persist_directory: str = ".localpilot/vectordb",
+        persist_directory: str | None = None,
         collection_name: str = "localpilot_codebase",
         ef_construction: int = 200,
         ef_search: int = 200,
@@ -44,15 +45,16 @@ class VectorStore:
             ef_search: HNSW search parameter (higher = better recall)
             m: HNSW M parameter (connections per layer)
         """
-        self.persist_directory = persist_directory
+        # Resolve persist directory from settings if not provided
+        self.persist_directory = persist_directory or settings.vector_db_path
         self.collection_name = collection_name
 
         # Create directory if needed
-        Path(persist_directory).mkdir(parents=True, exist_ok=True)
+        Path(self.persist_directory).mkdir(parents=True, exist_ok=True)
 
         # Initialize ChromaDB
         self.client = chromadb.PersistentClient(
-            path=persist_directory,
+            path=self.persist_directory,
             settings=Settings(
                 anonymized_telemetry=False,
                 allow_reset=True,

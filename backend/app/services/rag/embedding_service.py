@@ -40,6 +40,7 @@ class EmbeddingService:
         batch_size: int = 32,
         max_retries: int = 3,
         retry_delay: float = 1.0,
+        query_cache: Any | None = None,
     ):
         """
         Initialize embedding service.
@@ -54,6 +55,8 @@ class EmbeddingService:
         self.batch_size = batch_size
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        # Optional external query cache (duck-typed for get_embedding/set_embedding)
+        self.query_cache = query_cache
 
         # Statistics
         self._embed_count = 0
@@ -80,6 +83,18 @@ class EmbeddingService:
         Raises:
             RuntimeError: If Ollama API fails after retries
         """
+        # Check cache first using raw query string (if available)
+        if self.query_cache is not None:
+            try:
+                cached = self.query_cache.get_embedding(query)
+                if cached is not None:
+                    self._cache_hits += 1
+                    logger.debug(f"EmbeddingService cache hit for query: {query[:50]}...")
+                    return cached
+            except Exception:
+                # Cache errors should not fail embedding
+                pass
+
         # Prepare query with prefix for better retrieval
         prepared_query = f"Represent this query for searching code: {query}"
 
@@ -94,6 +109,13 @@ class EmbeddingService:
             f"Embedded query in {elapsed:.3f}s: {query[:50]}... "
             f"(total queries: {self._query_embed_count})"
         )
+
+        # Store in cache after successful embed
+        if self.query_cache is not None:
+            try:
+                self.query_cache.set_embedding(query, embedding)
+            except Exception:
+                pass
 
         return embedding
 
