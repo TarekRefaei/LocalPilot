@@ -42,6 +42,9 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/backend
         run: pytest -q --cov=app --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-fail-under=60
+      - name: Enforce Act folder coverage >= 85%
+        working-directory: backend
+        run: python scripts/verify_act_coverage.py
       - name: Upload coverage (Pytest XML)
         if: always()
         uses: actions/upload-artifact@v4

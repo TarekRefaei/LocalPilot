@@ -52,6 +52,8 @@ Authoritative IDs, command names, and topics used across extension and backend. 
 - LOG_LEVEL, DEBUG
 - EMBEDDING_MODEL, CHAT_MODEL, PLANNING_MODEL, CODING_MODEL
 - MAX_CONCURRENT_EMBEDDINGS, BATCH_SIZE_INDEXING
+ - ACT_APPLY_SAFETY (strict | git_optional | unsafe)
+ - ACT_APPROVAL_TIMEOUT_SECONDS (default: 300)
 
 ## Notes
 - Prefer kebab-case in filenames; dot-separated namespaces for WS topics; camelCase for TS properties; snake_case for Python fields.

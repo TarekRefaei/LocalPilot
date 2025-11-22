@@ -28,6 +28,28 @@
           "type": "string",
           "default": "local",
           "description": "Selected chat model identifier."
+        },
+        "localpilot.act.applySafety": {
+          "type": "string",
+          "enum": ["strict", "git-optional", "unsafe"],
+          "default": "strict",
+          "description": "Apply safety level: strict blocks outside Git and dirty trees; git-optional allows outside Git but requires clean tree; unsafe allows both with explicit confirmation."
+        },
+        "localpilot.act.autoApprove.safeCreates": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-approve safe file creations (docs/**, tests/** or __tests__/**, .localpilot/**)."
+        },
+        "localpilot.act.autoApprove.configFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow auto-approval for known safe config files (disabled by default)."
+        },
+        "localpilot.act.approvalTimeoutSeconds": {
+          "type": "number",
+          "default": 300,
+          "minimum": 0,
+          "description": "Approval timeout in seconds (0 disables). Recommended 30–3600."
         }
       }
     },

@@ -1,11 +1,135 @@
 import * as vscode from 'vscode';
 import { WebSocketClient } from './ws-client';
+import type { WebSocketEnvelope } from '../contracts/envelope';
 
 let client: WebSocketClient | null = null;
 let connected = false;
 
 interface IndexingState {
   setIndexingRunning(v: boolean): void;
+}
+
+interface ApprovalOperation {
+  path: string;
+  type: string;
+  diff: string;
+  additions: number;
+  deletions: number;
+  requiresApproval: boolean;
+}
+
+interface ApprovalPreview {
+  operations: ApprovalOperation[];
+  autoApprovedPaths: string[];
+  requiresReviewCount: number;
+}
+
+function isApprovalPreview(x: unknown): x is ApprovalPreview {
+  if (typeof x !== 'object' || x === null) return false;
+  const r = x as Record<string, unknown>;
+  const ops = Array.isArray(r.operations)
+    ? r.operations.every(
+        (o) =>
+          !!o &&
+          typeof (o as ApprovalOperation).path === 'string' &&
+          typeof (o as ApprovalOperation).type === 'string' &&
+          typeof (o as ApprovalOperation).diff === 'string'
+      )
+    : false;
+  const auto = Array.isArray(r.autoApprovedPaths)
+    ? (r.autoApprovedPaths as unknown[]).every((p) => typeof p === 'string')
+    : false;
+  const rev = typeof r.requiresReviewCount === 'number';
+  return ops && auto && rev;
+}
+
+export function actDryRun(payload: Record<string, unknown>): Promise<void> {
+  if (isTestEnv()) return Promise.resolve();
+  return ensureConnected()
+    .then((ws) => {
+      // One-shot subscription for approval preview
+      const off = ws.subscribe('act.request_approval', (envelope: WebSocketEnvelope) => {
+        const preview: ApprovalPreview = isApprovalPreview(envelope?.data)
+          ? envelope.data
+          : { operations: [], autoApprovedPaths: [], requiresReviewCount: 0 };
+        const ops = preview.operations;
+        const reviewCount = preview.requiresReviewCount;
+        const autoCount = preview.autoApprovedPaths.length;
+
+        void vscode.window
+          .showInformationMessage(
+            `Dry-run ready: ${ops.length} ops, ${reviewCount} need approval, ${autoCount} auto-approved. Apply now?`,
+            { modal: true },
+            'Apply',
+            'Cancel'
+          )
+          .then((choice) => {
+            if (choice === 'Apply') {
+              const apply = {
+                ...payload,
+                approved: true,
+                message: 'Apply approved operations',
+              } as Record<string, unknown>;
+              try {
+                ws.send('act.apply', apply);
+              } catch {
+                void vscode.window.showWarningMessage('Act: Apply failed to send');
+              }
+            }
+            try {
+              if (typeof off === 'function') off();
+            } catch {
+              // noop
+            }
+          });
+      });
+
+      try {
+        ws.send('act.request_approval', payload);
+      } catch {
+        void vscode.window.showWarningMessage('Act: Dry-run request failed');
+      }
+    })
+    .then(() => void 0);
+}
+
+export function actApprove(payload: Record<string, unknown>): Promise<void> {
+  if (isTestEnv()) return Promise.resolve();
+  return ensureConnected()
+    .then((ws) => {
+      try {
+        ws.send('act.approve', payload);
+      } catch {
+        void vscode.window.showWarningMessage('Act: Approve failed');
+      }
+    })
+    .then(() => void 0);
+}
+
+export function actApply(payload: Record<string, unknown>): Promise<void> {
+  if (isTestEnv()) return Promise.resolve();
+  return ensureConnected()
+    .then((ws) => {
+      try {
+        ws.send('act.apply', payload);
+      } catch {
+        void vscode.window.showWarningMessage('Act: Apply failed');
+      }
+    })
+    .then(() => void 0);
+}
+
+export function actRollback(payload: Record<string, unknown>): Promise<void> {
+  if (isTestEnv()) return Promise.resolve();
+  return ensureConnected()
+    .then((ws) => {
+      try {
+        ws.send('act.rollback', payload);
+      } catch {
+        void vscode.window.showWarningMessage('Act: Rollback failed');
+      }
+    })
+    .then(() => void 0);
 }
 
 function isTestEnv(): boolean {
