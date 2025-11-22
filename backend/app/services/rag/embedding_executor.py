@@ -53,9 +53,7 @@ class EmbeddingExecutor:
         self._failed_chunks = 0
         self._total_time = 0.0
 
-        logger.info(
-            f"EmbeddingExecutor initialized (batch_size={batch_size})"
-        )
+        logger.info(f"EmbeddingExecutor initialized (batch_size={batch_size})")
 
     async def execute(
         self,
@@ -113,9 +111,7 @@ class EmbeddingExecutor:
                 "failed_chunks": self._failed_chunks,
                 "duration_seconds": elapsed,
                 "average_time_per_chunk": (
-                    elapsed / self._embedded_chunks
-                    if self._embedded_chunks > 0
-                    else 0.0
+                    elapsed / self._embedded_chunks if self._embedded_chunks > 0 else 0.0
                 ),
             }
 
@@ -226,9 +222,7 @@ class EmbeddingExecutor:
                 )
 
             # Continue with next batch instead of failing completely
-            logger.warning(
-                f"Continuing with next batch despite error in batch {batch_num}"
-            )
+            logger.warning(f"Continuing with next batch despite error in batch {batch_num}")
 
     def get_statistics(self) -> dict[str, Any]:
         """Get executor statistics."""
@@ -239,9 +233,7 @@ class EmbeddingExecutor:
             "failed_chunks": self._failed_chunks,
             "total_time_seconds": self._total_time,
             "average_time_per_chunk": (
-                self._total_time / self._embedded_chunks
-                if self._embedded_chunks > 0
-                else 0.0
+                self._total_time / self._embedded_chunks if self._embedded_chunks > 0 else 0.0
             ),
         }
 

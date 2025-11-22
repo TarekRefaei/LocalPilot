@@ -283,9 +283,7 @@ class VectorStore:
             chunk_types = {}
 
         avg_search_time = (
-            self._total_search_time / self._search_count
-            if self._search_count > 0
-            else 0.0
+            self._total_search_time / self._search_count if self._search_count > 0 else 0.0
         )
 
         return {

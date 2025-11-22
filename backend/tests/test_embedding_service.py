@@ -247,10 +247,7 @@ class TestEmbeddingServiceIntegration:
             mock_post.return_value = mock_response
 
             # Embed multiple queries concurrently
-            tasks = [
-                embedding_service.embed_query(f"query{i}")
-                for i in range(5)
-            ]
+            tasks = [embedding_service.embed_query(f"query{i}") for i in range(5)]
             results = await asyncio.gather(*tasks)
 
             assert len(results) == 5

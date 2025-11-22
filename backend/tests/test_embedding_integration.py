@@ -145,9 +145,7 @@ class TestEmbeddingExecutor:
             mock_response.json.return_value = {"embedding": mock_embedding}
             mock_post.return_value = mock_response
 
-            result = await embedding_executor.execute(
-                chunks, progress_callback=progress_callback
-            )
+            result = await embedding_executor.execute(chunks, progress_callback=progress_callback)
 
             # Should have progress events
             assert len(progress_events) > 0
@@ -291,9 +289,7 @@ class TestEmbeddingVectorSearchIntegration:
 
             # Search for authentication-related code
             query_embedding = [0.1] * 1024
-            search_results = await vector_store.search(
-                query_embedding, top_k=5
-            )
+            search_results = await vector_store.search(query_embedding, top_k=5)
 
             # Should find chunks
             assert len(search_results) > 0
@@ -411,6 +407,7 @@ class TestEmbeddingVectorSearchIntegration:
         }
 
         with patch("requests.post") as mock_post:
+
             def get_embedding(content):
                 for chunk_id, embedding in embeddings.items():
                     if chunk_id in content:
@@ -439,9 +436,7 @@ class TestEmbeddingVectorSearchIntegration:
             assert len(results) > 0
 
     @pytest.mark.asyncio
-    async def test_large_batch_embedding(
-        self, embedding_executor, vector_store, embedding_service
-    ):
+    async def test_large_batch_embedding(self, embedding_executor, vector_store, embedding_service):
         """Test embedding large batch of chunks."""
         chunks = [
             CodeChunk(
@@ -505,10 +500,7 @@ class TestEmbeddingVectorSearchIntegration:
 
             # Concurrent searches
             query_embedding = [0.1] * 1024
-            search_tasks = [
-                vector_store.search(query_embedding, top_k=3)
-                for _ in range(3)
-            ]
+            search_tasks = [vector_store.search(query_embedding, top_k=3) for _ in range(3)]
             search_results = await asyncio.gather(*search_tasks)
 
             assert embed_result["embedded_chunks"] == 5

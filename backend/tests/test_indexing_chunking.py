@@ -254,9 +254,9 @@ class TestChunkMetadata:
             approx_words = len(chunk.content.split())
             expected_tokens = int(approx_words * 1.3)
             # Allow 50% variance
-            assert abs(chunk.tokens - expected_tokens) < expected_tokens * 0.5, (
-                f"Token estimate {chunk.tokens} too far from {expected_tokens}"
-            )
+            assert (
+                abs(chunk.tokens - expected_tokens) < expected_tokens * 0.5
+            ), f"Token estimate {chunk.tokens} too far from {expected_tokens}"
 
     def test_chunk_language_detection(self, tmp_path: Path) -> None:
         """Chunks should have correct language label."""
@@ -275,15 +275,15 @@ class TestChunkMetadata:
 
         ts_chunks = chunker.chunk_file(ts_file, "typescript", str(tmp_path))
         # TS chunks should be labeled with TS-like language ('typescript' or 'ts')
-        assert all(c.language in ["typescript", "ts"] for c in ts_chunks), (
-            f"TS chunks should be labeled as typescript/ts, got {[c.language for c in ts_chunks]}"
-        )
+        assert all(
+            c.language in ["typescript", "ts"] for c in ts_chunks
+        ), f"TS chunks should be labeled as typescript/ts, got {[c.language for c in ts_chunks]}"
 
         py_chunks = chunker.chunk_file(py_file, "python", str(tmp_path))
         # Python chunks should be labeled with Python-like language ('python' or 'py')
-        assert all(c.language in ["python", "py"] for c in py_chunks), (
-            f"Python chunks should be labeled as python/py, got {[c.language for c in py_chunks]}"
-        )
+        assert all(
+            c.language in ["python", "py"] for c in py_chunks
+        ), f"Python chunks should be labeled as python/py, got {[c.language for c in py_chunks]}"
 
 
 class TestSymbolMap:
@@ -330,13 +330,7 @@ class TestSymbolMap:
         src_dir.mkdir()
 
         py_file = src_dir / "utils.py"
-        py_content = (
-            "def helper():\n"
-            "    return 42\n"
-            "\n"
-            "class Utils:\n"
-            "    pass\n"
-        )
+        py_content = "def helper():\n" "    return 42\n" "\n" "class Utils:\n" "    pass\n"
         py_file.write_text(py_content, encoding="utf-8")
 
         chunker = SemanticChunker()
@@ -348,9 +342,9 @@ class TestSymbolMap:
 
         # Both maps should have same symbols
         assert len(map1.symbol_index) == len(map2.symbol_index), "Symbol counts should match"
-        assert set(map1.symbol_index.keys()) == set(map2.symbol_index.keys()), (
-            "Symbol names should match"
-        )
+        assert set(map1.symbol_index.keys()) == set(
+            map2.symbol_index.keys()
+        ), "Symbol names should match"
 
 
 class TestImportMap:
@@ -458,13 +452,7 @@ class TestLexicalChunkingFallback:
 
         # Create a .go file (not supported by Tree-sitter in basic setup)
         go_file = src_dir / "main.go"
-        go_content = (
-            "package main\n"
-            "\n"
-            "func main() {\n"
-            "    println(\"Hello\")\n"
-            "}\n"
-        )
+        go_content = "package main\n" "\n" "func main() {\n" '    println("Hello")\n' "}\n"
         go_file.write_text(go_content, encoding="utf-8")
 
         chunker = SemanticChunker()
@@ -475,7 +463,8 @@ class TestLexicalChunkingFallback:
 
         for chunk in chunks:
             # Fallback chunks can be 'module' or 'block' type
-            assert chunk.chunk_type in ["block", "module"], (
-                f"Fallback chunks should be 'block' or 'module' type, got {chunk.chunk_type}"
-            )
+            assert chunk.chunk_type in [
+                "block",
+                "module",
+            ], f"Fallback chunks should be 'block' or 'module' type, got {chunk.chunk_type}"
             assert chunk.tokens > 0, "Chunks should have token estimates"

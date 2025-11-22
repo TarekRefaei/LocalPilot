@@ -200,9 +200,7 @@ class SymbolImportMapBuilder:
         return symbol_map, import_map
 
     @staticmethod
-    def validate_determinism(
-        chunks1: list[CodeChunk], chunks2: list[CodeChunk]
-    ) -> bool:
+    def validate_determinism(chunks1: list[CodeChunk], chunks2: list[CodeChunk]) -> bool:
         """Validate that chunking is deterministic across runs.
 
         Compares two runs and checks:

@@ -226,9 +226,7 @@ class TestVectorStoreBasics:
 
         # Search with high minimum score
         query_embedding = [0.1] * 1024
-        results = await vector_store.search(
-            query_embedding, top_k=10, min_score=0.9
-        )
+        results = await vector_store.search(query_embedding, top_k=10, min_score=0.9)
 
         # Should only get very similar results
         assert all(r["score"] >= 0.9 for r in results)
@@ -321,9 +319,7 @@ class TestVectorStoreBasics:
         await vector_store.upsert_chunks(chunks)
 
         # Search by chunk type
-        results = await vector_store.search_by_metadata(
-            {"chunk_type": "function"}
-        )
+        results = await vector_store.search_by_metadata({"chunk_type": "function"})
 
         assert len(results) == 1
         assert results[0]["id"] == "chunk_1"
@@ -507,10 +503,7 @@ class TestVectorStoreIntegration:
 
         # Concurrent searches
         query_embedding = [0.1] * 1024
-        tasks = [
-            vector_store.search(query_embedding, top_k=3)
-            for _ in range(5)
-        ]
+        tasks = [vector_store.search(query_embedding, top_k=3) for _ in range(5)]
         results = await asyncio.gather(*tasks)
 
         assert len(results) == 5

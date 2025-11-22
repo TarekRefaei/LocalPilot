@@ -126,9 +126,7 @@ class EmbeddingService:
             batch_num = batch_idx // self.batch_size + 1
 
             # Prepare documents with prefix for better retrieval
-            prepared_batch = [
-                f"Represent this code for retrieval: {doc}" for doc in batch
-            ]
+            prepared_batch = [f"Represent this code for retrieval: {doc}" for doc in batch]
 
             start_time = time.time()
             batch_embeddings = await self._embed_batch(prepared_batch)
@@ -219,16 +217,14 @@ class EmbeddingService:
             except requests.exceptions.RequestException as e:
                 self._ollama_errors += 1
                 if attempt < self.max_retries - 1:
-                    wait_time = self.retry_delay * (2 ** attempt)
+                    wait_time = self.retry_delay * (2**attempt)
                     logger.warning(
                         f"Ollama API error (attempt {attempt + 1}/{self.max_retries}): {e}. "
                         f"Retrying in {wait_time:.1f}s..."
                     )
                     await asyncio.sleep(wait_time)
                 else:
-                    logger.error(
-                        f"Ollama API failed after {self.max_retries} attempts: {e}"
-                    )
+                    logger.error(f"Ollama API failed after {self.max_retries} attempts: {e}")
                     raise RuntimeError(
                         f"Failed to embed text after {self.max_retries} attempts: {e}"
                     ) from e
@@ -278,9 +274,7 @@ class EmbeddingService:
     def get_statistics(self) -> dict[str, Any]:
         """Get embedding service statistics."""
         total_embeds = self._embed_count + self._query_embed_count
-        avg_time = (
-            self._total_embed_time / total_embeds if total_embeds > 0 else 0.0
-        )
+        avg_time = self._total_embed_time / total_embeds if total_embeds > 0 else 0.0
 
         return {
             "model": self.MODEL_NAME,

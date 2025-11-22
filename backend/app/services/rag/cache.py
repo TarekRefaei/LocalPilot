@@ -75,9 +75,7 @@ class QueryCache:
 
         self._embedding_cache[query] = embedding
 
-    def get_search_results(
-        self, query_vector_id: str
-    ) -> Optional[list[dict[str, Any]]]:
+    def get_search_results(self, query_vector_id: str) -> Optional[list[dict[str, Any]]]:
         """
         Get cached search results for query vector.
 
@@ -97,9 +95,7 @@ class QueryCache:
         self._misses += 1
         return None
 
-    def set_search_results(
-        self, query_vector_id: str, results: list[dict[str, Any]]
-    ) -> None:
+    def set_search_results(self, query_vector_id: str, results: list[dict[str, Any]]) -> None:
         """
         Cache search results for query vector.
 
@@ -128,9 +124,7 @@ class QueryCache:
     def get_statistics(self) -> dict[str, Any]:
         """Get cache statistics."""
         total_requests = self._hits + self._misses
-        hit_rate = (
-            self._hits / total_requests if total_requests > 0 else 0.0
-        )
+        hit_rate = self._hits / total_requests if total_requests > 0 else 0.0
 
         return {
             "embedding_cache_size": len(self._embedding_cache),
