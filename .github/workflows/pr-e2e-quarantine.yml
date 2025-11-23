@@ -51,27 +51,7 @@ jobs:
           set -e
           FILE="scripts/e2e/.flaky.json"
           if [ ! -f "$FILE" ]; then echo '{"skip": []}' > "$FILE"; fi
-          python - << 'PY'
-import json, os
-p = 'scripts/e2e/.flaky.json'
-with open(p,'r',encoding='utf-8') as f:
-    try:
-        d = json.load(f)
-    except Exception:
-        d = {"skip": []}
-action = os.environ.get('ACTION_IN','add')
-scenario = os.environ.get('SCENARIO','chat-plan-act')
-skip = [str(x) for x in d.get('skip', [])]
-if action == 'add':
-    if scenario not in skip:
-        skip.append(scenario)
-elif action == 'remove':
-    skip = [x for x in skip if x != scenario]
-d['skip'] = skip
-with open(p,'w',encoding='utf-8') as f:
-    json.dump(d,f,indent=2)
-print('skip:', skip)
-PY
+          python -c "import json,os; p='scripts/e2e/.flaky.json';\ntry:\n d=json.load(open(p,'r',encoding='utf-8'))\nexcept Exception:\n d={'skip': []}\naction=os.environ.get('ACTION_IN','add'); scenario=os.environ.get('SCENARIO','chat-plan-act'); skip=[str(x) for x in d.get('skip',[])];\nif action=='add' and scenario not in skip: skip.append(scenario)\nif action=='remove': skip=[x for x in skip if x!=scenario]\nd['skip']=skip; open(p,'w',encoding='utf-8').write(json.dumps(d,indent=2)); print('skip:', skip)"
 
       - name: Commit and push
         run: |

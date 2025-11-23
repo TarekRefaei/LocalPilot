@@ -77,7 +77,13 @@
 [![CI Extension](https://github.com/TarekRefaei/LocalPilot/actions/workflows/ci-extension.yml/badge.svg?branch=main)](https://github.com/TarekRefaei/LocalPilot/actions/workflows/ci-extension.yml)
 [![Nightly E2E](https://github.com/TarekRefaei/LocalPilot/actions/workflows/nightly-e2e.yml/badge.svg?branch=main)](https://github.com/TarekRefaei/LocalPilot/actions/workflows/nightly-e2e.yml)
 [![Nightly Extension Integration](https://github.com/TarekRefaei/LocalPilot/actions/workflows/nightly-extension-e2e.yml/badge.svg?branch=main)](https://github.com/TarekRefaei/LocalPilot/actions/workflows/nightly-extension-e2e.yml)
- 
+
+## E2E & Nightlies
+
+- E2E harness and nightly details: see `docs/ci/Nightlies.md`.
+- To run E2E on a PR, add label `e2e:run` (Python harness) or `e2e:run-ext` (extension with backend).
+- Artifacts and job summaries include result JSON and timings.
+
 ## Seed GitHub Backlog
 - Script: `scripts/gh-seed-issues.ps1`
 - Examples:
