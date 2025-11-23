@@ -1,0 +1,82 @@
+name: PR E2E Quarantine Toggle
+
+on:
+  pull_request:
+    types: [labeled, unlabeled]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'add or remove'
+        required: true
+        default: 'add'
+        type: choice
+        options:
+          - add
+          - remove
+      scenario:
+        description: 'Scenario ID'
+        required: true
+        default: 'chat-plan-act'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  toggle:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && (
+        (github.event.action == 'labeled' && github.event.label.name == 'e2e:quarantine') ||
+        (github.event.action == 'unlabeled' && github.event.label.name == 'e2e:quarantine')
+      ))
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+
+      - name: Ensure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Toggle quarantine entry
+        env:
+          ACTION_IN: ${{ inputs.action || (github.event.action == 'labeled' && 'add' || 'remove') }}
+          SCENARIO: ${{ inputs.scenario || 'chat-plan-act' }}
+        run: |
+          set -e
+          FILE="scripts/e2e/.flaky.json"
+          if [ ! -f "$FILE" ]; then echo '{"skip": []}' > "$FILE"; fi
+          python - << 'PY'
+import json, os
+p = 'scripts/e2e/.flaky.json'
+with open(p,'r',encoding='utf-8') as f:
+    try:
+        d = json.load(f)
+    except Exception:
+        d = {"skip": []}
+action = os.environ.get('ACTION_IN','add')
+scenario = os.environ.get('SCENARIO','chat-plan-act')
+skip = [str(x) for x in d.get('skip', [])]
+if action == 'add':
+    if scenario not in skip:
+        skip.append(scenario)
+elif action == 'remove':
+    skip = [x for x in skip if x != scenario]
+d['skip'] = skip
+with open(p,'w',encoding='utf-8') as f:
+    json.dump(d,f,indent=2)
+print('skip:', skip)
+PY
+
+      - name: Commit and push
+        run: |
+          git config user.email "bot@localpilot"
+          git config user.name "localpilot-bot"
+          git add scripts/e2e/.flaky.json
+          git commit -m "chore(e2e): ${ACTION_IN} quarantine for ${SCENARIO}" || echo "No changes"
+          git push
