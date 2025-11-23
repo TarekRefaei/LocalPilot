@@ -70,6 +70,13 @@
   - `ci-extension.yml` (Node 20 on Windows/Linux): typecheck, lint, compile, tests with coverage artifact upload
   - `ci-backend.yml` (Python 3.11 on Windows/Linux): ruff, black --check, pytest with coverage XML/HTML artifact upload
 - Push to `main` triggers CI. View runs on GitHub → Actions tab.
+
+### Status
+
+[![CI Backend](https://github.com/TarekRefaei/LocalPilot/actions/workflows/ci-backend.yml/badge.svg?branch=main)](https://github.com/TarekRefaei/LocalPilot/actions/workflows/ci-backend.yml)
+[![CI Extension](https://github.com/TarekRefaei/LocalPilot/actions/workflows/ci-extension.yml/badge.svg?branch=main)](https://github.com/TarekRefaei/LocalPilot/actions/workflows/ci-extension.yml)
+[![Nightly E2E](https://github.com/TarekRefaei/LocalPilot/actions/workflows/nightly-e2e.yml/badge.svg?branch=main)](https://github.com/TarekRefaei/LocalPilot/actions/workflows/nightly-e2e.yml)
+[![Nightly Extension Integration](https://github.com/TarekRefaei/LocalPilot/actions/workflows/nightly-extension-e2e.yml/badge.svg?branch=main)](https://github.com/TarekRefaei/LocalPilot/actions/workflows/nightly-extension-e2e.yml)
  
 ## Seed GitHub Backlog
 - Script: `scripts/gh-seed-issues.ps1`

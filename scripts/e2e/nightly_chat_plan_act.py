@@ -263,11 +263,18 @@ async def run_scenario() -> Dict[str, Any]:
     workspace.mkdir(parents=True, exist_ok=True)
     init_git_repo(workspace)
 
+    # Use isolated vector DB path per run to avoid file locks on Windows
+    vec_dir = tmp_root / "vectordb"
+    vec_dir.mkdir(parents=True, exist_ok=True)
+    os.environ["VECTOR_DB_PATH"] = str(vec_dir)
+
     # 1) Start backend
     proc = start_backend()
     try:
+        timings: Dict[str, float] = {}
+
         # 2) Health
-        await wait_for_health()
+        _t0 = time.time(); await wait_for_health(); timings["health_ms"] = (time.time() - _t0) * 1000
 
         # 3) WebSocket handshake + heartbeat
         ws_url = f"{WS_URL_BASE}?client_id={CLIENT_ID}"
@@ -286,17 +293,22 @@ async def run_scenario() -> Dict[str, Any]:
                 {"workspace_path": str(workspace), "options": {}},
             )
             # server broadcasts original event; we wait to see it echoed
+            _t = time.time()
             echo = await ws_send_recv_until(ws, "indexing.start", send_first=idx, timeout_s=10.0)
+            timings["indexing_broadcast_ms"] = (time.time() - _t) * 1000
             assert echo.get("event") == "indexing.start"
 
             # 5) REST chat echo smoke (short prompt)
+            _t = time.time()
             async with httpx.AsyncClient(timeout=10.0) as client:
                 r = await client.post(f"{HTTP_BASE}/chat/echo", json={"prompt": "E2E", "model": "local"})
                 r.raise_for_status()
+            timings["chat_echo_ms"] = (time.time() - _t) * 1000
 
             # 5b) Retrieval smoke
             if await is_ollama_online():
                 # Semantic path (requires Ollama)
+                _t = time.time()
                 async with httpx.AsyncClient(timeout=15.0) as client:
                     rr = await client.post(
                         f"{HTTP_BASE}/retrieve",
@@ -308,9 +320,11 @@ async def run_scenario() -> Dict[str, Any]:
                         },
                     )
                     rr.raise_for_status()
+                timings["retrieve_semantic_ms"] = (time.time() - _t) * 1000
             else:
                 # Offline path: optionally seed symbol fixture for deterministic query
                 if ENABLE_OFFLINE_RETRIEVAL:
+                    _t = time.time()
                     await seed_retrieval_fixture()
                     async with httpx.AsyncClient(timeout=15.0) as client:
                         rr = await client.post(
@@ -323,10 +337,11 @@ async def run_scenario() -> Dict[str, Any]:
                             },
                         )
                         rr.raise_for_status()
+                    timings["retrieve_offline_ms"] = (time.time() - _t) * 1000
 
             # 6) act.request_approval
             op = {"type": "create", "path": TARGET_FILE, "content": TARGET_CONTENT}
-            dry = make_envelope(
+            _t = time.time(); dry = make_envelope(
                 "act.request_approval",
                 {
                     "workspace_path": str(workspace),
@@ -340,11 +355,12 @@ async def run_scenario() -> Dict[str, Any]:
             data = preview.get("data", {})
             ops = data.get("operations", [])
             assert isinstance(ops, list) and len(ops) == 1
+            timings["act_dry_run_ms"] = (time.time() - _t) * 1000
 
             # 7) act.apply (approved)
             # Ensure workspace is clean to satisfy strict safety policy
             ensure_clean_git(workspace)
-            apply_env = make_envelope(
+            _t = time.time(); apply_env = make_envelope(
                 "act.apply",
                 {
                     "workspace_path": str(workspace),
@@ -359,16 +375,76 @@ async def run_scenario() -> Dict[str, Any]:
             apply_res = await ws_send_recv_until(ws, "act.apply_result", send_first=apply_env, timeout_s=20.0)
             written = apply_res.get("data", {}).get("written", [])
             assert any(p.endswith(TARGET_FILE.replace("\\", "/")) for p in written)
+            timings["act_apply_create_ms"] = (time.time() - _t) * 1000
 
         # Verify file on disk
         target = workspace / TARGET_FILE
         assert target.exists(), f"File not found: {target}"
         assert target.read_text(encoding="utf-8") == TARGET_CONTENT
 
+        # Assert audit file was written
+        audit_dir = workspace / ".localpilot" / "audit"
+        assert audit_dir.exists()
+        audit_files = sorted(audit_dir.glob("*.diff"))
+        assert audit_files, "No audit diff written"
+        latest_audit = audit_files[-1]
+        audit_text = latest_audit.read_text(encoding="utf-8")
+        assert "E2E seeded content" in audit_text
+
+        # 8) act.modify then act.delete, and verify
+        # Modify
+        mod_content = "E2E modified\n"
+        mod_op = {"type": "modify", "path": TARGET_FILE, "content": mod_content}
+        ensure_clean_git(workspace)
+        _t = time.time(); mod_env = make_envelope(
+            "act.apply",
+            {
+                "workspace_path": str(workspace),
+                "plan_id": PLAN_ID,
+                "todo_id": TODO_ID,
+                "message": "Modify file",
+                "operations": [mod_op],
+                "approved": True,
+            },
+            correlation_id=EXECUTION_ID,
+        )
+        async with websockets.connect(f"{WS_URL_BASE}?client_id={CLIENT_ID}") as ws2:
+            _ = await ws_send_recv_until(ws2, "act.apply_result", send_first=mod_env, timeout_s=20.0)
+        timings["act_apply_modify_ms"] = (time.time() - _t) * 1000
+        assert target.read_text(encoding="utf-8") == mod_content
+
+        # Delete
+        del_op = {"type": "delete", "path": TARGET_FILE, "content": None}
+        ensure_clean_git(workspace)
+        _t = time.time(); del_env = make_envelope(
+            "act.apply",
+            {
+                "workspace_path": str(workspace),
+                "plan_id": PLAN_ID,
+                "todo_id": TODO_ID,
+                "message": "Delete file",
+                "operations": [del_op],
+                "approved": True,
+            },
+            correlation_id=EXECUTION_ID,
+        )
+        async with websockets.connect(f"{WS_URL_BASE}?client_id={CLIENT_ID}") as ws3:
+            _ = await ws_send_recv_until(ws3, "act.apply_result", send_first=del_env, timeout_s=20.0)
+        timings["act_apply_delete_ms"] = (time.time() - _t) * 1000
+        assert not target.exists()
+
+        # 9) Local rollback one commit (simulating rollback) then verify file restored absent/present as expected
+        # Roll back delete -> file should reappear with modified content
+        run(["git", "reset", "--hard", "HEAD~1"], cwd=workspace)
+        assert target.exists()
+        assert target.read_text(encoding="utf-8") == mod_content
+
         result = {
             "ok": True,
             "workspace": str(workspace),
             "written": [str(target)],
+            "timings_ms": timings,
+            "vector_db_path": str(vec_dir),
         }
         return result
     finally:
@@ -416,12 +492,20 @@ def main() -> None:
                     "retry": True,
                     "flaky": False,
                     "error": f"{first_err} | after-retry: {second_err}",
+                    "error_type": type(second_err).__name__,
                 }
                 RESULT_JSON.write_text(json.dumps(err, indent=2), encoding="utf-8")
                 print("E2E failure after retry:", err, file=sys.stderr)
                 sys.exit(1)
         # Non-transient failure: no retry
-        err = {"ok": False, "scenario": SCENARIO_ID, "retry": False, "flaky": False, "error": str(first_err)}
+        err = {
+            "ok": False,
+            "scenario": SCENARIO_ID,
+            "retry": False,
+            "flaky": False,
+            "error": str(first_err),
+            "error_type": type(first_err).__name__,
+        }
         RESULT_JSON.write_text(json.dumps(err, indent=2), encoding="utf-8")
         print("E2E failure:", err, file=sys.stderr)
         sys.exit(1)

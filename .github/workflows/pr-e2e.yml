@@ -1,12 +1,13 @@
-name: Nightly E2E Chat-Plan-Act (Windows)
+name: PR On-Demand E2E (Chat-Plan-Act)
 
 on:
-  schedule:
-    - cron: '0 1 * * *'  # 01:00 UTC nightly
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
   workflow_dispatch: {}
 
 jobs:
   e2e-windows:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'e2e:run')
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -22,12 +23,13 @@ jobs:
             backend/requirements-dev.txt
 
       - name: Install backend dependencies
+        shell: pwsh
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r backend/requirements.txt
           python -m pip install -r backend/requirements-dev.txt
 
-      - name: Run E2E scenario (Chat-Plan-Act)
+      - name: Run E2E harness
         shell: pwsh
         run: |
           python scripts/e2e/nightly_chat_plan_act.py
@@ -38,7 +40,7 @@ jobs:
         run: |
           if (Test-Path artifacts/e2e/e2e-result.json) {
             $res = Get-Content artifacts/e2e/e2e-result.json -Raw
-            "# Nightly E2E (Windows) Result`n`n```json`n$res`n```" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            "# PR E2E (Windows) Result`n`n```json`n$res`n```" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
             try {
               $obj = $res | ConvertFrom-Json
               if ($obj.timings_ms) {
@@ -50,18 +52,19 @@ jobs:
               }
             } catch {}
           } else {
-            "# Nightly E2E (Windows) Result`n`n(no result file found)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            "# PR E2E (Windows) Result`n`n(no result file found)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
           }
 
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nightly-e2e-artifacts
+          name: pr-e2e-artifacts-windows
           path: |
             artifacts/e2e/**
 
   e2e-ubuntu:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'e2e:run')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -82,14 +85,14 @@ jobs:
           python -m pip install -r backend/requirements.txt
           python -m pip install -r backend/requirements-dev.txt
 
-      - name: Run E2E scenario (Chat-Plan-Act)
+      - name: Run E2E harness
         run: |
           python scripts/e2e/nightly_chat_plan_act.py
 
       - name: Job summary (Ubuntu)
         if: always()
         run: |
-          echo "# Nightly E2E (Ubuntu) Result" >> $GITHUB_STEP_SUMMARY
+          echo "# PR E2E (Ubuntu) Result" >> $GITHUB_STEP_SUMMARY
           if [ -f artifacts/e2e/e2e-result.json ]; then
             echo '```json' >> $GITHUB_STEP_SUMMARY
             cat artifacts/e2e/e2e-result.json >> $GITHUB_STEP_SUMMARY
@@ -105,6 +108,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nightly-e2e-artifacts-ubuntu
+          name: pr-e2e-artifacts-ubuntu
           path: |
             artifacts/e2e/**
