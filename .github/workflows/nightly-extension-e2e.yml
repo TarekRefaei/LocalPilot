@@ -77,8 +77,8 @@ jobs:
         shell: pwsh
         run: |
           if (Test-Path backend.pid) {
-            $pid = Get-Content backend.pid
-            try { Stop-Process -Id $pid -Force } catch {}
+            $backendPid = Get-Content backend.pid
+            try { Stop-Process -Id $backendPid -Force } catch {}
           }
 
   ubuntu:
