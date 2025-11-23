@@ -1,0 +1,10 @@
+# Repository labels managed by labels-sync workflow
+- name: e2e:run
+  color: 0e8a16
+  description: Run Python E2E harness on PR (Windows + Ubuntu)
+- name: e2e:run-ext
+  color: dbab09
+  description: Run Extension Integration with live backend on PR (Windows + Ubuntu)
+- name: e2e:quarantine
+  color: b60205
+  description: Quarantine flaky E2E scenario via scripts/e2e/.flaky.json
