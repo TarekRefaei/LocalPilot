@@ -162,7 +162,7 @@ describe('WebSocketClient', () => {
       expect(client.connectionState).toBe(ConnectionState.Reconnecting);
     });
 
-    it.skip('should apply exponential backoff between reconnect attempts', async () => {
+    it('should apply exponential backoff between reconnect attempts', async () => {
       mockServer.onConnection((ws) => {
         ws.on('message', (data: string) => {
           const msg = JSON.parse(data);
@@ -185,12 +185,7 @@ describe('WebSocketClient', () => {
           resolve();
         });
       });
-
-      try {
-        await client.connect();
-      } catch {
-        // Expected to fail after max attempts
-      }
+      void client.connect();
 
       await reconnectingPromise;
 
@@ -198,7 +193,7 @@ describe('WebSocketClient', () => {
       expect(client.connectionState).toBe(ConnectionState.Reconnecting);
     }, 10000);
 
-    it.skip('should emit failed event after max reconnect attempts', async () => {
+    it('should emit failed event after max reconnect attempts', async () => {
       mockServer.onConnection((ws) => {
         ws.on('message', (data: string) => {
           const msg = JSON.parse(data);
@@ -217,12 +212,7 @@ describe('WebSocketClient', () => {
       const failedPromise = new Promise<void>((resolve) => {
         client.on('failed', () => resolve());
       });
-
-      try {
-        await client.connect();
-      } catch {
-        // Expected
-      }
+      void client.connect();
 
       await failedPromise;
       expect(client.connectionState).toBe(ConnectionState.Failed);

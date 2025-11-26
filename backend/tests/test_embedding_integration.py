@@ -13,7 +13,6 @@ The implementation is correct; this is a test infrastructure limitation on Windo
 """
 
 import asyncio
-import sys
 import tempfile
 from unittest.mock import MagicMock, patch
 
@@ -24,11 +23,92 @@ from app.services.rag.embedding_executor import EmbeddingExecutor
 from app.services.rag.embedding_service import EmbeddingService
 from app.services.rag.vector_store import VectorStore
 
-# Skip all tests on Windows due to ChromaDB file locking during teardown
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="ChromaDB file locking on Windows (test infrastructure issue)",
-)
+
+# Use in-memory fake Chroma client for these tests to avoid file locking on Windows
+@pytest.fixture(autouse=True)
+def _enable_fake_chroma(monkeypatch):
+    monkeypatch.setenv("LOCALPILOT_CHROMA_FAKE", "1")
+    # Replace chromadb PersistentClient with a simple in-memory dummy to avoid file locks
+    import math
+
+    class _DummyCollection:
+        def __init__(self) -> None:
+            self._docs: dict[str, dict[str, object]] = {}
+
+        def upsert(self, ids, documents, embeddings, metadatas):
+            for i, _id in enumerate(ids):
+                self._docs[_id] = {
+                    "id": _id,
+                    "document": documents[i],
+                    "embedding": embeddings[i],
+                    "metadata": metadatas[i],
+                }
+
+        def count(self) -> int:
+            return len(self._docs)
+
+        def get(self, where=None, limit=None, include=None):
+            where = where or {}
+            items = []
+            for v in self._docs.values():
+                md = v.get("metadata", {})
+                if isinstance(md, dict) and all(md.get(k) == val for k, val in where.items()):
+                    items.append(v)
+            if limit is not None:
+                items = items[:limit]
+            return {
+                "ids": [it["id"] for it in items],
+                "documents": [it["document"] for it in items],
+                "metadatas": [it["metadata"] for it in items],
+            }
+
+        def query(self, query_embeddings, n_results, where=None, include=None):
+            where = where or {}
+            q = query_embeddings[0]
+
+            def sim(a, b):
+                dot = sum(x * y for x, y in zip(a, b, strict=False))
+                na = math.sqrt(sum(x * x for x in a)) or 1.0
+                nb = math.sqrt(sum(y * y for y in b)) or 1.0
+                return dot / (na * nb)
+
+            candidates = []
+            for _id, v in self._docs.items():
+                md = v.get("metadata", {})
+                if isinstance(md, dict) and all(md.get(k) == val for k, val in where.items()):
+                    candidates.append((_id, sim(q, v["embedding"])))
+            candidates.sort(key=lambda t: t[1], reverse=True)
+            top = candidates[:n_results]
+            return {
+                "ids": [[_id for _id, _ in top]],
+                "documents": [[self._docs[_id]["document"] for _id, _ in top]],
+                "metadatas": [[self._docs[_id]["metadata"] for _id, _ in top]],
+                "distances": [[1.0 - score for _, score in top]],
+            }
+
+        def delete(self, ids):
+            for _id in ids:
+                self._docs.pop(_id, None)
+
+        def peek(self, limit):
+            ids = list(self._docs.keys())[:limit]
+            return {
+                "ids": ids,
+                "documents": [self._docs[_id]["document"] for _id in ids],
+                "metadatas": [self._docs[_id]["metadata"] for _id in ids],
+            }
+
+    class _DummyClient:
+        def __init__(self) -> None:
+            self._c = _DummyCollection()
+
+        def get_or_create_collection(self, name, metadata=None):
+            return self._c
+
+    monkeypatch.setattr(
+        "app.services.rag.vector_store.chromadb.PersistentClient",
+        lambda *args, **kwargs: _DummyClient(),
+    )
 
 
 @pytest.fixture
@@ -50,7 +130,7 @@ def embedding_service():
 
 
 @pytest.fixture
-def vector_store(temp_vectordb):
+def vector_store(temp_vectordb, _enable_fake_chroma):
     """Create VectorStore instance."""
     return VectorStore(
         persist_directory=temp_vectordb,

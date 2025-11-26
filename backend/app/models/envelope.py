@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
+from pydantic.config import ConfigDict
 
 
 class WebSocketEnvelope(BaseModel):
@@ -27,8 +28,8 @@ class WebSocketEnvelope(BaseModel):
         default="0.1.0", description="Contract version for forward compatibility"
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "event": "handshake",
                 "data": {"version": "0.1.0", "clientId": "client-123"},
@@ -37,6 +38,7 @@ class WebSocketEnvelope(BaseModel):
                 "contractVersion": "0.1.0",
             }
         }
+    )
 
 
 class ErrorData(BaseModel):

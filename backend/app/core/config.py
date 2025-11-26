@@ -3,7 +3,7 @@ Configuration management for LocalPilot backend.
 Supports environment variables and .env files.
 """
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -35,15 +35,18 @@ class Settings(BaseSettings):
     # Vector DB
     vector_db_path: str = "./data/chroma"
 
+    # Act/execution safety settings
     act_apply_safety: str = "strict"
     act_autoapprove_safe_creates: bool = True
     act_autoapprove_config_files: bool = False
     act_approval_timeout_seconds: int = 300
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    # Pydantic v2 settings config
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
 
 
 settings = Settings()

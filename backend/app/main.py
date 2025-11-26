@@ -4,6 +4,7 @@ Exposes REST and WebSocket APIs for the VS Code extension.
 """
 
 import asyncio
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import FastAPI
@@ -18,6 +19,18 @@ from app.core.logging import get_logger, setup_logging
 setup_logging()
 logger = get_logger("localpilot.backend")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context to handle startup/shutdown."""
+    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
+    health.set_startup_time(datetime.utcnow())
+    try:
+        yield
+    finally:
+        logger.info("Shutting down backend")
+
+
 # Create FastAPI app
 app = FastAPI(
     title=settings.app_name,
@@ -25,21 +38,8 @@ app = FastAPI(
     debug=settings.debug,
     docs_url="/docs" if settings.debug else None,
     redoc_url="/redoc" if settings.debug else None,
+    lifespan=lifespan,
 )
-
-
-# Startup and shutdown events
-@app.on_event("startup")
-async def startup_event() -> None:
-    """Initialize on startup."""
-    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
-    health.set_startup_time(datetime.utcnow())
-
-
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Cleanup on shutdown."""
-    logger.info("Shutting down backend")
 
 
 # Include routers
