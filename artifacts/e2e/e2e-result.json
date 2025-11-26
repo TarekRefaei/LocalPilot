@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "workspace": "C:\\Users\\super\\AppData\\Local\\Temp\\lp-e2e-t6tpgl_z\\ws",
+  "written": [
+    "C:\\Users\\super\\AppData\\Local\\Temp\\lp-e2e-t6tpgl_z\\ws\\docs\\E2E_README.md"
+  ],
+  "timings_ms": {
+    "health_ms": 1736.689805984497,
+    "indexing_broadcast_ms": 1.5132427215576172,
+    "chat_echo_ms": 250.01835823059082,
+    "act_dry_run_ms": 2.5110244750976562,
+    "act_apply_create_ms": 324.39208030700684,
+    "act_apply_modify_ms": 303.8187026977539,
+    "act_apply_delete_ms": 295.9325313568115
+  },
+  "vector_db_path": "C:\\Users\\super\\AppData\\Local\\Temp\\lp-e2e-t6tpgl_z\\vectordb",
+  "scenario": "chat-plan-act",
+  "retry": false,
+  "flaky": false
+}
