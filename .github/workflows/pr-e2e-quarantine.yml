@@ -37,6 +37,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          fetch-depth: 0
 
       - name: Ensure Python
         uses: actions/setup-python@v5
@@ -53,10 +54,27 @@ jobs:
           if [ ! -f "$FILE" ]; then echo '{"skip": []}' > "$FILE"; fi
           python -c "import json,os; p='scripts/e2e/.flaky.json';\ntry:\n d=json.load(open(p,'r',encoding='utf-8'))\nexcept Exception:\n d={'skip': []}\naction=os.environ.get('ACTION_IN','add'); scenario=os.environ.get('SCENARIO','chat-plan-act'); skip=[str(x) for x in d.get('skip',[])];\nif action=='add' and scenario not in skip: skip.append(scenario)\nif action=='remove': skip=[x for x in skip if x!=scenario]\nd['skip']=skip; open(p,'w',encoding='utf-8').write(json.dumps(d,indent=2)); print('skip:', skip)"
 
+      - name: Determine push capability
+        id: push_guard
+        run: |
+          can_push=false
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then can_push=true; fi
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then can_push=true; fi
+          echo "can_push=${can_push}" >> "$GITHUB_OUTPUT"
+
       - name: Commit and push
+        if: steps.push_guard.outputs.can_push == 'true'
         run: |
           git config user.email "bot@localpilot"
           git config user.name "localpilot-bot"
           git add scripts/e2e/.flaky.json
           git commit -m "chore(e2e): ${ACTION_IN} quarantine for ${SCENARIO}" || echo "No changes"
           git push
+
+      - name: Upload flaky file (no push perms)
+        if: always() && steps.push_guard.outputs.can_push != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: flaky-json-patch
+          path: scripts/e2e/.flaky.json
+          if-no-files-found: warn
