@@ -8,6 +8,10 @@ on:
   pull_request:
     paths:
       - 'backend/**'
+      - '.github/workflows/ci-backend.yml'
+      - 'docs/**'
+      - 'README.md'
+      - '.vscode/**'
   workflow_dispatch: {}
 
 jobs:

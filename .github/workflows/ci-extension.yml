@@ -8,6 +8,10 @@ on:
   pull_request:
     paths:
       - 'extension/**'
+      - '.github/workflows/ci-extension.yml'
+      - 'docs/**'
+      - 'README.md'
+      - '.vscode/**'
   workflow_dispatch: {}
 
 jobs:

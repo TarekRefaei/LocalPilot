@@ -32,7 +32,7 @@
     {
       "label": "Backend: Run",
       "type": "shell",
-      "command": ".venv\\Scripts\\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+      "command": ".venv\\Scripts\\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8765",
       "options": { "cwd": "${workspaceFolder}/backend" },
       "problemMatcher": []
     },
