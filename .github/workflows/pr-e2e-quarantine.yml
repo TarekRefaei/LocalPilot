@@ -48,11 +48,18 @@ jobs:
         env:
           ACTION_IN: ${{ inputs.action || (github.event.action == 'labeled' && 'add' || 'remove') }}
           SCENARIO: ${{ inputs.scenario || 'chat-plan-act' }}
+        shell: bash
         run: |
           set -e
           FILE="scripts/e2e/.flaky.json"
           if [ ! -f "$FILE" ]; then echo '{"skip": []}' > "$FILE"; fi
-          python -c "import json,os; p='scripts/e2e/.flaky.json';\ntry:\n d=json.load(open(p,'r',encoding='utf-8'))\nexcept Exception:\n d={'skip': []}\naction=os.environ.get('ACTION_IN','add'); scenario=os.environ.get('SCENARIO','chat-plan-act'); skip=[str(x) for x in d.get('skip',[])];\nif action=='add' and scenario not in skip: skip.append(scenario)\nif action=='remove': skip=[x for x in skip if x!=scenario]\nd['skip']=skip; open(p,'w',encoding='utf-8').write(json.dumps(d,indent=2)); print('skip:', skip)"
+          tmp=$(mktemp)
+          if [ "$ACTION_IN" = "add" ]; then
+            jq --arg s "$SCENARIO" '.skip = ((.skip // []) + [$s] | unique)' "$FILE" > "$tmp" && mv "$tmp" "$FILE"
+          else
+            jq --arg s "$SCENARIO" '.skip = ((.skip // []) | map(select(. != $s)))' "$FILE" > "$tmp" && mv "$tmp" "$FILE"
+          fi
+          echo "Updated .flaky.json:"; cat "$FILE"
 
       - name: Determine push capability
         id: push_guard

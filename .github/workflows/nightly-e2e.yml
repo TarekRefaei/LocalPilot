@@ -34,21 +34,13 @@ jobs:
 
       - name: Job summary (Windows)
         if: always()
+        continue-on-error: true
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Continue'
           if (Test-Path artifacts/e2e/e2e-result.json) {
             $res = Get-Content artifacts/e2e/e2e-result.json -Raw
             "# Nightly E2E (Windows) Result`n`n```json`n$res`n```" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-            try {
-              $obj = $res | ConvertFrom-Json
-              if ($obj.timings_ms) {
-                "`n## Timings (ms)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-                foreach ($k in $obj.timings_ms.PSObject.Properties.Name) {
-                  $v = [math]::Round([double]$obj.timings_ms[$k],1)
-                  "- $k: $v" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-                }
-              }
-            } catch {}
           } else {
             "# Nightly E2E (Windows) Result`n`n(no result file found)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
           }
@@ -89,15 +81,13 @@ jobs:
 
       - name: Job summary (Ubuntu)
         if: always()
+        continue-on-error: true
         run: |
           echo "# Nightly E2E (Ubuntu) Result" >> $GITHUB_STEP_SUMMARY
           if [ -f artifacts/e2e/e2e-result.json ]; then
             echo '```json' >> $GITHUB_STEP_SUMMARY
             cat artifacts/e2e/e2e-result.json >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "## Timings (ms)" >> $GITHUB_STEP_SUMMARY
-            python -c "import json; d=json.load(open('artifacts/e2e/e2e-result.json','r',encoding='utf-8')); t=d.get('timings_ms') or {};\n\n\n\n[print(f'- {k}: {float(t[k]):.1f}') if isinstance(t[k], (int,float)) or str(t[k]).replace('.','',1).isdigit() else print(f'- {k}: {t[k]}') for k in t]" >> $GITHUB_STEP_SUMMARY
           else
             echo "(no result file found)" >> $GITHUB_STEP_SUMMARY
           fi
