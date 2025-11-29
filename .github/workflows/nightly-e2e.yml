@@ -35,15 +35,16 @@ jobs:
       - name: Job summary (Windows)
         if: always()
         continue-on-error: true
-        shell: pwsh
+        shell: bash
         run: |
-          $ErrorActionPreference = 'Continue'
-          if (Test-Path artifacts/e2e/e2e-result.json) {
-            $res = Get-Content artifacts/e2e/e2e-result.json -Raw
-            "# Nightly E2E (Windows) Result`n`n```json`n$res`n```" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-          } else {
-            "# Nightly E2E (Windows) Result`n`n(no result file found)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-          }
+          echo "# Nightly E2E (Windows) Result" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f artifacts/e2e/e2e-result.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat artifacts/e2e/e2e-result.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "(no result file found)" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload artifacts
         if: always()
