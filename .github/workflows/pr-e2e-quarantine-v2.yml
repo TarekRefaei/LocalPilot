@@ -1,6 +1,18 @@
 name: PR E2E Quarantine Toggle v2
 
 on:
+  workflow_call:
+    inputs:
+      action:
+        description: 'add or remove'
+        required: false
+        type: string
+        default: 'add'
+      scenario:
+        description: 'Scenario ID'
+        required: false
+        type: string
+        default: 'chat-plan-act'
   pull_request:
     types: [labeled, unlabeled]
   workflow_dispatch:
@@ -27,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'workflow_call' ||
       (github.event_name == 'pull_request' && (
         (github.event.action == 'labeled' && github.event.label.name == 'e2e:quarantine') ||
         (github.event.action == 'unlabeled' && github.event.label.name == 'e2e:quarantine')

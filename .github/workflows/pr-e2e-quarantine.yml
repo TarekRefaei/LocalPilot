@@ -1,4 +1,4 @@
-name: PR E2E Quarantine Toggle v2
+name: PR E2E Quarantine Toggle (wrapper)
 
 on:
   pull_request:
@@ -23,70 +23,8 @@ permissions:
   contents: write
 
 jobs:
-  toggle:
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && (
-        (github.event.action == 'labeled' && github.event.label.name == 'e2e:quarantine') ||
-        (github.event.action == 'unlabeled' && github.event.label.name == 'e2e:quarantine')
-      ))
-    steps:
-      - name: Checkout PR head
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref || github.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          fetch-depth: 0
-
-      - name: Ensure Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Ensure jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-
-      - name: Toggle quarantine entry (jq)
-        env:
-          ACTION_IN: ${{ inputs.action || (github.event.action == 'labeled' && 'add' || 'remove') }}
-          SCENARIO: ${{ inputs.scenario || 'chat-plan-act' }}
-        shell: bash
-        run: |
-          set -e
-          FILE="scripts/e2e/.flaky.json"
-          if [ ! -f "$FILE" ]; then echo '{"skip": []}' > "$FILE"; fi
-          tmp=$(mktemp)
-          if [ "$ACTION_IN" = "add" ]; then
-            jq --arg s "$SCENARIO" '.skip = ((.skip // []) + [$s] | unique)' "$FILE" > "$tmp" && mv "$tmp" "$FILE"
-          else
-            jq --arg s "$SCENARIO" '.skip = ((.skip // []) | map(select(. != $s)))' "$FILE" > "$tmp" && mv "$tmp" "$FILE"
-          fi
-          echo "Updated .flaky.json:"; cat "$FILE"
-
-      - name: Determine push capability
-        id: push_guard
-        run: |
-          can_push=false
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then can_push=true; fi
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then can_push=true; fi
-          echo "can_push=${can_push}" >> "$GITHUB_OUTPUT"
-
-      - name: Commit and push
-        if: steps.push_guard.outputs.can_push == 'true'
-        run: |
-          git config user.email "bot@localpilot"
-          git config user.name "localpilot-bot"
-          git add scripts/e2e/.flaky.json
-          git commit -m "chore(e2e): ${ACTION_IN} quarantine for ${SCENARIO}" || echo "No changes"
-          git push
-
-      - name: Upload flaky file (no push perms)
-        if: always() && steps.push_guard.outputs.can_push != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: flaky-json-patch
-          path: scripts/e2e/.flaky.json
-          if-no-files-found: warn
+  call-v2:
+    uses: ./.github/workflows/pr-e2e-quarantine-v2.yml
+    with:
+      action: ${{ inputs.action || (github.event_name == 'pull_request' && (github.event.action == 'labeled' && 'add' || 'remove')) || 'add' }}
+      scenario: ${{ inputs.scenario || 'chat-plan-act' }}
