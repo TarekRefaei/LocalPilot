@@ -1,3 +1,5 @@
 {
-  "skip": []
+  "skip": [
+    "chat-plan-act"
+  ]
 }
