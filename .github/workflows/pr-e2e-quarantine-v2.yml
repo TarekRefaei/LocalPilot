@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: 'chat-plan-act'
+      can_push:
+        description: 'Explicit push permission propagated from wrapper (bool)'
+        required: false
+        type: boolean
+        default: false
   pull_request:
     types: [labeled, unlabeled]
   workflow_dispatch:
@@ -76,10 +81,16 @@ jobs:
 
       - name: Determine push capability
         id: push_guard
+        env:
+          ACTION_CAN_PUSH: ${{ inputs.can_push }}
         run: |
           can_push=false
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then can_push=true; fi
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then can_push=true; fi
+          if [ -n "$ACTION_CAN_PUSH" ]; then
+            if [ "$ACTION_CAN_PUSH" = "true" ]; then can_push=true; fi
+          else
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then can_push=true; fi
+            if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then can_push=true; fi
+          fi
           echo "can_push=${can_push}" >> "$GITHUB_OUTPUT"
 
       - name: Commit and push
