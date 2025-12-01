@@ -32,6 +32,8 @@ export interface LocalPilotState {
   setPlans(plans: Plan[]): void;
   setIndexingRunning(value: boolean): void;
   setRecentPrompts(list: string[]): void;
+  getDefaultModel(): string | undefined;
+  setDefaultModel(model: string): Promise<void> | void;
 }
 
 export class InMemoryState implements LocalPilotState {
@@ -41,6 +43,7 @@ export class InMemoryState implements LocalPilotState {
   private plans: Plan[] = [];
   private indexingRunning = false;
   private recentPrompts: string[] = [];
+  private defaultModel: string | undefined;
 
   getPlans(): readonly Plan[] {
     return this.plans;
@@ -68,6 +71,15 @@ export class InMemoryState implements LocalPilotState {
     this.recentPrompts = [...list];
     this._onDidChange.fire();
   }
+
+  getDefaultModel(): string | undefined {
+    return this.defaultModel;
+  }
+
+  setDefaultModel(model: string): void {
+    this.defaultModel = model;
+    this._onDidChange.fire();
+  }
 }
 
 export class MementoState extends InMemoryState {
@@ -75,6 +87,7 @@ export class MementoState extends InMemoryState {
   private readonly K_PLANS = 'localpilot.plans';
   private readonly K_INDEXING = 'localpilot.indexing';
   private readonly K_RECENT = 'localpilot.recentPrompts';
+  private readonly K_MODEL = 'localpilot.defaultModel';
 
   constructor(memento: vscode.Memento) {
     super();
@@ -95,9 +108,13 @@ export class MementoState extends InMemoryState {
       : [];
     const indexing = !!this.m.get<boolean>(this.K_INDEXING);
     const recent = (this.m.get<string[]>(this.K_RECENT) ?? []).filter(Boolean);
+    const model = this.m.get<string | undefined>(this.K_MODEL);
     super.setPlans(plans);
     super.setIndexingRunning(indexing);
     super.setRecentPrompts(recent);
+    if (model) {
+      super.setDefaultModel(model);
+    }
   }
 
   override setPlans(plans: Plan[]): void {
@@ -113,5 +130,17 @@ export class MementoState extends InMemoryState {
   override setRecentPrompts(list: string[]): void {
     super.setRecentPrompts(list);
     void this.m.update(this.K_RECENT, list);
+  }
+
+  override async setDefaultModel(model: string): Promise<void> {
+    super.setDefaultModel(model);
+    await this.m.update(this.K_MODEL, model);
+    try {
+      await vscode.workspace
+        .getConfiguration('localpilot')
+        .update('defaultModel', model, vscode.ConfigurationTarget.Global);
+    } catch {
+      // ignore if configuration update fails
+    }
   }
 }

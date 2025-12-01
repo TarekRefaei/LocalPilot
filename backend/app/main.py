@@ -11,7 +11,9 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.api import health, metrics, retrieve, websocket
+from app.api import chat as chat_api
+from app.api import health, metrics, prom_metrics, retrieve, websocket
+from app.api import models as models_api
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 
@@ -47,6 +49,9 @@ app.include_router(health.router, tags=["health"])
 app.include_router(websocket.router, tags=["websocket"])
 app.include_router(metrics.router, tags=["metrics"])
 app.include_router(retrieve.router, tags=["retrieval"])
+app.include_router(models_api.router, tags=["models"])
+app.include_router(chat_api.router, tags=["chat"])
+app.include_router(prom_metrics.router)
 
 
 # Legacy endpoints for compatibility
@@ -57,7 +62,9 @@ class ChatRequest(BaseModel):
 
 @app.post("/chat/echo")
 async def chat_echo(req: ChatRequest):
-    logger.info(f"Chat request: prompt={req.prompt[:50]}..., model={req.model or 'local'}")
+    logger.info(
+        f"Chat request: prompt={req.prompt[:50]}..., model={req.model or 'local'}"
+    )
 
     async def gen():
         try:
