@@ -44,10 +44,7 @@ def _get_ollama_api_key() -> str | None:
 
 
 def _get_ssl_verify() -> bool:
-    if (
-        settings is not None
-        and getattr(settings, "OLLAMA_VERIFY_SSL", None) is not None
-    ):
+    if settings is not None and getattr(settings, "OLLAMA_VERIFY_SSL", None) is not None:
         return bool(settings.OLLAMA_VERIFY_SSL)  # type: ignore[arg-type]
     val = os.environ.get("OLLAMA_VERIFY_SSL", "1")
     return val not in ("0", "false", "False")
@@ -105,9 +102,7 @@ def _extract_texts_from_json(obj) -> list[str]:
                 if isinstance(choice, dict):
                     if "delta" in choice and isinstance(choice["delta"], dict):
                         for k in ("content", "text", "token"):
-                            if k in choice["delta"] and isinstance(
-                                choice["delta"][k], str
-                            ):
+                            if k in choice["delta"] and isinstance(choice["delta"][k], str):
                                 pieces.append(choice["delta"][k])
                     if "text" in choice and isinstance(choice["text"], str):
                         pieces.append(choice["text"])
@@ -242,9 +237,7 @@ async def stream_from_ollama(
 
     try:
         async with httpx.AsyncClient(timeout=timeout, verify=verify) as client:
-            async with client.stream(
-                "POST", url, json=payload, headers=headers
-            ) as resp:
+            async with client.stream("POST", url, json=payload, headers=headers) as resp:
                 resp.raise_for_status()
                 async for parsed in _parse_ollama_stream(
                     _iter_stream_text(resp), request_id=request_id, model_label=model
@@ -274,9 +267,7 @@ async def stream_from_ollama_safe(
     Convenience wrapper that catches exceptions and yields an error message as a final chunk.
     """
     try:
-        async for piece in stream_from_ollama(
-            prompt, model=model, request_id=request_id
-        ):
+        async for piece in stream_from_ollama(prompt, model=model, request_id=request_id):
             yield piece
     except Exception as exc:  # pragma: no cover - network/host dependent
         logger.exception("Model adapter failed: %s", exc)
