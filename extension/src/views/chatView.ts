@@ -89,7 +89,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       const current = this.state?.getDefaultModel?.() ?? 'local';
       const models = await fetchAvailableModels();
       const items = models.length ? models : ['local'];
-      const choice = await vscode.window.showQuickPick(items, { placeHolder: `Current: ${current}` });
+      const choice = await vscode.window.showQuickPick(items, {
+        placeHolder: `Current: ${current}`,
+      });
       if (choice) {
         const prefixed = choice.includes(':') ? choice : `ollama:${choice}`;
         await this.state?.setDefaultModel?.(prefixed);
@@ -123,7 +125,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
     if (msg?.type === 'refresh') {
       this.sendState();
-      this.updateModels();
+      await this.updateModels();
       return;
     }
     if (msg?.type === 'clearHistory') {

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { randomUUID as nodeRandomUUID } from 'crypto';
 
 const LOG_PREFIX = '[LocalPilot Chat]';
 
@@ -67,7 +68,7 @@ export async function streamChatFromBackend(
   try {
     cbs.onStart?.();
     // generate a request id client-side
-    const rid = (globalThis as any).crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
+    const rid = typeof nodeRandomUUID === 'function' ? nodeRandomUUID() : Math.random().toString(36).slice(2);
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -80,7 +81,8 @@ export async function streamChatFromBackend(
       throw new Error(msg);
     }
     // capture request id from headers if provided
-    lastRequestId = res.headers.get('X-Request-Id') || rid;
+    const hdrRid = res.headers.get('X-Request-Id');
+    lastRequestId = hdrRid ?? rid;
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let finished = false;
@@ -129,16 +131,36 @@ export async function abortLastRequest(): Promise<boolean> {
   }
 }
 
-export async function fetchHistory(sessionId: string, limit = 200): Promise<Array<{ role: string; text: string; ts: number }>> {
+export type HistoryItem = { role: string; text: string; ts: number };
+
+export async function fetchHistory(sessionId: string, limit = 200): Promise<HistoryItem[]> {
   const cfg = vscode.workspace.getConfiguration('localpilot');
   const baseUrl = String(cfg.get('backend.baseUrl') ?? 'http://127.0.0.1:8765');
   const url = `${baseUrl.replace(/\/$/, '')}/chat/history?session_id=${encodeURIComponent(sessionId)}&limit=${limit}`;
   try {
     const res = await fetch(url, { method: 'GET' });
     if (!res.ok) return [];
-    const body = await res.json();
-    if (body && Array.isArray((body as any).history)) {
-      return (body as any).history as Array<{ role: string; text: string; ts: number }>;
+    const body: unknown = await res.json();
+    if (typeof body === 'object' && body !== null) {
+      const maybe = body as { history?: unknown };
+      if (Array.isArray(maybe.history)) {
+        const result: HistoryItem[] = [];
+        for (const m of maybe.history) {
+          if (
+            typeof m === 'object' &&
+            m !== null &&
+            'role' in m &&
+            'text' in m &&
+            'ts' in m
+          ) {
+            const { role, text, ts } = m as { role: unknown; text: unknown; ts: unknown };
+            if (typeof role === 'string' && typeof text === 'string' && typeof ts === 'number') {
+              result.push({ role, text, ts });
+            }
+          }
+        }
+        return result;
+      }
     }
     return [];
   } catch (e) {
