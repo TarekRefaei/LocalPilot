@@ -54,9 +54,14 @@ async def stream_chat(req: ChatRequest, request: Request):
             model_name = (req.model or "llama2").strip()
             if model_name.lower().startswith("ollama:"):
                 model_name = model_name.split(":", 1)[1]
-            async for chunk in stream_from_ollama_safe(
-                full_prompt, model=model_name, request_id=request_id
-            ):
+            try:
+                agen = stream_from_ollama_safe(full_prompt, model=model_name, request_id=request_id)
+            except TypeError as e:
+                if "request_id" in str(e):
+                    agen = stream_from_ollama_safe(full_prompt, model=model_name)
+                else:
+                    raise
+            async for chunk in agen:
                 # Save assistant chunk
                 try:
                     await storage.save_message(session_id, "assistant", chunk)
