@@ -7,6 +7,8 @@ const treeProviders: Record<string, any> = {};
 
 export const window = {
   showInformationMessage: jest.fn(() => Promise.resolve(undefined)),
+  showWarningMessage: jest.fn(() => Promise.resolve(undefined)),
+  showErrorMessage: jest.fn(() => Promise.resolve(undefined)),
   registerTreeDataProvider: jest.fn((viewId: string, provider: any): Disposable => {
     treeProviders[viewId] = provider;
     return { dispose() {} };
