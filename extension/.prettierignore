@@ -4,3 +4,4 @@ coverage/
 .vscode-test/
 media/
 resources/
+src/webview/
