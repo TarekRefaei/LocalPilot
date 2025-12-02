@@ -1,0 +1,20 @@
+name: Extension Integration (manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  extension-integration:
+    name: Extension Integration Tests (manual)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install and run integration tests
+        working-directory: ./extension
+        run: |
+          npm ci
+          npm run test:integration

@@ -111,6 +111,19 @@
     }
   }
 
+  function renderModels(models){
+    const m = byId('models'); if(!m) return;
+    if(!Array.isArray(models) || models.length === 0){ m.innerHTML = ''; return; }
+    m.innerHTML = models.map(name => `<span class="item" data-model="${encodeURIComponent(name)}">${escapeHtml(name)}</span>`).join('');
+    for(const el of m.querySelectorAll('.item')){
+      el.addEventListener('click', ()=>{
+        const v = decodeURIComponent(el.getAttribute('data-model') || '');
+        vscode.postMessage({ type: 'setModel', text: v });
+        updateModelBadge(v);
+      });
+    }
+  }
+
   function updateModelBadge(model){
     const el = byId('model-badge');
     if(el){ el.textContent = 'model: ' + String(model || 'local'); }
@@ -190,6 +203,13 @@
       updateModelBadge(msg.model || 'local');
       log('[LocalPilot Chat] state message:', msg);
     }
+    if(msg && msg.type === 'models'){
+      renderModels(msg.list || []);
+    }
+    if(msg && msg.type === 'clearAll'){
+      const messages = byId('messages'); if(messages){ messages.innerHTML = ''; }
+      renderRecent([]);
+    }
   });
 
   function init(){
@@ -208,12 +228,14 @@
     const btnCopy = byId('btn-copy');
     const btnTransfer = byId('btn-transfer');
     const btnClear = byId('btn-clear');
+    const btnClearHistory = byId('btn-clear-history');
     if(btnSend){ btnSend.addEventListener('click', ()=> send()); }
     if(btnStop){ btnStop.addEventListener('click', ()=> vscode.postMessage({ type: 'stop' })); }
     if(btnRegen){ btnRegen.addEventListener('click', ()=> vscode.postMessage({ type: 'regen' })); }
     if(btnCopy){ btnCopy.addEventListener('click', ()=> copyLastAssistant()); }
     if(btnTransfer){ btnTransfer.addEventListener('click', ()=> transfer()); }
     if(btnClear){ btnClear.addEventListener('click', ()=> clearMsgs()); }
+    if(btnClearHistory){ btnClearHistory.addEventListener('click', ()=> { clearMsgs(); renderRecent([]); vscode.postMessage({ type: 'clearHistory' }); }); }
 
     const modelBadge = byId('model-badge');
     if(modelBadge){ modelBadge.style.cursor = 'pointer'; modelBadge.title = 'Click to switch model'; modelBadge.addEventListener('click',()=> vscode.postMessage({ type: 'pickModel' })); }

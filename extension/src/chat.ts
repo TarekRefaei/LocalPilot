@@ -13,10 +13,12 @@ export function createChatHandler(state: LocalPilotState): vscode.ChatRequestHan
 
     try {
       stream.progress('Preparing response...');
-      // Simple streamed markdown response
+      const selectedModel = state.getDefaultModel?.() ?? 'llama2';
+      // Cleaner header with model + plans and a separator
       stream.markdown('### LocalPilot\n');
-      stream.markdown('I can draft a plan from your request.\n\n');
-      stream.markdown(`You currently have ${planCount} plan(s).\n`);
+      stream.markdown(`**Model:** ${selectedModel}  \n**Plans:** ${planCount}\n\n---\n`);
+      // Short guidance line below header
+      stream.markdown(`Type @ for context, / for commands (Model: ${selectedModel})\n\n`);
       stream.markdown('Preview:');
       const title = `Draft plan: ${prompt.slice(0, 40) || 'Untitled'}`;
       stream.markdown(`\n- ${title}\n`);

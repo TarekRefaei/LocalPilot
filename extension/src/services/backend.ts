@@ -13,6 +13,27 @@ function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown):
   }
 }
 
+export async function fetchAvailableModels(): Promise<string[]> {
+  const cfg = vscode.workspace.getConfiguration('localpilot');
+  const baseUrl = String(cfg.get('backend.baseUrl') ?? 'http://127.0.0.1:8765');
+  const url = `${baseUrl.replace(/\/$/, '')}/api/models`;
+  try {
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return [];
+    const body = await res.json();
+    if (Array.isArray(body)) {
+      return body.map((it: any) => it?.name ?? it?.id ?? String(it));
+    }
+    if (body && Array.isArray((body as any).models)) {
+      return (body as any).models as string[];
+    }
+    return [];
+  } catch (err) {
+    console.warn('[LocalPilot] fetchAvailableModels failed', err);
+    return [];
+  }
+}
+
 export interface StreamCallbacks {
   onStart?: () => void;
   onChunk?: (text: string) => void;
@@ -25,23 +46,32 @@ interface ReadResult {
   value?: Uint8Array;
 }
 
+let lastRequestId: string | null = null;
+
+export function getLastRequestId(): string | null {
+  return lastRequestId;
+}
+
 export async function streamChatFromBackend(
   prompt: string,
   abort: AbortSignal,
-  cbs: StreamCallbacks
+  cbs: StreamCallbacks,
+  sessionId?: string,
 ): Promise<void> {
   const cfg = vscode.workspace.getConfiguration('localpilot');
-  const baseUrl = String(cfg.get('backend.baseUrl') ?? 'http://127.0.0.1:8000');
-  const model = String(cfg.get('model') ?? 'local');
+  const baseUrl = String(cfg.get('backend.baseUrl') ?? 'http://127.0.0.1:8765');
+  const model = String(cfg.get('defaultModel') ?? cfg.get('model') ?? 'local');
 
-  const url = `${baseUrl.replace(/\/$/, '')}/chat/echo`;
+  const url = `${baseUrl.replace(/\/$/, '')}/chat/stream`;
   log('info', `Starting stream to ${url} with model=${model}`);
   try {
     cbs.onStart?.();
+    // generate a request id client-side
+    const rid = (globalThis as any).crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, model }),
+      body: JSON.stringify({ prompt, model, request_id: rid, session_id: sessionId }),
       signal: abort,
     });
     if (!res.ok || !res.body) {
@@ -49,6 +79,8 @@ export async function streamChatFromBackend(
       log('error', msg);
       throw new Error(msg);
     }
+    // capture request id from headers if provided
+    lastRequestId = res.headers.get('X-Request-Id') || rid;
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let finished = false;
@@ -75,5 +107,42 @@ export async function streamChatFromBackend(
     const errMsg = err instanceof Error ? err.message : String(err);
     log('error', `Stream failed: ${errMsg}`);
     cbs.onError?.(err);
+  }
+}
+
+export async function abortLastRequest(): Promise<boolean> {
+  try {
+    const rid = lastRequestId;
+    if (!rid) return false;
+    const cfg = vscode.workspace.getConfiguration('localpilot');
+    const baseUrl = String(cfg.get('backend.baseUrl') ?? 'http://127.0.0.1:8765');
+    const url = `${baseUrl.replace(/\/$/, '')}/chat/abort`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ request_id: rid }),
+    });
+    return res.ok;
+  } catch (e) {
+    log('warn', 'abortLastRequest failed', e);
+    return false;
+  }
+}
+
+export async function fetchHistory(sessionId: string, limit = 200): Promise<Array<{ role: string; text: string; ts: number }>> {
+  const cfg = vscode.workspace.getConfiguration('localpilot');
+  const baseUrl = String(cfg.get('backend.baseUrl') ?? 'http://127.0.0.1:8765');
+  const url = `${baseUrl.replace(/\/$/, '')}/chat/history?session_id=${encodeURIComponent(sessionId)}&limit=${limit}`;
+  try {
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return [];
+    const body = await res.json();
+    if (body && Array.isArray((body as any).history)) {
+      return (body as any).history as Array<{ role: string; text: string; ts: number }>;
+    }
+    return [];
+  } catch (e) {
+    log('warn', 'fetchHistory failed', e);
+    return [];
   }
 }

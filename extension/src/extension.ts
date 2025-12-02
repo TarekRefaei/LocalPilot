@@ -4,6 +4,7 @@ import { registerLocalPilotCommands } from './commands';
 import { COMMAND_IDS } from './ids';
 import { InMemoryState, MementoState } from './services/state';
 import { registerLocalPilotChat } from './chat';
+import { LocalPilotPanel } from './webview/panel';
 
 export function activate(context: vscode.ExtensionContext) {
   const state = context.globalState ? new MementoState(context.globalState) : new InMemoryState();
@@ -16,6 +17,11 @@ export function activate(context: vscode.ExtensionContext) {
   registerLocalPilotCommands(context, state);
   registerLocalPilotViews(context, state);
   registerLocalPilotChat(context, state);
+
+  const openWebviewCmd = vscode.commands.registerCommand('localpilot.openWebview', () => {
+    LocalPilotPanel.createOrShow(state);
+  });
+  context.subscriptions.push(openWebviewCmd);
 
   return { state };
 }

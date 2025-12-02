@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import type { LocalPilotState } from '../services/state';
 import { COMMAND_IDS } from '../ids';
-import { streamChatFromBackend } from '../services/backend';
+import { streamChatFromBackend, fetchAvailableModels } from '../services/backend';
 
 export class ChatViewProvider implements vscode.WebviewViewProvider {
   private view: vscode.WebviewView | undefined;
@@ -53,6 +53,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     });
     webview.html = this.getHtml(webview);
     void this.sendState();
+    void this.updateModels();
   }
 
   private async handleMessage(msg: {
@@ -85,16 +86,22 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       return;
     }
     if (msg?.type === 'pickModel') {
-      const cfg = vscode.workspace.getConfiguration('localpilot');
-      const current = String(cfg.get('model') ?? 'local');
-      const choice = await vscode.window.showQuickPick(
-        ['local', 'ollama:llama3', 'openai:gpt-4o-mini'],
-        { placeHolder: `Current: ${current}` }
-      );
+      const current = this.state?.getDefaultModel?.() ?? 'local';
+      const models = await fetchAvailableModels();
+      const items = models.length ? models : ['local'];
+      const choice = await vscode.window.showQuickPick(items, { placeHolder: `Current: ${current}` });
       if (choice) {
-        await cfg.update('model', choice, vscode.ConfigurationTarget.Global);
+        const prefixed = choice.includes(':') ? choice : `ollama:${choice}`;
+        await this.state?.setDefaultModel?.(prefixed);
         this.sendState();
       }
+      return;
+    }
+    if (msg?.type === 'setModel' && typeof msg.text === 'string') {
+      const choice = msg.text;
+      const prefixed = choice.includes(':') ? choice : `ollama:${choice}`;
+      await this.state?.setDefaultModel?.(prefixed);
+      this.sendState();
       return;
     }
     if (msg?.type === 'stop') {
@@ -116,6 +123,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
     if (msg?.type === 'refresh') {
       this.sendState();
+      this.updateModels();
+      return;
+    }
+    if (msg?.type === 'clearHistory') {
+      this.state?.setRecentPrompts?.([]);
+      this.sendState();
+      void this.view?.webview.postMessage({ type: 'clearAll' });
       return;
     }
   }
@@ -170,6 +184,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         .badge { padding: 2px 6px; border: 1px solid var(--vscode-input-border); border-radius: 999px; }
         .recent { font-size: 12px; opacity: 0.9; }
         .recent .item { display: inline-block; margin: 2px 6px 2px 0; padding: 2px 6px; border: 1px solid var(--vscode-input-border); border-radius: 999px; cursor: pointer; }
+        .models { font-size: 12px; opacity: 0.9; }
+        .models .item { display: inline-block; margin: 2px 6px 2px 0; padding: 2px 6px; border: 1px solid var(--vscode-input-border); border-radius: 999px; cursor: pointer; }
       </style>
     `;
     const script = `
@@ -187,6 +203,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           <div class="container">
             <div id="hint" class="hint">LocalPilot Chat (inline). Type a prompt, send, and optionally transfer to Plans.</div>
             <div id="recent" class="recent"></div>
+            <div id="models" class="models"></div>
             <div id="messages" class="messages"></div>
             <div class="composer">
               <div class="statusbar">
@@ -201,6 +218,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                 <button id="btn-copy">Copy</button>
                 <button id="btn-transfer">Transfer to Plan</button>
                 <button id="btn-clear">Clear</button>
+                <button id="btn-clear-history">Clear History</button>
               </div>
             </div>
           </div>
@@ -216,11 +234,25 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     if (!webview) return;
     const count = this.state?.getPlans().length ?? 0;
     const recent = this.state?.getRecentPrompts?.() ?? [];
-    const cfg = vscode.workspace.getConfiguration('localpilot');
-    const model = String(cfg.get('model') ?? 'local');
+    const model = this.state?.getDefaultModel?.() ?? 'local';
     const payload = { type: 'state', plans: count, recent, model } as const;
     this.lastStatePayload = { plans: count, recent: [...recent], model };
     void webview.postMessage(payload);
+  }
+
+  private async updateModels(): Promise<void> {
+    try {
+      const list = await fetchAvailableModels();
+      const webview = this.view?.webview;
+      if (webview) {
+        void webview.postMessage({ type: 'models', list });
+      }
+    } catch {
+      const webview = this.view?.webview;
+      if (webview) {
+        void webview.postMessage({ type: 'models', list: [] });
+      }
+    }
   }
 
   public __testGetLastState(): { plans: number; recent: string[]; model: string } | undefined {

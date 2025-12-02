@@ -288,8 +288,23 @@ export function registerLocalPilotCommands(
   );
 
   d.push(
-    vscode.commands.registerCommand(COMMAND_IDS.modelSwap, () => {
-      void vscode.window.showInformationMessage('Model: Swap');
+    vscode.commands.registerCommand(COMMAND_IDS.modelSwap, async () => {
+      try {
+        const backendSvc = await import('./services/backend');
+        const models = await backendSvc.fetchAvailableModels();
+        if (!models || models.length === 0) {
+          void vscode.window.showInformationMessage('No models available from backend');
+          return;
+        }
+        const pick = await vscode.window.showQuickPick(models, { placeHolder: 'Select model' });
+        if (pick) {
+          const chosen = pick.includes(':') ? pick : `ollama:${pick}`;
+          await state?.setDefaultModel?.(chosen);
+          void vscode.window.showInformationMessage(`Model set to ${chosen}`);
+        }
+      } catch (err) {
+        void vscode.window.showErrorMessage('Model selection failed: ' + String(err));
+      }
     })
   );
 
