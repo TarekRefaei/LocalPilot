@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.retrieve import get_retriever
 from app.models.chat import ChatRequest
 from app.services import storage, stream_control
-from app.services.model_adapter import stream_from_ollama
+from app.services.model_adapter import stream_from_ollama_safe
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -36,9 +36,7 @@ async def stream_chat(req: ChatRequest, request: Request):
     evidence_texts: list[str] = [r.get("content", "") for r in results][:5]
 
     # Build prompt
-    system_prefix = (
-        "You are LocalPilot. Use the evidence below to answer the user's question.\n\n"
-    )
+    system_prefix = "You are LocalPilot. Use the evidence below to answer the user's question.\n\n"
     evidence_block = "\n\n--- Evidence ---\n\n" + (
         "\n\n".join(evidence_texts) if evidence_texts else "<no evidence>"
     )
@@ -56,7 +54,7 @@ async def stream_chat(req: ChatRequest, request: Request):
             model_name = (req.model or "llama2").strip()
             if model_name.lower().startswith("ollama:"):
                 model_name = model_name.split(":", 1)[1]
-            async for chunk in stream_from_ollama(
+            async for chunk in stream_from_ollama_safe(
                 full_prompt, model=model_name, request_id=request_id
             ):
                 # Save assistant chunk
