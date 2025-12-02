@@ -21,12 +21,30 @@ export async function fetchAvailableModels(): Promise<string[]> {
   try {
     const res = await fetch(url, { method: 'GET' });
     if (!res.ok) return [];
-    const body = await res.json();
+    const body: unknown = await res.json();
+    // body can be either an array of strings/objects or an object with a models array
+    const extractNames = (arr: unknown[]): string[] => {
+      const out: string[] = [];
+      for (const it of arr) {
+        if (typeof it === 'string') {
+          out.push(it);
+        } else if (typeof it === 'object' && it !== null) {
+          const o = it as { name?: unknown; id?: unknown };
+          const val =
+            typeof o.name === 'string' ? o.name : typeof o.id === 'string' ? o.id : undefined;
+          if (val) out.push(val);
+        }
+      }
+      return out;
+    };
     if (Array.isArray(body)) {
-      return body.map((it: any) => it?.name ?? it?.id ?? String(it));
+      return extractNames(body);
     }
-    if (body && Array.isArray((body as any).models)) {
-      return (body as any).models as string[];
+    if (typeof body === 'object' && body !== null) {
+      const maybe = body as { models?: unknown };
+      if (Array.isArray(maybe.models)) {
+        return extractNames(maybe.models);
+      }
     }
     return [];
   } catch (err) {
@@ -57,7 +75,7 @@ export async function streamChatFromBackend(
   prompt: string,
   abort: AbortSignal,
   cbs: StreamCallbacks,
-  sessionId?: string,
+  sessionId?: string
 ): Promise<void> {
   const cfg = vscode.workspace.getConfiguration('localpilot');
   const baseUrl = String(cfg.get('backend.baseUrl') ?? 'http://127.0.0.1:8765');
@@ -68,7 +86,8 @@ export async function streamChatFromBackend(
   try {
     cbs.onStart?.();
     // generate a request id client-side
-    const rid = typeof nodeRandomUUID === 'function' ? nodeRandomUUID() : Math.random().toString(36).slice(2);
+    const rid =
+      typeof nodeRandomUUID === 'function' ? nodeRandomUUID() : Math.random().toString(36).slice(2);
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -131,7 +150,11 @@ export async function abortLastRequest(): Promise<boolean> {
   }
 }
 
-export type HistoryItem = { role: string; text: string; ts: number };
+export interface HistoryItem {
+  role: string;
+  text: string;
+  ts: number;
+}
 
 export async function fetchHistory(sessionId: string, limit = 200): Promise<HistoryItem[]> {
   const cfg = vscode.workspace.getConfiguration('localpilot');
@@ -146,13 +169,7 @@ export async function fetchHistory(sessionId: string, limit = 200): Promise<Hist
       if (Array.isArray(maybe.history)) {
         const result: HistoryItem[] = [];
         for (const m of maybe.history) {
-          if (
-            typeof m === 'object' &&
-            m !== null &&
-            'role' in m &&
-            'text' in m &&
-            'ts' in m
-          ) {
+          if (typeof m === 'object' && m !== null && 'role' in m && 'text' in m && 'ts' in m) {
             const { role, text, ts } = m as { role: unknown; text: unknown; ts: unknown };
             if (typeof role === 'string' && typeof text === 'string' && typeof ts === 'number') {
               result.push({ role, text, ts });
