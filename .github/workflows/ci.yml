@@ -45,18 +45,25 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install Python deps
+        working-directory: ./backend
         run: |
           python -m venv .venv
-          source .venv/bin/activate
+          . .venv/bin/activate
           pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt || true
       - name: Run backend tests
+        working-directory: ./backend
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
         run: |
-          source .venv/bin/activate
-          pytest -q backend/tests || (pytest -q backend/tests; exit 1)
+          . .venv/bin/activate
+          pytest -q tests || (pytest -q tests; exit 1)
       - name: Run contract parity check
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
         run: |
-          source .venv/bin/activate
+          . backend/.venv/bin/activate
           python scripts/compare_schemas.py
 
   # Note: extension integration tests (Electron) run via manual workflow to avoid slowing CI.
