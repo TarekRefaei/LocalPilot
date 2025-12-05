@@ -35,7 +35,9 @@ def register_validator_startup(app):
         return
 
     @app.on_event("startup")
-    async def _validate_models_on_startup() -> None:  # pragma: no cover - exercised in app startup
+    async def _validate_models_on_startup() -> (
+        None
+    ):  # pragma: no cover - exercised in app startup
         cfg: dict[str, str | None] = {
             "embedding": os.getenv("MODEL_EMBEDDING")
             or os.getenv("MODEL_EMBED")
