@@ -18,21 +18,24 @@ jobs:
         with:
           python-version: '3.10'
       - name: Install dev deps
+        working-directory: ./backend
         run: |
-          cd backend
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements-dev.txt || pip install pytest pytest-asyncio numpy psutil GPUtil
       - name: Run vram validator tests
+        working-directory: ./backend
         run: |
           . .venv/bin/activate
-          pytest -q backend/tests/test_vram_validator.py -q
+          pytest -q tests/test_vram_validator.py -q
       - name: Run act-mode quick e2e
+        working-directory: ./backend
         run: |
           . .venv/bin/activate
-          pytest -q backend/tests/e2e/test_act_mode_safety.py::test_act_mode_branch_and_rollback -q
+          pytest -q tests/e2e/test_act_mode_safety.py::test_act_mode_branch_and_rollback -q
       - name: Run indexing quick check
+        working-directory: ./backend
         run: |
           . .venv/bin/activate
-          pytest -q backend/tests/test_retrieval_integration.py::TestRetrievalFixtures::test_all_fixtures_precision -q
+          pytest -q tests/test_retrieval_integration.py::TestRetrievalFixtures::test_all_fixtures_precision -q
