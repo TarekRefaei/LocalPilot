@@ -44,6 +44,13 @@ app = FastAPI(
 )
 
 
+# Register model validator on startup (idempotent)
+try:
+    prom_metrics.register_validator_startup(app)
+except Exception as e:  # pragma: no cover
+    logger.debug(f"Could not register validator startup hook: {e}")
+
+
 # Include routers
 app.include_router(health.router, tags=["health"])
 app.include_router(websocket.router, tags=["websocket"])

@@ -35,7 +35,10 @@ async def test_typescript_arrow_and_interface(monkeypatch, tmp_path: Path):
     # Allow small snippets to form chunks
     monkeypatch.setattr(SemanticChunker, "MIN_CHUNK_SIZE", 1, raising=False)
 
-    content = "export const add = (a, b) => { return a + b; }\n\n" "interface Foo { x: number; }\n"
+    content = (
+        "export const add = (a, b) => { return a + b; }\n\n"
+        "interface Foo { x: number; }\n"
+    )
     f = tmp_path / "math.ts"
     f.write_text(content, encoding="utf-8")
 

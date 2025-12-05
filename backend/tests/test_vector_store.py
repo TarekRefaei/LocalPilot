@@ -50,7 +50,9 @@ def _enable_fake_chroma(monkeypatch):
             items = []
             for v in self._docs.values():
                 md = v.get("metadata", {})
-                if isinstance(md, dict) and all(md.get(k) == val for k, val in where.items()):
+                if isinstance(md, dict) and all(
+                    md.get(k) == val for k, val in where.items()
+                ):
                     items.append(v)
             if limit is not None:
                 items = items[:limit]
@@ -73,7 +75,9 @@ def _enable_fake_chroma(monkeypatch):
             candidates = []
             for _id, v in self._docs.items():
                 md = v.get("metadata", {})
-                if isinstance(md, dict) and all(md.get(k) == val for k, val in where.items()):
+                if isinstance(md, dict) and all(
+                    md.get(k) == val for k, val in where.items()
+                ):
                     candidates.append((_id, sim(q, v["embedding"])))
             candidates.sort(key=lambda t: t[1], reverse=True)
             top = candidates[:n_results]

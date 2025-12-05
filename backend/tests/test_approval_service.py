@@ -4,7 +4,9 @@ from app.services.act.approval import FileOperation, categorize_operations
 def test_auto_approve_safe_creates_docs_tests_localpilot(monkeypatch):
     from app.core import config as cfg
 
-    monkeypatch.setattr(cfg.settings, "act_autoapprove_safe_creates", True, raising=False)
+    monkeypatch.setattr(
+        cfg.settings, "act_autoapprove_safe_creates", True, raising=False
+    )
 
     ops = [
         FileOperation(type="create", path="docs/readme.md"),

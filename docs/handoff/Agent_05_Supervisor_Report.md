@@ -1,9 +1,9 @@
 # Agent 05 Supervisor Report: Backend API Gateway
 
-**Agent:** 05 — Backend API Gateway  
-**Status:** ✅ COMPLETED  
-**Date:** 2025-01-15  
-**PR:** #5 (feat(api): expose REST health/config and WS topics)  
+**Agent:** 05 — Backend API Gateway
+**Status:** ✅ COMPLETED
+**Date:** 2025-01-15
+**PR:** #5 (feat(api): expose REST health/config and WS topics)
 **Branch:** `feat/05-backend-gateway`
 
 ---
@@ -492,6 +492,6 @@ Agent 05 successfully delivered a production-ready backend API gateway with comp
 
 ---
 
-**Prepared by:** Agent 05  
-**Date:** 2025-01-15  
+**Prepared by:** Agent 05
+**Date:** 2025-01-15
 **Next:** Agent 06 — Indexing Service

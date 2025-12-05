@@ -28,7 +28,11 @@ def test_act_request_approval_returns_previews(tmp_path: Path):
                     "plan_id": "p1",
                     "todo_id": "t1",
                     "operations": [
-                        {"type": "create", "path": "docs/readme.md", "content": "# Title\n"}
+                        {
+                            "type": "create",
+                            "path": "docs/readme.md",
+                            "content": "# Title\n",
+                        }
                     ],
                 },
                 "timestamp": "2025-01-15T10:31:00Z",
@@ -70,7 +74,11 @@ def test_act_apply_requires_approval(tmp_path: Path):
                     "todo_id": "t1",
                     "message": "Apply",
                     "operations": [
-                        {"type": "create", "path": "docs/readme.md", "content": "# Title\n"}
+                        {
+                            "type": "create",
+                            "path": "docs/readme.md",
+                            "content": "# Title\n",
+                        }
                     ],
                 },
                 "timestamp": "2025-01-15T10:32:00Z",
@@ -84,7 +92,9 @@ def test_act_apply_requires_approval(tmp_path: Path):
         assert resp["data"]["code"] == "ACT_APPROVAL_REQUIRED"
 
 
-def test_act_apply_approved_outside_git_allowed_in_git_optional(tmp_path: Path, monkeypatch):
+def test_act_apply_approved_outside_git_allowed_in_git_optional(
+    tmp_path: Path, monkeypatch
+):
     from app.core import config as cfg
 
     monkeypatch.setattr(cfg.settings, "act_apply_safety", "git-optional", raising=False)
@@ -113,7 +123,11 @@ def test_act_apply_approved_outside_git_allowed_in_git_optional(tmp_path: Path, 
                     "message": "Apply",
                     "approved": True,
                     "operations": [
-                        {"type": "create", "path": "docs/readme.md", "content": "# Title\n"}
+                        {
+                            "type": "create",
+                            "path": "docs/readme.md",
+                            "content": "# Title\n",
+                        }
                     ],
                 },
                 "timestamp": "2025-01-15T10:32:00Z",
@@ -124,7 +138,9 @@ def test_act_apply_approved_outside_git_allowed_in_git_optional(tmp_path: Path, 
 
         resp = ws.receive_json()
         assert resp["event"] == "act.apply_result"
-        assert any(p.endswith("docs/readme.md") for p in resp["data"]["written"])  # created
+        assert any(
+            p.endswith("docs/readme.md") for p in resp["data"]["written"]
+        )  # created
 
 
 def test_act_rollback_broadcasts_result():

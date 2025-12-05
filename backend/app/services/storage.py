@@ -24,7 +24,9 @@ async def init_db() -> None:
         await db.commit()
 
 
-async def save_message(session_id: str, role: str, text: str, ts: int | None = None) -> None:
+async def save_message(
+    session_id: str, role: str, text: str, ts: int | None = None
+) -> None:
     if ts is None:
         ts = int(time.time())
     await init_db()

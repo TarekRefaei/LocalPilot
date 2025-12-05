@@ -55,7 +55,14 @@ class TestWebSocketHandshake:
             response = websocket.receive_json()
             capabilities = response["data"]["capabilities"]
 
-            expected_capabilities = ["streaming", "indexing", "chat", "plan", "act", "vram"]
+            expected_capabilities = [
+                "streaming",
+                "indexing",
+                "chat",
+                "plan",
+                "act",
+                "vram",
+            ]
             for cap in expected_capabilities:
                 assert cap in capabilities
 

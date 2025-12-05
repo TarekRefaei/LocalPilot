@@ -149,7 +149,9 @@ class DiscoveryExecutor:
         for root, dirs, files in os.walk(workspace):
             root_path = Path(root)
             # Filter directories in-place
-            dirs[:] = [d for d in dirs if not self._is_excluded(spec, workspace, root_path / d)]
+            dirs[:] = [
+                d for d in dirs if not self._is_excluded(spec, workspace, root_path / d)
+            ]
             for name in files:
                 p = root_path / name
                 if self._is_excluded(spec, workspace, p):

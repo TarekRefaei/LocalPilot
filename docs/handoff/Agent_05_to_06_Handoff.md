@@ -1,7 +1,7 @@
 # Agent 05 → Agent 06 Handoff: Backend API Gateway → Indexing Service
 
-**Date:** 2025-01-15  
-**Status:** ✅ COMPLETED  
+**Date:** 2025-01-15
+**Status:** ✅ COMPLETED
 **PR:** #5 (feat(api): expose REST health/config and WS topics)
 
 ---
@@ -139,7 +139,7 @@ class IndexingService:
     async def index_workspace(self, workspace_path: str, client_id: str):
         manager = get_manager()
         indexing_id = f"idx-{datetime.now().isoformat()}"
-        
+
         # Phase 1: Discovery
         await manager.send_personal(client_id, WebSocketEnvelope(
             event="indexing.progress",
@@ -155,9 +155,9 @@ class IndexingService:
                 message="Scanning workspace..."
             ).model_dump()
         ).model_dump())
-        
+
         # ... implementation ...
-        
+
         # Completion
         await manager.send_personal(client_id, WebSocketEnvelope(
             event="indexing.complete",
@@ -194,17 +194,17 @@ Example test:
 ```python
 def test_indexing_emits_progress_events(mock_manager):
     service = IndexingService()
-    
+
     # Mock manager.send_personal
     mock_manager.send_personal = AsyncMock()
-    
+
     # Run indexing
     await service.index_workspace("/path", "client-123")
-    
+
     # Verify progress events sent
     calls = mock_manager.send_personal.call_args_list
     assert len(calls) >= 5  # At least one per phase
-    
+
     # Verify first event is discovery
     first_call = calls[0]
     assert first_call[0][0] == "client-123"

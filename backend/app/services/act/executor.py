@@ -31,7 +31,9 @@ class ActExecutor:
     def __init__(self, git_safety: GitSafetyService):
         self.git_safety = git_safety
 
-    def dry_run(self, root: Path, ops: Iterable[OperationRequest]) -> list[OperationPreview]:
+    def dry_run(
+        self, root: Path, ops: Iterable[OperationRequest]
+    ) -> list[OperationPreview]:
         previews: list[OperationPreview] = []
         root = Path(root)
         for op in ops:

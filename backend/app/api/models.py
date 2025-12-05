@@ -53,7 +53,10 @@ async def list_models(authorization: str | None = Header(None)) -> Any:
 
     # TLS verify toggle via settings or env OLLAMA_VERIFY_SSL
     verify = True
-    if settings is not None and getattr(settings, "OLLAMA_VERIFY_SSL", None) is not None:
+    if (
+        settings is not None
+        and getattr(settings, "OLLAMA_VERIFY_SSL", None) is not None
+    ):
         verify = bool(settings.OLLAMA_VERIFY_SSL)  # type: ignore[arg-type]
     else:
         verify = os.environ.get("OLLAMA_VERIFY_SSL", "1") not in ("0", "false", "False")

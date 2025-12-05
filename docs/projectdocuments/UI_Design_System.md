@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #7: UI_DESIGN_SYSTEM.md
 # LocalPilot - UI Design System
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation
 **Author:** LocalPilot UI Team
 
 ---
@@ -110,32 +110,32 @@ export const colors = {
     active: 'var(--vscode-button-activeBackground)',
     foreground: 'var(--vscode-button-foreground)',
   },
-  
+
   // Semantic colors
   success: {
     DEFAULT: '#4CAF50',
     light: 'rgba(76, 175, 80, 0.1)',
     dark: '#2E7D32',
   },
-  
+
   warning: {
     DEFAULT: '#FF9800',
     light: 'rgba(255, 152, 0, 0.1)',
     dark: '#E65100',
   },
-  
+
   error: {
     DEFAULT: '#F44336',
     light: 'rgba(244, 67, 54, 0.1)',
     dark: '#C62828',
   },
-  
+
   info: {
     DEFAULT: '#2196F3',
     light: 'rgba(33, 150, 243, 0.1)',
     dark: '#1565C0',
   },
-  
+
   // VS Code integrated colors
   background: {
     DEFAULT: 'var(--vscode-editor-background)',
@@ -143,32 +143,32 @@ export const colors = {
     elevated: 'var(--vscode-editorWidget-background)',
     overlay: 'var(--vscode-editorOverlayWidget-background)',
   },
-  
+
   foreground: {
     DEFAULT: 'var(--vscode-foreground)',
     secondary: 'var(--vscode-descriptionForeground)',
     muted: 'var(--vscode-disabledForeground)',
   },
-  
+
   border: {
     DEFAULT: 'var(--vscode-panel-border)',
     focus: 'var(--vscode-focusBorder)',
     contrast: 'var(--vscode-contrastBorder)',
   },
-  
+
   input: {
     background: 'var(--vscode-input-background)',
     foreground: 'var(--vscode-input-foreground)',
     border: 'var(--vscode-input-border)',
     placeholder: 'var(--vscode-input-placeholderForeground)',
   },
-  
+
   list: {
     hover: 'var(--vscode-list-hoverBackground)',
     active: 'var(--vscode-list-activeSelectionBackground)',
     focus: 'var(--vscode-list-focusBackground)',
   },
-  
+
   // Custom LocalPilot colors
   accent: {
     blue: '#00A8E8',
@@ -176,14 +176,14 @@ export const colors = {
     green: '#00C853',
     orange: '#FF6D00',
   },
-  
+
   // Code-specific colors
   code: {
     background: 'var(--vscode-textCodeBlock-background)',
     border: 'var(--vscode-textBlockQuote-border)',
     inline: 'var(--vscode-textPreformat-foreground)',
   },
-  
+
   // Link colors
   link: {
     DEFAULT: 'var(--vscode-textLink-foreground)',
@@ -228,13 +228,13 @@ export const componentSpacing = {
   paddingMd: spacing[4],   // 16px
   paddingLg: spacing[6],   // 24px
   paddingXl: spacing[8],   // 32px
-  
+
   // Gaps
   gapXs: spacing[2],       // 8px
   gapSm: spacing[3],       // 12px
   gapMd: spacing[4],       // 16px
   gapLg: spacing[6],       // 24px
-  
+
   // Margins
   marginXs: spacing[2],
   marginSm: spacing[3],
@@ -256,7 +256,7 @@ export const typography = {
     base: 'var(--vscode-font-family)',
     mono: 'var(--vscode-editor-font-family)',
   },
-  
+
   fontSize: {
     xs: '11px',
     sm: '12px',
@@ -266,21 +266,21 @@ export const typography = {
     '2xl': '20px',
     '3xl': '24px',
   },
-  
+
   fontWeight: {
     normal: 400,
     medium: 500,
     semibold: 600,
     bold: 700,
   },
-  
+
   lineHeight: {
     tight: 1.25,
     normal: 1.5,
     relaxed: 1.75,
     loose: 2,
   },
-  
+
   letterSpacing: {
     tight: '-0.02em',
     normal: '0',
@@ -434,7 +434,7 @@ export const Button: React.FC<ButtonProps> = ({
     loading && 'lp-button--loading',
     className,
   ].filter(Boolean).join(' ');
-  
+
   return (
     <VSCodeButton
       appearance={variant === 'primary' ? 'primary' : 'secondary'}
@@ -676,21 +676,21 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
   className = '',
 }, ref) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // Auto-resize functionality
   useEffect(() => {
     if (autoResize && textAreaRef.current) {
       const element = textAreaRef.current;
       element.style.height = 'auto';
-      
+
       const scrollHeight = element.scrollHeight;
       const lineHeight = parseInt(getComputedStyle(element).lineHeight);
       const maxHeight = lineHeight * maxRows;
-      
+
       element.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
     }
   }, [value, autoResize, maxRows]);
-  
+
   return (
     <div className={`lp-textarea-wrapper ${className}`}>
       {label && (
@@ -757,7 +757,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   className = '',
 }) => {
   const percentage = Math.min(Math.max(value, 0), 100);
-  
+
   return (
     <div className={`lp-progress ${className}`}>
       {label && (
@@ -892,10 +892,10 @@ export const Message: React.FC<MessageProps> = ({
   contextFiles,
 }) => {
   const isUser = role === 'user';
-  
+
   // Parse content for code blocks and file references
   const parsedContent = parseMessageContent(content);
-  
+
   return (
     <div className={`lp-message lp-message--${role}`}>
       <div className="lp-message-header">
@@ -906,7 +906,7 @@ export const Message: React.FC<MessageProps> = ({
           {formatTimestamp(timestamp)}
         </span>
       </div>
-      
+
       <div className="lp-message-content">
         {parsedContent.map((block, index) => {
           if (block.type === 'text') {
@@ -926,12 +926,12 @@ export const Message: React.FC<MessageProps> = ({
           }
           return null;
         })}
-        
+
         {streaming && (
           <span className="lp-message-cursor">▊</span>
         )}
       </div>
-      
+
       {contextFiles && contextFiles.length > 0 && (
         <div className="lp-message-context">
           <details>
@@ -963,11 +963,11 @@ function parseMessageContent(content: string) {
     content: string;
     language?: string;
   }> = [];
-  
+
   const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
   let lastIndex = 0;
   let match;
-  
+
   while ((match = codeBlockRegex.exec(content)) !== null) {
     // Add text before code block
     if (match.index > lastIndex) {
@@ -976,17 +976,17 @@ function parseMessageContent(content: string) {
         content: content.slice(lastIndex, match.index).trim(),
       });
     }
-    
+
     // Add code block
     blocks.push({
       type: 'code',
       content: match[2].trim(),
       language: match[1] || 'text',
     });
-    
+
     lastIndex = match.index + match[0].length;
   }
-  
+
   // Add remaining text
   if (lastIndex < content.length) {
     blocks.push({
@@ -994,7 +994,7 @@ function parseMessageContent(content: string) {
       content: content.slice(lastIndex).trim(),
     });
   }
-  
+
   return blocks;
 }
 
@@ -1029,13 +1029,13 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
   fileName,
 }) => {
   const [copied, setCopied] = useState(false);
-  
+
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  
+
   return (
     <div className="lp-codeblock">
       <div className="lp-codeblock-header">
@@ -1189,7 +1189,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onToggle,
 }) => {
   const [expanded, setExpanded] = useState(false);
-  
+
   const getStatusIcon = (status: TodoStatus) => {
     switch (status) {
       case 'completed': return '✓';
@@ -1199,7 +1199,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       default: return '○';
     }
   };
-  
+
   const getTypeIcon = (type: FileOperationType) => {
     switch (type) {
       case 'create': return '➕';
@@ -1208,7 +1208,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       case 'research': return '🔍';
     }
   };
-  
+
   return (
     <div className={`lp-todo-item lp-todo-item--${todo.status}`}>
       <div className="lp-todo-item-header" onClick={() => setExpanded(!expanded)}>
@@ -1217,7 +1217,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             {getStatusIcon(todo.status)}
           </span>
         </div>
-        
+
         <div className="lp-todo-item-content">
           <div className="lp-todo-item-title">
             <span className="lp-todo-item-type-icon">
@@ -1232,7 +1232,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             )}
           </div>
         </div>
-        
+
         <div className="lp-todo-item-actions">
           <button
             className="lp-todo-item-expand"
@@ -1245,13 +1245,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           </button>
         </div>
       </div>
-      
+
       {expanded && (
         <div className="lp-todo-item-details">
           <div className="lp-todo-item-description">
             {todo.description}
           </div>
-          
+
           <div className="lp-todo-item-files">
             <h4>Files to modify:</h4>
             <ul>
@@ -1270,13 +1270,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({
               ))}
             </ul>
           </div>
-          
+
           {todo.error && (
             <div className="lp-todo-item-error">
               <strong>Error:</strong> {todo.error}
             </div>
           )}
-          
+
           <div className="lp-todo-item-footer">
             <Button variant="ghost" size="sm" onClick={onEdit}>
               Edit
@@ -1425,7 +1425,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           </button>
         </div>
       </header>
-      
+
       <main className="lp-layout-content">
         {children}
       </main>
@@ -1499,26 +1499,26 @@ export const ChatView: React.FC = () => {
   const [message, setMessage] = React.useState('');
   const [messages, setMessages] = React.useState([]);
   const [streaming, setStreaming] = React.useState(false);
-  
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-  
+
   const handleSend = () => {
     if (!message.trim()) return;
-    
+
     // Send message logic
     setMessage('');
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       handleSend();
     }
   };
-  
+
   return (
     <div className="lp-chat-view">
       <div className="lp-chat-messages">
@@ -1527,7 +1527,7 @@ export const ChatView: React.FC = () => {
         ))}
         <div ref={messagesEndRef} />
       </div>
-      
+
       <div className="lp-chat-input-area">
         <TextArea
           value={message}
@@ -1612,7 +1612,7 @@ export const animations = {
     slow: '300ms',
     slower: '500ms',
   },
-  
+
   // Easing functions
   easing: {
     easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1783,17 +1783,17 @@ export function useFocusTrap(ref: React.RefObject<HTMLElement>) {
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    
+
     const focusableElements = element.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    
+
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-    
+
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
-      
+
       if (e.shiftKey) {
         if (document.activeElement === firstElement) {
           e.preventDefault();
@@ -1806,10 +1806,10 @@ export function useFocusTrap(ref: React.RefObject<HTMLElement>) {
         }
       }
     };
-    
+
     element.addEventListener('keydown', handleTab);
     firstElement?.focus();
-    
+
     return () => {
       element.removeEventListener('keydown', handleTab);
     };
@@ -1828,9 +1828,9 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
     .map(([key, value]) => `${key}: ${value}`)
     .join('; ');
   announcement.textContent = message;
-  
+
   document.body.appendChild(announcement);
-  
+
   setTimeout(() => {
     document.body.removeChild(announcement);
   }, 1000);
@@ -1852,31 +1852,31 @@ export type Theme = 'dark' | 'light' | 'high-contrast';
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>('dark');
-  
+
   useEffect(() => {
     // Detect VS Code theme
     const computedStyle = getComputedStyle(document.body);
     const backgroundColor = computedStyle.getPropertyValue('--vscode-editor-background');
-    
+
     // Simple heuristic: if background is dark, it's a dark theme
     const isDark = isColorDark(backgroundColor);
     setTheme(isDark ? 'dark' : 'light');
-    
+
     // Listen for theme changes
     const observer = new MutationObserver(() => {
       const newBg = getComputedStyle(document.body).getPropertyValue('--vscode-editor-background');
       const newIsDark = isColorDark(newBg);
       setTheme(newIsDark ? 'dark' : 'light');
     });
-    
+
     observer.observe(document.body, {
       attributes: true,
       attributeFilter: ['class', 'style'],
     });
-    
+
     return () => observer.disconnect();
   }, []);
-  
+
   return theme;
 }
 
@@ -1884,10 +1884,10 @@ function isColorDark(color: string): boolean {
   // Parse RGB color and calculate luminance
   const rgb = color.match(/\d+/g);
   if (!rgb || rgb.length < 3) return true;
-  
+
   const [r, g, b] = rgb.map(Number);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  
+
   return luminance < 0.5;
 }
 ```

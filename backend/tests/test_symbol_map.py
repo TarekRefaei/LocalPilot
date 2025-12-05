@@ -1,5 +1,10 @@
 from app.services.indexing.chunking import CodeChunk
-from app.services.indexing.symbol_map import ImportMap, Symbol, SymbolImportMapBuilder, SymbolMap
+from app.services.indexing.symbol_map import (
+    ImportMap,
+    Symbol,
+    SymbolImportMapBuilder,
+    SymbolMap,
+)
 
 
 def make_chunk(
@@ -100,8 +105,19 @@ def test_import_map_build_and_queries():
 
     # Add via build_from_chunks using synthetic chunks with imports
     chunks = [
-        make_chunk("a#1-10", "src/a.ts", 1, 10, "typescript", "function", ["f"], ["lodash", "./b"]),
-        make_chunk("b#1-10", "src/b.ts", 1, 10, "typescript", "function", ["g"], ["lodash"]),
+        make_chunk(
+            "a#1-10",
+            "src/a.ts",
+            1,
+            10,
+            "typescript",
+            "function",
+            ["f"],
+            ["lodash", "./b"],
+        ),
+        make_chunk(
+            "b#1-10", "src/b.ts", 1, 10, "typescript", "function", ["g"], ["lodash"]
+        ),
     ]
     im.build_from_chunks(chunks)
 
@@ -132,5 +148,7 @@ def test_builder_and_determinism():
     assert SymbolImportMapBuilder.validate_determinism(chunks1, chunks2) is True
 
     # Determinism false for changed chunk lines
-    changed = [make_chunk("p#1-6", "pkg/x.py", 1, 6, "python", "function", ["x"], [])] + chunks1[1:]
+    changed = [
+        make_chunk("p#1-6", "pkg/x.py", 1, 6, "python", "function", ["x"], [])
+    ] + chunks1[1:]
     assert SymbolImportMapBuilder.validate_determinism(changed, chunks1) is False

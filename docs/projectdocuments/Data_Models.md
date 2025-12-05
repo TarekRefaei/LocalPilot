@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #5: DATA_MODELS.md
 # LocalPilot - Data Models & Schemas
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation
 **Author:** LocalPilot Data Team
 
 ---
@@ -66,12 +66,12 @@ TypeScript:
   Interfaces: PascalCase (e.g., ChatMessage)
   Enums: PascalCase (e.g., IndexingPhase)
   Properties: camelCase (e.g., messageId)
-  
+
 Python:
   Classes: PascalCase (e.g., ChatMessage)
   Enums: PascalCase (e.g., IndexingPhase)
   Fields: snake_case (e.g., message_id)
-  
+
 Shared Identifiers:
   IDs: {entity}-{timestamp}-{random} (e.g., chat-20250115-103045)
   Timestamps: ISO 8601 UTC (e.g., 2025-01-15T10:30:45Z)
@@ -145,13 +145,13 @@ export enum IndexingStatus {
 export interface IndexingOptions {
   /** Patterns to exclude from indexing (glob patterns) */
   excludePatterns: string[];
-  
+
   /** Maximum file size in MB */
   maxFileSizeMb: number;
-  
+
   /** Programming languages to index (empty = all) */
   languages: string[];
-  
+
   /** Force re-indexing even if cache exists */
   forceReindex: boolean;
 }
@@ -162,31 +162,31 @@ export interface IndexingOptions {
 export interface IndexingProgress {
   /** Unique indexing operation ID */
   indexingId: string;
-  
+
   /** Current phase */
   phase: IndexingPhase;
-  
+
   /** Phase number (1-5) */
   phaseNumber: number;
-  
+
   /** Total phases (always 5) */
   totalPhases: number;
-  
+
   /** Current file being processed */
   currentFile: number;
-  
+
   /** Total files to process */
   totalFiles: number;
-  
+
   /** Current file path */
   currentFilePath?: string;
-  
+
   /** Overall percentage (0-100) */
   percentage: Percentage;
-  
+
   /** Estimated time remaining in seconds */
   estimatedTimeRemainingSeconds: number;
-  
+
   /** Human-readable status message */
   message: string;
 }
@@ -197,22 +197,22 @@ export interface IndexingProgress {
 export interface IndexingStatistics {
   /** Total files discovered */
   totalFiles: number;
-  
+
   /** Files successfully indexed */
   indexedFiles: number;
-  
+
   /** Files that failed to index */
   failedFiles: number;
-  
+
   /** Total semantic chunks created */
   totalChunks: number;
-  
+
   /** Total embeddings generated */
   totalEmbeddings: number;
-  
+
   /** Total symbols extracted (functions, classes, etc.) */
   totalSymbols: number;
-  
+
   /** Index size in megabytes */
   indexSizeMb: number;
 }
@@ -223,10 +223,10 @@ export interface IndexingStatistics {
 export interface FailedFile {
   /** File path */
   path: FilePath;
-  
+
   /** Error message */
   error: string;
-  
+
   /** Error code (optional) */
   errorCode?: string;
 }
@@ -237,22 +237,22 @@ export interface FailedFile {
 export interface IndexingResult {
   /** Unique indexing operation ID */
   indexingId: string;
-  
+
   /** Duration in seconds */
   durationSeconds: number;
-  
+
   /** Statistics */
   statistics: IndexingStatistics;
-  
+
   /** AI-generated project summary */
   projectSummary: string;
-  
+
   /** List of failed files */
   failedFiles: FailedFile[];
-  
+
   /** Timestamp when indexing started */
   startedAt: Timestamp;
-  
+
   /** Timestamp when indexing completed */
   completedAt: Timestamp;
 }
@@ -280,16 +280,16 @@ export enum MessageRole {
 export interface ChatMessage {
   /** Unique message ID */
   id: string;
-  
+
   /** Message role */
   role: MessageRole;
-  
+
   /** Message content */
   content: string;
-  
+
   /** Timestamp */
   timestamp: Timestamp;
-  
+
   /** Metadata (optional) */
   metadata?: ChatMessageMetadata;
 }
@@ -300,16 +300,16 @@ export interface ChatMessage {
 export interface ChatMessageMetadata {
   /** Model used for generation */
   model?: string;
-  
+
   /** Tokens generated */
   tokens?: number;
-  
+
   /** Generation time in seconds */
   generationTimeSeconds?: number;
-  
+
   /** Whether RAG context was used */
   ragContextUsed?: boolean;
-  
+
   /** Number of context chunks retrieved */
   contextChunksRetrieved?: number;
 }
@@ -320,16 +320,16 @@ export interface ChatMessageMetadata {
 export interface RAGContextChunk {
   /** File path */
   filePath: FilePath;
-  
+
   /** Start line */
   startLine: number;
-  
+
   /** End line */
   endLine: number;
-  
+
   /** Code content */
   content: string;
-  
+
   /** Relevance score (0-1) */
   relevanceScore: number;
 }
@@ -340,13 +340,13 @@ export interface RAGContextChunk {
 export interface RAGContext {
   /** Retrieved chunks */
   chunks: RAGContextChunk[];
-  
+
   /** Total tokens in context */
   totalTokens: number;
-  
+
   /** Relevance scores */
   relevanceScores: number[];
-  
+
   /** Query used for retrieval */
   query: string;
 }
@@ -357,25 +357,25 @@ export interface RAGContext {
 export interface ChatSession {
   /** Unique session ID */
   id: string;
-  
+
   /** Session title (auto-generated or user-defined) */
   title: string;
-  
+
   /** Messages in session */
   messages: ChatMessage[];
-  
+
   /** Current RAG context (if any) */
   context?: RAGContext;
-  
+
   /** Suggested plan (if any) */
   suggestedPlan?: PlanSuggestion;
-  
+
   /** Workspace path */
   workspacePath: string;
-  
+
   /** Created timestamp */
   createdAt: Timestamp;
-  
+
   /** Last updated timestamp */
   updatedAt: Timestamp;
 }
@@ -386,16 +386,16 @@ export interface ChatSession {
 export interface PlanSuggestion {
   /** Suggested title */
   title: string;
-  
+
   /** Description */
   description: string;
-  
+
   /** Goals/objectives */
   goals: string[];
-  
+
   /** Estimated complexity */
   estimatedComplexity: 'low' | 'medium' | 'high';
-  
+
   /** Confidence score (0-1) */
   confidence: number;
 }
@@ -406,16 +406,16 @@ export interface PlanSuggestion {
 export interface ChatOptions {
   /** Enable streaming response */
   stream: boolean;
-  
+
   /** Maximum tokens to generate */
   maxTokens: number;
-  
+
   /** Temperature (0-1) */
   temperature: number;
-  
+
   /** Enable RAG context retrieval */
   retrieveContext: boolean;
-  
+
   /** Model to use (optional, uses default if not specified) */
   model?: string;
 }
@@ -426,13 +426,13 @@ export interface ChatOptions {
 export interface ChatContext {
   /** File user is currently viewing */
   currentFile?: FilePath;
-  
+
   /** Selected/highlighted code */
   selectedCode?: string;
-  
+
   /** Workspace path */
   workspacePath: string;
-  
+
   /** Active tab/mode */
   activeMode?: 'chat' | 'plan' | 'act';
 }
@@ -483,10 +483,10 @@ export enum FileOperationType {
 export interface TodoFile {
   /** File path */
   path: FilePath;
-  
+
   /** Operation type */
   operation: FileOperationType;
-  
+
   /** Estimated changes */
   estimatedChanges?: string;  // e.g., "+45 lines"
 }
@@ -497,31 +497,31 @@ export interface TodoFile {
 export interface TodoItem {
   /** Unique TODO ID */
   id: string;
-  
+
   /** Title */
   title: string;
-  
+
   /** Detailed description */
   description: string;
-  
+
   /** Primary operation type */
   type: FileOperationType;
-  
+
   /** Files affected */
   files: TodoFile[];
-  
+
   /** IDs of prerequisite TODOs */
   dependencies: string[];
-  
+
   /** Current status */
   status: TodoStatus;
-  
+
   /** Detailed instructions for AI (Act mode) */
   aiInstructions: string;
-  
+
   /** Order/index in plan */
   order: number;
-  
+
   /** Error message (if failed) */
   error?: string;
 }
@@ -532,37 +532,37 @@ export interface TodoItem {
 export interface Plan {
   /** Unique plan ID */
   id: string;
-  
+
   /** Source chat session (if created from chat) */
   fromChatSession?: string;
-  
+
   /** Plan title */
   title: string;
-  
+
   /** Overview/description */
   overview: string;
-  
+
   /** TODO items */
   todos: TodoItem[];
-  
+
   /** Current status */
   status: PlanStatus;
-  
+
   /** Estimated complexity */
   complexity: 'low' | 'medium' | 'high';
-  
+
   /** Estimated duration in minutes */
   estimatedDurationMinutes?: number;
-  
+
   /** Workspace path */
   workspacePath: string;
-  
+
   /** Created timestamp */
   createdAt: Timestamp;
-  
+
   /** Last updated timestamp */
   updatedAt: Timestamp;
-  
+
   /** Execution history */
   executionHistory: ExecutionSummary[];
 }
@@ -573,22 +573,22 @@ export interface Plan {
 export interface ExecutionSummary {
   /** Execution ID */
   executionId: string;
-  
+
   /** Started timestamp */
   startedAt: Timestamp;
-  
+
   /** Completed timestamp */
   completedAt?: Timestamp;
-  
+
   /** Status */
   status: 'in_progress' | 'completed' | 'failed' | 'cancelled';
-  
+
   /** TODOs completed */
   todosCompleted: number;
-  
+
   /** TODOs failed */
   todosFailed: number;
-  
+
   /** TODOs skipped */
   todosSkipped: number;
 }
@@ -618,25 +618,25 @@ export enum ExecutionStatus {
 export interface FileOperation {
   /** Unique operation ID */
   operationId: string;
-  
+
   /** Operation type */
   type: FileOperationType;
-  
+
   /** File path */
   path: FilePath;
-  
+
   /** New content (for create/modify) */
   content?: string;
-  
+
   /** Diff (unified diff format) */
   diff?: string;
-  
+
   /** Preview (shortened version) */
   preview?: string;
-  
+
   /** Requires user approval */
   requiresApproval: boolean;
-  
+
   /** Metadata */
   metadata?: FileOperationMetadata;
 }
@@ -647,13 +647,13 @@ export interface FileOperation {
 export interface FileOperationMetadata {
   /** Lines added */
   additions: number;
-  
+
   /** Lines deleted */
   deletions: number;
-  
+
   /** Programming language */
   language: string;
-  
+
   /** File size (bytes) */
   fileSize?: number;
 }
@@ -674,16 +674,16 @@ export enum ApprovalDecision {
 export interface ApprovalRequest {
   /** Execution ID */
   executionId: string;
-  
+
   /** TODO ID */
   todoId: string;
-  
+
   /** File operations to approve */
   fileOperations: FileOperation[];
-  
+
   /** Timeout in seconds */
   approvalTimeoutSeconds: number;
-  
+
   /** Requested timestamp */
   requestedAt: Timestamp;
 }
@@ -694,16 +694,16 @@ export interface ApprovalRequest {
 export interface ApprovalResponse {
   /** Execution ID */
   executionId: string;
-  
+
   /** TODO ID */
   todoId: string;
-  
+
   /** Decision */
   decision: ApprovalDecision;
-  
+
   /** Edited operations (if decision = edit) */
   editedOperations?: FileOperation[];
-  
+
   /** Timestamp */
   respondedAt: Timestamp;
 }
@@ -714,19 +714,19 @@ export interface ApprovalResponse {
 export interface ExecutionLogEntry {
   /** Entry ID */
   id: string;
-  
+
   /** TODO ID */
   todoId: string;
-  
+
   /** Entry type */
   type: 'info' | 'success' | 'warning' | 'error';
-  
+
   /** Message */
   message: string;
-  
+
   /** Timestamp */
   timestamp: Timestamp;
-  
+
   /** Additional data */
   data?: any;
 }
@@ -737,13 +737,13 @@ export interface ExecutionLogEntry {
 export interface GitCommitInfo {
   /** Commit hash */
   hash: string;
-  
+
   /** Commit message */
   message: string;
-  
+
   /** Author */
   author?: string;
-  
+
   /** Timestamp */
   timestamp?: Timestamp;
 }
@@ -754,13 +754,13 @@ export interface GitCommitInfo {
 export interface FileChange {
   /** File path */
   path: FilePath;
-  
+
   /** Change type */
   type: FileOperationType;
-  
+
   /** Lines added */
   additions: number;
-  
+
   /** Lines deleted */
   deletions: number;
 }
@@ -771,37 +771,37 @@ export interface FileChange {
 export interface ActSession {
   /** Unique execution ID */
   executionId: string;
-  
+
   /** Plan ID */
   planId: string;
-  
+
   /** Current TODO ID */
   currentTodoId?: string;
-  
+
   /** Execution status */
   status: ExecutionStatus;
-  
+
   /** Git branch */
   gitBranch?: string;
-  
+
   /** Base Git commit */
   baseCommit?: string;
-  
+
   /** Execution log */
   executionLog: ExecutionLogEntry[];
-  
+
   /** Generated file changes */
   generatedFiles: FileChange[];
-  
+
   /** Git commits made */
   commits: GitCommitInfo[];
-  
+
   /** Started timestamp */
   startedAt: Timestamp;
-  
+
   /** Completed timestamp */
   completedAt?: Timestamp;
-  
+
   /** Error (if failed) */
   error?: string;
 }
@@ -812,16 +812,16 @@ export interface ActSession {
 export interface ExecutionOptions {
   /** Auto-approve all changes (dangerous!) */
   autoApprove: boolean;
-  
+
   /** Create Git branch */
   createGitBranch: boolean;
-  
+
   /** Custom Git branch name */
   gitBranchName?: string;
-  
+
   /** Model to use for code generation */
   model?: string;
-  
+
   /** Timeout per TODO in seconds */
   timeoutPerTodoSeconds: number;
 }
@@ -849,28 +849,28 @@ export enum ModelType {
 export interface ModelInfo {
   /** Model ID/name */
   id: string;
-  
+
   /** Display name */
   name: string;
-  
+
   /** Model type */
   type: ModelType;
-  
+
   /** Size in GB */
   sizeGb: number;
-  
+
   /** Context window (tokens) */
   contextWindow?: number;
-  
+
   /** Embedding dimensions (for embedding models) */
   dimensions?: number;
-  
+
   /** Capabilities */
   capabilities: string[];
-  
+
   /** Currently loaded in memory */
   loaded: boolean;
-  
+
   /** Recommended use cases */
   recommendedFor: string[];
 }
@@ -881,19 +881,19 @@ export interface ModelInfo {
 export interface SystemResources {
   /** VRAM usage in GB */
   vramUsageGb: number;
-  
+
   /** Total VRAM in GB */
   vramTotalGb: number;
-  
+
   /** RAM usage in GB */
   ramUsageGb: number;
-  
+
   /** Total RAM in GB */
   ramTotalGb: number;
-  
+
   /** CPU usage percentage */
   cpuUsagePercent?: number;
-  
+
   /** Disk usage in GB */
   diskUsageGb?: number;
 }
@@ -904,22 +904,22 @@ export interface SystemResources {
 export interface HealthStatus {
   /** Overall status */
   status: 'healthy' | 'degraded' | 'unhealthy';
-  
+
   /** Backend version */
   version: string;
-  
+
   /** Uptime in seconds */
   uptimeSeconds: number;
-  
+
   /** Service statuses */
   services: {
     ollama: ServiceStatus;
     vectorDb: ServiceStatus;
   };
-  
+
   /** Resource usage */
   resources: SystemResources;
-  
+
   /** Timestamp */
   timestamp: Timestamp;
 }
@@ -930,10 +930,10 @@ export interface HealthStatus {
 export interface ServiceStatus {
   /** Status */
   status: 'connected' | 'disconnected' | 'error';
-  
+
   /** Additional info */
   info?: any;
-  
+
   /** Error message (if error) */
   error?: string;
 }
@@ -944,22 +944,22 @@ export interface ServiceStatus {
 export interface VRAMWarning {
   /** Warning level */
   level: 'warning' | 'critical';
-  
+
   /** Current usage in GB */
   currentUsageGb: number;
-  
+
   /** Total VRAM in GB */
   totalVramGb: number;
-  
+
   /** Usage percentage */
   usagePercentage: number;
-  
+
   /** Loaded models */
   loadedModels: Array<{
     name: string;
     vramGb: number;
   }>;
-  
+
   /** Recommendation */
   recommendation: string;
 }
@@ -970,16 +970,16 @@ export interface VRAMWarning {
 export interface ModelSwapEvent {
   /** Model being unloaded */
   unloading?: string;
-  
+
   /** Model being loaded */
   loading: string;
-  
+
   /** Reason for swap */
   reason: string;
-  
+
   /** Estimated duration in seconds */
   estimatedDurationSeconds: number;
-  
+
   /** Timestamp */
   timestamp: Timestamp;
 }
@@ -998,13 +998,13 @@ export interface ModelSwapEvent {
 export interface ModelConfiguration {
   /** Embedding model */
   embedding: string;
-  
+
   /** Chat model */
   chat: string;
-  
+
   /** Planning model */
   planning: string;
-  
+
   /** Coding model */
   coding: string;
 }
@@ -1015,13 +1015,13 @@ export interface ModelConfiguration {
 export interface IndexingConfiguration {
   /** Exclude patterns */
   excludePatterns: string[];
-  
+
   /** Max file size in MB */
   maxFileSizeMb: number;
-  
+
   /** Chunk size (tokens) */
   chunkSize: number;
-  
+
   /** Chunk overlap (tokens) */
   chunkOverlap: number;
 }
@@ -1032,13 +1032,13 @@ export interface IndexingConfiguration {
 export interface SafetyConfiguration {
   /** Require Git repository for Act mode */
   requireGitRepo: boolean;
-  
+
   /** Check for uncommitted changes */
   checkUncommittedChanges: boolean;
-  
+
   /** Auto-approve new files */
   autoApproveNewFiles: boolean;
-  
+
   /** Auto-approve config file changes */
   autoApproveConfigChanges: boolean;
 }
@@ -1049,7 +1049,7 @@ export interface SafetyConfiguration {
 export interface OllamaConfiguration {
   /** Ollama host URL */
   host: string;
-  
+
   /** Request timeout in seconds */
   timeoutSeconds: number;
 }
@@ -1060,13 +1060,13 @@ export interface OllamaConfiguration {
 export interface Configuration {
   /** Ollama config */
   ollama: OllamaConfiguration;
-  
+
   /** Model config */
   models: ModelConfiguration;
-  
+
   /** Indexing config */
   indexing: IndexingConfiguration;
-  
+
   /** Safety config */
   safety: SafetyConfiguration;
 }
@@ -1087,37 +1087,37 @@ export enum ErrorCode {
   WEBSOCKET_CONNECTION_FAILED = '1001',
   WEBSOCKET_TIMEOUT = '1002',
   HANDSHAKE_FAILED = '1003',
-  
+
   // LLM errors (2xxx)
   LLM_CONNECTION_FAILED = '2001',
   LLM_TIMEOUT = '2002',
   LLM_MODEL_NOT_FOUND = '2003',
   LLM_GENERATION_FAILED = '2004',
   LLM_CONTEXT_TOO_LARGE = '2005',
-  
+
   // Indexing errors (3xxx)
   INDEXING_FAILED = '3001',
   PARSING_FAILED = '3002',
   EMBEDDING_FAILED = '3003',
   VECTOR_DB_ERROR = '3004',
-  
+
   // Plan errors (4xxx)
   PLAN_GENERATION_FAILED = '4001',
   PLAN_NOT_FOUND = '4002',
   INVALID_PLAN = '4003',
-  
+
   // Act errors (5xxx)
   EXECUTION_FAILED = '5001',
   GIT_ERROR = '5002',
   FILE_OPERATION_FAILED = '5003',
   COMPILATION_ERROR = '5004',
   APPROVAL_TIMEOUT = '5005',
-  
+
   // Resource errors (6xxx)
   VRAM_OVERFLOW = '6001',
   RAM_OVERFLOW = '6002',
   DISK_FULL = '6003',
-  
+
   // System errors (9xxx)
   INTERNAL_ERROR = '9001',
   INVALID_REQUEST = '9002',
@@ -1130,10 +1130,10 @@ export enum ErrorCode {
 export interface RecoveryOption {
   /** Action identifier */
   action: string;
-  
+
   /** Human-readable description */
   description: string;
-  
+
   /** Parameters for action */
   parameters?: Record<string, any>;
 }
@@ -1144,19 +1144,19 @@ export interface RecoveryOption {
 export interface ErrorResponse {
   /** Error code */
   code: ErrorCode | string;
-  
+
   /** Human-readable message */
   message: string;
-  
+
   /** Additional details */
   details?: any;
-  
+
   /** Timestamp */
   timestamp: Timestamp;
-  
+
   /** Request ID (if applicable) */
   requestId?: string;
-  
+
   /** Recovery options */
   recoveryOptions?: RecoveryOption[];
 }
@@ -1182,7 +1182,7 @@ class TimestampedModel(BaseModel):
     """Base model with timestamp fields"""
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat() + 'Z'
@@ -1255,7 +1255,7 @@ class IndexingProgress(BaseModel):
     percentage: float = Field(ge=0, le=100)
     estimated_time_remaining_seconds: int = Field(ge=0)
     message: str
-    
+
     @validator('percentage')
     def round_percentage(cls, v):
         return round(v, 1)
@@ -1685,7 +1685,7 @@ class OllamaConfiguration(BaseModel):
     """Ollama configuration"""
     host: str = Field(default="http://localhost:11434")
     timeout_seconds: int = Field(default=120, ge=30, le=600)
-    
+
     @validator('host')
     def validate_host(cls, v):
         if not v.startswith(('http://', 'https://')):
@@ -1718,26 +1718,26 @@ export const CONSTANTS = {
   DEFAULT_CHUNK_OVERLAP: 200,
   DEFAULT_MAX_FILE_SIZE_MB: 10,
   DEFAULT_EXCLUDE_PATTERNS: ['node_modules', '.git', 'dist', 'build', '.next'],
-  
+
   // Chat
   DEFAULT_MAX_TOKENS: 2048,
   DEFAULT_TEMPERATURE: 0.7,
   MAX_CONTEXT_TOKENS: 4096,
-  
+
   // WebSocket
   WEBSOCKET_RECONNECT_DELAY_MS: 2000,
   MAX_WEBSOCKET_RECONNECT_ATTEMPTS: 5,
   WEBSOCKET_TIMEOUT_MS: 30000,
-  
+
   // Act Mode
   DEFAULT_APPROVAL_TIMEOUT_SECONDS: 300,
   DEFAULT_TODO_TIMEOUT_SECONDS: 300,
   GIT_BRANCH_PREFIX: 'localpilot',
-  
+
   // Resources
   VRAM_WARNING_THRESHOLD: 0.9,
   VRAM_CRITICAL_THRESHOLD: 0.95,
-  
+
   // Models
   DEFAULT_EMBEDDING_MODEL: 'bge-m3',
   DEFAULT_CHAT_MODEL: 'qwen2.5-coder:7b-instruct-q4_K_M',
@@ -1985,7 +1985,7 @@ from pydantic import validator
 
 class Validators:
     """Common validators"""
-    
+
     @staticmethod
     def validate_file_path(v: str) -> str:
         """Validate file path"""
@@ -1994,21 +1994,21 @@ class Validators:
         if not v.strip():
             raise ValueError('File path cannot be empty')
         return v
-    
+
     @staticmethod
     def validate_percentage(v: float) -> float:
         """Validate percentage (0-100)"""
         if not 0 <= v <= 100:
             raise ValueError('Percentage must be between 0 and 100')
         return round(v, 1)
-    
+
     @staticmethod
     def validate_complexity(v: str) -> str:
         """Validate complexity level"""
         if v not in ('low', 'medium', 'high'):
             raise ValueError('Complexity must be low, medium, or high')
         return v
-    
+
     @staticmethod
     def validate_model_name(v: str) -> str:
         """Validate model name"""
@@ -2273,7 +2273,7 @@ Strategy:
   - Support reading previous schema versions
   - Migrate on load (lazy migration)
   - Never auto-migrate user data without consent
-  
+
 Future Considerations:
   - Export/import functionality
   - Schema validation on load

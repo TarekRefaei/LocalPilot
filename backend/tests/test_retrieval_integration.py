@@ -18,7 +18,13 @@ from app.services.rag.vector_store import VectorStore
 TEST_FIXTURES = [
     {
         "query": "How does authentication work?",
-        "relevant_ids": {"auth_001", "auth_002", "security_001", "security_002", "security_003"},
+        "relevant_ids": {
+            "auth_001",
+            "auth_002",
+            "security_001",
+            "security_002",
+            "security_003",
+        },
         "chunks": [
             {
                 "id": "auth_001",
@@ -74,7 +80,13 @@ TEST_FIXTURES = [
     },
     {
         "query": "How to query the database?",
-        "relevant_ids": {"database_001", "database_002", "orm_001", "orm_002", "orm_003"},
+        "relevant_ids": {
+            "database_001",
+            "database_002",
+            "orm_001",
+            "orm_002",
+            "orm_003",
+        },
         "chunks": [
             {
                 "id": "database_001",
@@ -361,7 +373,9 @@ class TestRetrieverIntegration:
     """Integration tests for multi-level retriever."""
 
     @pytest.mark.asyncio
-    async def test_retrieve_basic(self, retriever, mock_vector_store, mock_embedding_service):
+    async def test_retrieve_basic(
+        self, retriever, mock_vector_store, mock_embedding_service
+    ):
         """Test basic retrieval."""
         # Setup mocks
         mock_embedding_service.embed_query.return_value = [0.1] * 1024
@@ -408,7 +422,9 @@ class TestRetrieverIntegration:
 
         # Execute with context
         user_context = {"current_file": "test.py"}
-        results = await retriever.retrieve("test query", top_k=5, user_context=user_context)
+        results = await retriever.retrieve(
+            "test query", top_k=5, user_context=user_context
+        )
 
         # Verify context boost was applied
         assert len(results) > 0

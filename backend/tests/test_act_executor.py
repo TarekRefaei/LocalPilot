@@ -51,7 +51,9 @@ def test_apply_writes_files_and_audit(tmp_path: Path, monkeypatch):
 
     ops = [
         OperationRequest(type="create", path="docs/readme.md", content="# Title\n"),
-        OperationRequest(type="modify", path="docs/readme.md", content="# Title\nMore\n"),
+        OperationRequest(
+            type="modify", path="docs/readme.md", content="# Title\nMore\n"
+        ),
     ]
 
     # dry run

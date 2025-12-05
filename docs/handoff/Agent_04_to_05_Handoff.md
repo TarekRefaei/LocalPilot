@@ -8,13 +8,13 @@
 - Scope delivered: Robust WebSocket client with reconnect, exponential backoff, heartbeat; shared message envelope contract; 13/15 unit tests passing
 
 ## Artifacts
-- **Code**: 
+- **Code**:
   - `extension/src/contracts/envelope.ts` - Shared TypeScript types and envelope
   - `extension/src/services/ws-client.ts` - WebSocket client implementation
   - `extension/__tests__/ws-client.test.ts` - 13 passing unit tests
   - `extension/__tests__/mocks/mock-ws-server.ts` - Mock server for testing
 - **Test results**: 13 passing, 2 skipped (timing-dependent); all lint and typecheck pass
-- **Docs**: 
+- **Docs**:
   - `docs/agents/04-WebSocket-Client-Contract-Summary.md` - Implementation summary
   - `docs/agents/04-WebSocket-Client-Contract.md` - Detailed plan and checklist
 

@@ -1,7 +1,7 @@
 # Agent 12 — Integration & E2E Plan
 
-Version: 1.0  
-Status: Active  
+Version: 1.0
+Status: Active
 Owner: Agent 12
 
 ---

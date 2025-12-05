@@ -17,10 +17,13 @@ def test_vector_store_defaults_to_settings_path(monkeypatch):
             return DummyCollection()
 
     # Patch PersistentClient used inside the VectorStore module
-    monkeypatch.setattr("app.services.rag.vector_store.chromadb.PersistentClient", DummyClient)
+    monkeypatch.setattr(
+        "app.services.rag.vector_store.chromadb.PersistentClient", DummyClient
+    )
     # Patch Path.mkdir used inside the VectorStore module to avoid disk writes
     monkeypatch.setattr(
-        "app.services.rag.vector_store.Path.mkdir", lambda self, parents=False, exist_ok=False: None
+        "app.services.rag.vector_store.Path.mkdir",
+        lambda self, parents=False, exist_ok=False: None,
     )
 
     from app.services.rag.vector_store import VectorStore

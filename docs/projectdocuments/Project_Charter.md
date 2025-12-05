@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #1: PROJECT_CHARTER.md
 # LocalPilot - Project Charter
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation
 **Author:** LocalPilot Team
 
 ---
@@ -99,7 +99,7 @@ Build a VS Code extension that:
 #### v0.3 (Advanced Features)
 - Auto-debugging in Act mode
 - Test generation
-- Multiple LLM providers (LM Studio, LocalAI) 
+- Multiple LLM providers (LM Studio, LocalAI)
 - Collaborative features
 
 #### v0.4+

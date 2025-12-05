@@ -89,7 +89,9 @@ class EmbeddingService:
                 cached = self.query_cache.get_embedding(query)
                 if cached is not None:
                     self._cache_hits += 1
-                    logger.debug(f"EmbeddingService cache hit for query: {query[:50]}...")
+                    logger.debug(
+                        f"EmbeddingService cache hit for query: {query[:50]}..."
+                    )
                     return cached
             except Exception:
                 # Cache errors should not fail embedding
@@ -148,7 +150,9 @@ class EmbeddingService:
             batch_num = batch_idx // self.batch_size + 1
 
             # Prepare documents with prefix for better retrieval
-            prepared_batch = [f"Represent this code for retrieval: {doc}" for doc in batch]
+            prepared_batch = [
+                f"Represent this code for retrieval: {doc}" for doc in batch
+            ]
 
             start_time = time.time()
             batch_embeddings = await self._embed_batch(prepared_batch)
@@ -247,7 +251,9 @@ class EmbeddingService:
                     )
                     await asyncio.sleep(wait_time)
                 else:
-                    logger.error(f"Ollama API failed after {self.max_retries} attempts: {e}")
+                    logger.error(
+                        f"Ollama API failed after {self.max_retries} attempts: {e}"
+                    )
                     raise RuntimeError(
                         f"Failed to embed text after {self.max_retries} attempts: {e}"
                     ) from e
