@@ -1,0 +1,29 @@
+name: CI - RAG Quick Precision
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/**'
+  workflow_dispatch:
+
+jobs:
+  rag-quick:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dev deps
+        run: |
+          cd backend
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements-dev.txt || pip install pytest pytest-asyncio numpy
+      - name: Run quick retrieval precision test
+        run: |
+          . backend/.venv/bin/activate
+          pytest -q backend/tests/test_retrieval_integration.py::TestRetrievalFixtures::test_all_fixtures_precision -q
