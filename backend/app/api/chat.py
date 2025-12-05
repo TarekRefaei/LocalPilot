@@ -36,7 +36,9 @@ async def stream_chat(req: ChatRequest, request: Request):
     evidence_texts: list[str] = [r.get("content", "") for r in results][:5]
 
     # Build prompt
-    system_prefix = "You are LocalPilot. Use the evidence below to answer the user's question.\n\n"
+    system_prefix = (
+        "You are LocalPilot. Use the evidence below to answer the user's question.\n\n"
+    )
     evidence_block = "\n\n--- Evidence ---\n\n" + (
         "\n\n".join(evidence_texts) if evidence_texts else "<no evidence>"
     )
@@ -55,7 +57,9 @@ async def stream_chat(req: ChatRequest, request: Request):
             if model_name.lower().startswith("ollama:"):
                 model_name = model_name.split(":", 1)[1]
             try:
-                agen = stream_from_ollama_safe(full_prompt, model=model_name, request_id=request_id)
+                agen = stream_from_ollama_safe(
+                    full_prompt, model=model_name, request_id=request_id
+                )
             except TypeError as e:
                 if "request_id" in str(e):
                     agen = stream_from_ollama_safe(full_prompt, model=model_name)

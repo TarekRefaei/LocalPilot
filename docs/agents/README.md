@@ -1,5 +1,5 @@
 # LocalPilot Agent References
- 
+
 Start here: [Orchestration-Guidelines](./Orchestration-Guidelines.md)
 
 All agents follow TDD, SOLID, and Clean Architecture (UI / Use-cases / Adapters / Infra). Use Red → Green → Refactor on every task.

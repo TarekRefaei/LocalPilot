@@ -54,7 +54,9 @@ async def test_stream_from_ollama_safe_parses_ndjson(monkeypatch):
     resp = DummyResponse(ndjson_lines)
 
     # Patch httpx.AsyncClient to our fake
-    fake_module = types.SimpleNamespace(AsyncClient=lambda *a, **k: FakeAsyncClient(resp))
+    fake_module = types.SimpleNamespace(
+        AsyncClient=lambda *a, **k: FakeAsyncClient(resp)
+    )
     monkeypatch.setattr(model_adapter, "httpx", fake_module)
 
     pieces = []

@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #2: TECHNICAL_ARCHITECTURE.md
 # LocalPilot - Technical Architecture Document
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation
 **Author:** LocalPilot Architecture Team
 
 ---
@@ -114,11 +114,11 @@ graph TB
         FS[File System API]
         GIT[Git API]
     end
-    
+
     subgraph Backend["Python Backend (FastAPI)"]
         API[API Gateway]
         WS[WebSocket Hub]
-        
+
         subgraph Services
             IDX[Indexing Service]
             RAG[RAG Service]
@@ -126,39 +126,39 @@ graph TB
             PLAN[Plan Service]
             ACT[Act Service]
         end
-        
+
         subgraph LLM["LLM Layer"]
             PROV[Provider Manager]
             SWAP[Model Swapper]
             VRAM[VRAM Monitor]
         end
-        
+
         subgraph Data["Data Layer"]
             VDB[(ChromaDB)]
             META[(SQLite)]
             CACHE[(Cache)]
         end
     end
-    
+
     subgraph External["External Services"]
         OLLAMA[Ollama API]
     end
-    
+
     VIEWS -->|User Actions| EXT
     EXT <-->|WebSocket| WS
     EXT <-->|REST| API
-    
+
     WS --> Services
     API --> Services
-    
+
     Services --> LLM
     Services --> Data
-    
+
     LLM <-->|HTTP| OLLAMA
-    
+
     IDX --> FS
     ACT --> GIT
-    
+
     style VSCode fill:#e1f5ff
     style Backend fill:#fff4e1
     style External fill:#f0f0f0
@@ -180,11 +180,11 @@ sequenceDiagram
     U->>UI: Click "Start Indexing"
     UI->>BE: WS: indexing.start
     BE->>IDX: initiate_indexing()
-    
+
     Note over IDX: Phase 1: Discovery
     IDX->>IDX: Scan workspace structure
     IDX-->>UI: Progress: Discovery (5%)
-    
+
     Note over IDX: Phase 2: Documentation
     IDX->>IDX: Extract README, docs
     IDX->>EMB: embed_documents()
@@ -192,14 +192,14 @@ sequenceDiagram
     LLM-->>EMB: embeddings
     EMB->>VDB: store(embeddings)
     IDX-->>UI: Progress: Documentation (25%)
-    
+
     Note over IDX: Phase 3: Code Structure
     IDX->>TS: parse_file(code)
     TS-->>IDX: AST
     IDX->>IDX: extract_symbols()
     IDX->>VDB: store_metadata()
     IDX-->>UI: Progress: Structure (50%)
-    
+
     Note over IDX: Phase 4: Semantic Chunking
     IDX->>IDX: create_chunks()
     IDX->>EMB: embed_chunks()
@@ -207,13 +207,13 @@ sequenceDiagram
     LLM-->>EMB: embeddings
     EMB->>VDB: store(embeddings)
     IDX-->>UI: Progress: Chunking (75%)
-    
+
     Note over IDX: Phase 5: Summarization
     IDX->>LLM: POST /api/chat (qwen2.5-coder:7b)
     LLM-->>IDX: project_summary
     IDX->>VDB: store_summary()
     IDX-->>UI: Progress: Complete (100%)
-    
+
     IDX-->>BE: indexing_complete
     BE-->>UI: WS: indexing.complete + summary
     UI->>U: Show summary, enable modes
@@ -241,20 +241,20 @@ sequenceDiagram
     LLM-->>CHAT: response + plan_suggestion
     CHAT->>U: Display response
     CHAT->>U: Show "Transfer to Plan" button
-    
+
     Note over U,PLAN: TRANSITION TO PLAN MODE
     U->>PLAN: Click "Transfer to Plan"
     PLAN->>LLM: generate_detailed_plan(suggestion)
     LLM-->>PLAN: structured_todos
     PLAN->>U: Display TODO list (editable)
     U->>PLAN: Review & approve
-    
+
     Note over U,ACT: TRANSITION TO ACT MODE
     U->>ACT: Click "Start Implementation"
     ACT->>GIT: check_git_repo()
     GIT-->>ACT: repo_status
     ACT->>GIT: create_branch("localpilot/plan-123")
-    
+
     loop For each TODO
         ACT->>LLM: generate_code(todo_instructions)
         LLM-->>ACT: file_operations[]
@@ -264,7 +264,7 @@ sequenceDiagram
         ACT->>GIT: commit("Complete: TODO #1")
         ACT->>U: Update progress
     end
-    
+
     ACT->>U: Implementation complete
     ACT->>U: Show merge instructions
 ```
@@ -291,17 +291,17 @@ sequenceDiagram
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   // 1. Start Python backend
   await BackendService.start(context);
-  
+
   // 2. Register commands
   context.subscriptions.push(
     vscode.commands.registerCommand('localpilot.openPanel', () => {
       LocalPilotViews.register(context);
     })
   );
-  
+
   // 3. Initialize WebSocket connection
   await WebSocketService.connect();
-  
+
   // 4. Register file watchers
   FileWatcherService.initialize();
 }
@@ -353,27 +353,27 @@ export class WebSocketService {
   private static ws: WebSocket;
   private static reconnectAttempts = 0;
   private static eventHandlers: Map<string, EventHandler[]>;
-  
+
   public static async connect(): Promise<void> {
     this.ws = new WebSocket(CONFIG.BACKEND_WS_URL);
-    
+
     this.ws.on('open', () => {
       console.log('Connected to backend');
       this.reconnectAttempts = 0;
     });
-    
+
     this.ws.on('message', (data: string) => {
       const event = JSON.parse(data);
       this.emit(event.type, event.payload);
     });
-    
+
     this.ws.on('close', () => this.handleReconnect());
   }
-  
+
   public static send<T>(event: string, payload: T): void {
     this.ws.send(JSON.stringify({ event, payload }));
   }
-  
+
   public static on(event: string, handler: EventHandler): void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, []);
@@ -387,11 +387,11 @@ export class WebSocketService {
 ```typescript
 export class BackendService {
   private static process: ChildProcess;
-  
+
   public static async start(context: vscode.ExtensionContext): Promise<void> {
     const pythonPath = await this.getPythonPath();
     const backendPath = path.join(context.extensionPath, 'backend');
-    
+
     this.process = spawn(pythonPath, ['-m', 'uvicorn', 'src.main:app'], {
       cwd: backendPath,
       env: {
@@ -399,11 +399,11 @@ export class BackendService {
         PYTHONPATH: backendPath,
       },
     });
-    
+
     // Wait for backend to be ready
     await this.waitForHealthCheck();
   }
-  
+
   private static async waitForHealthCheck(): Promise<void> {
     for (let i = 0; i < 30; i++) {
       try {
@@ -505,20 +505,20 @@ router = APIRouter()
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
-    
+
     async def connect(self, client_id: str, websocket: WebSocket):
         await websocket.accept()
         self.active_connections[client_id] = websocket
-    
+
     def disconnect(self, client_id: str):
         self.active_connections.pop(client_id, None)
-    
+
     async def send_personal(self, client_id: str, event: str, data: dict):
         if client_id in self.active_connections:
             await self.active_connections[client_id].send_text(
                 json.dumps({"type": event, "payload": data})
             )
-    
+
     async def broadcast(self, event: str, data: dict):
         for connection in self.active_connections.values():
             await connection.send_text(
@@ -559,7 +559,7 @@ class IndexingService:
         self.vector_store = vector_store
         self.parser = parser
         self.embedding_service = embedding_service
-    
+
     async def index_workspace(
         self,
         workspace_path: str
@@ -574,10 +574,10 @@ class IndexingService:
             total=0,
             message="Scanning workspace..."
         )
-        
+
         files = await self._discover_files(workspace_path)
         total_files = len(files)
-        
+
         # Phase 2: Documentation
         yield IndexingProgress(
             phase=IndexingPhase.DOCUMENTATION,
@@ -585,11 +585,11 @@ class IndexingService:
             total=total_files,
             message="Indexing documentation..."
         )
-        
+
         docs = await self._extract_documentation(workspace_path)
         doc_embeddings = await self.embedding_service.embed_documents(docs)
         await self.vector_store.add_documents(doc_embeddings)
-        
+
         # Phase 3: Code Structure
         yield IndexingProgress(
             phase=IndexingPhase.STRUCTURE,
@@ -597,19 +597,19 @@ class IndexingService:
             total=total_files,
             message="Analyzing code structure..."
         )
-        
+
         for idx, file in enumerate(files):
             ast = await self.parser.parse_file(file)
             symbols = self._extract_symbols(ast)
             await self.vector_store.add_metadata(file, symbols)
-            
+
             yield IndexingProgress(
                 phase=IndexingPhase.STRUCTURE,
                 current=idx + 1,
                 total=total_files,
                 current_file=file
             )
-        
+
         # Phase 4: Semantic Chunking
         yield IndexingProgress(
             phase=IndexingPhase.CHUNKING,
@@ -617,19 +617,19 @@ class IndexingService:
             total=total_files,
             message="Creating semantic chunks..."
         )
-        
+
         for idx, file in enumerate(files):
             chunks = await self._create_chunks(file)
             embeddings = await self.embedding_service.embed_chunks(chunks)
             await self.vector_store.add_chunks(embeddings)
-            
+
             yield IndexingProgress(
                 phase=IndexingPhase.CHUNKING,
                 current=idx + 1,
                 total=total_files,
                 current_file=file
             )
-        
+
         # Phase 5: Summarization
         yield IndexingProgress(
             phase=IndexingPhase.SUMMARIZATION,
@@ -637,10 +637,10 @@ class IndexingService:
             total=1,
             message="Generating project summary..."
         )
-        
+
         summary = await self._generate_summary(workspace_path)
         await self.vector_store.store_summary(summary)
-        
+
         yield IndexingProgress(
             phase=IndexingPhase.COMPLETE,
             current=total_files,
@@ -665,7 +665,7 @@ class RAGService:
     ):
         self.vector_store = vector_store
         self.embedding_service = embedding_service
-    
+
     async def retrieve_context(
         self,
         query: str,
@@ -677,14 +677,14 @@ class RAGService:
         """
         # 1. Embed query
         query_embedding = await self.embedding_service.embed_query(query)
-        
+
         # 2. Search vector store
         results = await self.vector_store.search(
             query_embedding,
             top_k=top_k,
             filters=filters
         )
-        
+
         # 3. Build context
         chunks = [
             CodeChunk(
@@ -696,7 +696,7 @@ class RAGService:
             )
             for r in results
         ]
-        
+
         return RAGContext(
             query=query,
             chunks=chunks,
@@ -722,17 +722,17 @@ class ProviderManager:
     def __init__(self):
         self.providers: Dict[str, LLMProvider] = {}
         self.active_provider: str = "ollama"
-    
+
     async def initialize(self, config: LLMConfig):
         """Initialize LLM providers"""
         # Initialize Ollama
         ollama = OllamaProvider(config.ollama_host)
         await ollama.connect()
         self.providers["ollama"] = ollama
-        
+
         # Future: Initialize other providers
         # self.providers["lmstudio"] = LMStudioProvider(...)
-    
+
     def get_provider(self, name: str = None) -> LLMProvider:
         provider_name = name or self.active_provider
         return self.providers[provider_name]
@@ -752,7 +752,7 @@ class ModelSwapper:
         self.vram_monitor = vram_monitor
         self.loaded_models: Dict[str, bool] = {}
         self.lock = asyncio.Lock()
-    
+
     async def ensure_model_loaded(self, model_name: str) -> None:
         """
         Ensure model is loaded, swap if necessary
@@ -760,23 +760,23 @@ class ModelSwapper:
         async with self.lock:
             if model_name in self.loaded_models:
                 return
-            
+
             # Check if we need to unload another model
             current_vram = await self.vram_monitor.get_usage()
             model_size = await self._get_model_size(model_name)
-            
+
             if current_vram + model_size > self.vram_monitor.max_vram * 0.9:
                 await self._unload_least_recently_used()
-            
+
             # Load model
             await self._load_model(model_name)
             self.loaded_models[model_name] = True
-    
+
     async def _load_model(self, model_name: str):
         """Load model into memory"""
         # Trigger Ollama to load model
         await ollama.generate(model=model_name, prompt="", stream=False)
-    
+
     async def _unload_least_recently_used(self):
         """Unload least recently used model"""
         # Implementation: track model usage, unload LRU
@@ -798,7 +798,7 @@ class VectorStore:
             name="localpilot_codebase",
             metadata={"hnsw:space": "cosine"}
         )
-    
+
     async def add_documents(
         self,
         documents: List[VectorDocument]
@@ -810,7 +810,7 @@ class VectorStore:
             documents=[doc.content for doc in documents],
             metadatas=[doc.metadata for doc in documents]
         )
-    
+
     async def search(
         self,
         query_embedding: List[float],
@@ -823,7 +823,7 @@ class VectorStore:
             n_results=top_k,
             where=filters
         )
-        
+
         return [
             SearchResult(
                 id=results['ids'][0][i],
@@ -941,12 +941,12 @@ VRAM Allocation:
   Total: 8GB
   System Reserved: ~500MB
   Available: ~7.5GB
-  
+
   Concurrent Load (Recommended):
     - Embeddings (bge-m3): 1.5GB
     - Chat Model (7b): 4.5GB
     - Total: 6GB (75% utilization ✅)
-  
+
   Swappable Load:
     - Planning/Coding (14b): 9GB
     - Strategy: Unload chat, load 14b, process, swap back
@@ -1088,13 +1088,13 @@ const validateModelSelection = (
   // Calculate concurrent VRAM usage
   const concurrentModels = selections.filter(s => s.concurrent);
   const concurrentVRAM = concurrentModels.reduce((sum, m) => sum + m.vramGB, 0);
-  
+
   // Calculate peak VRAM (including swappable)
   const peakVRAM = Math.max(
     concurrentVRAM,
     ...selections.map(s => s.vramGB)
   );
-  
+
   // Validate
   if (concurrentVRAM > systemVRAM * 0.9) {
     return {
@@ -1104,7 +1104,7 @@ const validateModelSelection = (
       suggestion: 'Reduce number of concurrent models or use smaller variants'
     };
   }
-  
+
   if (peakVRAM > systemVRAM) {
     return {
       valid: false,
@@ -1113,7 +1113,7 @@ const validateModelSelection = (
       suggestion: 'Use quantized version or smaller model'
     };
   }
-  
+
   if (concurrentVRAM > systemVRAM * 0.7) {
     return {
       valid: true,
@@ -1122,7 +1122,7 @@ const validateModelSelection = (
       suggestion: 'May experience slowdowns under heavy load'
     };
   }
-  
+
   return {
     valid: true,
     level: 'success',
@@ -1149,30 +1149,30 @@ class GitSafetyService:
                 "Workspace is not a Git repository. "
                 "Initialize with 'git init' for safety."
             )
-        
+
         # 2. Check for uncommitted changes
         if await self.has_uncommitted_changes():
             raise UncommittedChangesError(
                 "Workspace has uncommitted changes. "
                 "Commit or stash before using Act mode."
             )
-        
+
         # 3. Create safety branch
         branch_name = f"localpilot/plan-{plan_id}"
         await self.create_branch(branch_name)
         await self.checkout_branch(branch_name)
-        
+
         return GitSafetyContext(
             original_branch=await self.get_current_branch(),
             safety_branch=branch_name,
             base_commit=await self.get_current_commit()
         )
-    
+
     async def commit_todo(self, todo_id: str, message: str):
         """Commit after each TODO completion"""
         await self.git_add_all()
         await self.git_commit(f"[LocalPilot] {message}\n\nTODO: {todo_id}")
-    
+
     async def rollback_todo(self, todo_id: str):
         """Rollback last TODO if it failed"""
         await self.git_reset_hard("HEAD~1")
@@ -1194,39 +1194,39 @@ class ApprovalService {
     // Categorize operations
     const autoApprove = operations.filter(op => !op.requiresApproval);
     const requiresReview = operations.filter(op => op.requiresApproval);
-    
+
     if (requiresReview.length === 0) {
       return { approved: true, operations: autoApprove };
     }
-    
+
     // Show approval UI
     const result = await showApprovalDialog({
       operations: requiresReview,
       summary: this.generateSummary(requiresReview),
       diffs: await this.generateDiffs(requiresReview)
     });
-    
+
     if (result.approved) {
       return {
         approved: true,
         operations: [...autoApprove, ...result.approvedOperations]
       };
     }
-    
+
     return { approved: false };
   }
-  
+
   private shouldAutoApprove(op: FileOperation): boolean {
     // Auto-approve new files in safe locations
     if (op.type === 'create' && this.isSafeLocation(op.path)) {
       return true;
     }
-    
+
     // Auto-approve config files (with user setting)
     if (this.isConfigFile(op.path) && settings.autoApproveConfig) {
       return true;
     }
-    
+
     // Everything else requires approval
     return false;
   }
@@ -1267,19 +1267,19 @@ class ResourceLimits:
     MAX_FILE_SIZE_MB = 10
     MAX_CONCURRENT_FILE_PARSING = 5
     MAX_EMBEDDING_BATCH_SIZE = 32
-    
+
     # Memory
     MAX_VECTOR_DB_MEMORY_GB = 2
     MAX_CACHE_SIZE_MB = 500
-    
+
     # VRAM
     MAX_VRAM_UTILIZATION = 0.90  # 90% of available
     MIN_VRAM_BUFFER_GB = 0.5
-    
+
     # Concurrency
     MAX_CONCURRENT_LLM_REQUESTS = 1  # One at a time for VRAM
     MAX_CONCURRENT_EMBEDDINGS = 3
-    
+
     # Timeouts
     LLM_TIMEOUT_SECONDS = 120
     INDEXING_TIMEOUT_SECONDS = 1800  # 30 minutes max
@@ -1345,7 +1345,7 @@ class TelemetryService:
             "event": event,
             "properties": self._anonymize(properties)
         })
-    
+
     async def get_usage_stats(self) -> UsageStats:
         """Generate usage statistics for user"""
         return UsageStats(
@@ -1365,19 +1365,19 @@ class PerformanceMonitor:
         """Context manager for performance tracking"""
         start_time = time.time()
         start_vram = await self.get_vram_usage()
-        
+
         try:
             yield
         finally:
             duration = time.time() - start_time
             vram_used = await self.get_vram_usage() - start_vram
-            
+
             await self.record_metric(
                 name=operation_name,
                 duration=duration,
                 vram_delta=vram_used
             )
-            
+
             # Warn if operation is slow
             if duration > self.get_threshold(operation_name):
                 logger.warning(

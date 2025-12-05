@@ -1,7 +1,7 @@
 # PR #8 Merge Checklist — Agent 08
 
-**PR Title**: `feat(rag): bge-m3 embeddings and Chroma integration`  
-**Branch**: `feat/08-embeddings-vector-store`  
+**PR Title**: `feat(rag): bge-m3 embeddings and Chroma integration`
+**Branch**: `feat/08-embeddings-vector-store`
 **Date**: 2025-11-22
 
 ---
@@ -219,6 +219,6 @@ stats = vector_store.get_statistics()
 
 ---
 
-**Prepared by**: Agent 08  
-**Date**: 2025-11-22  
+**Prepared by**: Agent 08
+**Date**: 2025-11-22
 **Status**: Ready for Review & Merge

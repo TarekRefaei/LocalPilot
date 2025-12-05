@@ -112,9 +112,9 @@ Persistent Vector DB (.localpilot/vectordb)
 
 ### Integration Points
 
-**Input**: CodeChunk objects with metadata (file_path, symbols, imports, etc.)  
-**Output**: Searchable vector embeddings with metadata filtering  
-**Events**: Progress callbacks via WebSocket for UI updates  
+**Input**: CodeChunk objects with metadata (file_path, symbols, imports, etc.)
+**Output**: Searchable vector embeddings with metadata filtering
+**Events**: Progress callbacks via WebSocket for UI updates
 **Next**: Agent 09 (Retrieval & Ranking) queries this vector store
 
 ---
@@ -278,6 +278,6 @@ Agent 08 delivers a **production-ready embeddings and vector store system** for 
 
 ---
 
-**Branch**: `feat/08-embeddings-vector-store`  
-**Commit**: `feat(rag): bge-m3 embeddings and Chroma integration`  
+**Branch**: `feat/08-embeddings-vector-store`
+**Commit**: `feat(rag): bge-m3 embeddings and Chroma integration`
 **Date**: 2025-11-22

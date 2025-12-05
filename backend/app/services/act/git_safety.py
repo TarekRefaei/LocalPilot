@@ -56,7 +56,9 @@ class GitSafetyService:
                 )
         elif mode == "git-optional":
             if in_repo and dirty:
-                raise GitSafetyError("Uncommitted changes present. Clean working tree required.")
+                raise GitSafetyError(
+                    "Uncommitted changes present. Clean working tree required."
+                )
         else:
             # unsafe: allowed, but no-op
             pass
@@ -66,14 +68,18 @@ class GitSafetyService:
         in_repo = self.git.is_repo()
         if not in_repo:
             # Outside Git and allowed by safety; create a synthetic context
-            return GitSafetyContext(original_branch="", safety_branch="", base_commit="")
+            return GitSafetyContext(
+                original_branch="", safety_branch="", base_commit=""
+            )
 
         original = self.git.current_branch()
         base = self.git.current_commit()
         branch = f"localpilot/plan-{plan_id}"
         self.git.create_branch(branch)
         self.git.checkout(branch)
-        return GitSafetyContext(original_branch=original, safety_branch=branch, base_commit=base)
+        return GitSafetyContext(
+            original_branch=original, safety_branch=branch, base_commit=base
+        )
 
     def commit_todo(self, todo_id: str, message: str) -> None:
         if not self.git.is_repo():

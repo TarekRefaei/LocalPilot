@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #6: INDEXING_SYSTEM_SPEC.md
 # LocalPilot - Indexing System Specification
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation - CRITICAL COMPONENT  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation - CRITICAL COMPONENT
 **Author:** LocalPilot Indexing Team
 
 ---
@@ -47,17 +47,17 @@ Primary Goals:
      - Understand code semantics, not just syntax
      - Preserve function/class context
      - Maintain dependency relationships
-  
+
   2. Accurate Retrieval
      - Retrieve most relevant code for queries
      - Minimize false positives
      - Provide sufficient context
-  
+
   3. Multi-Language Support
      - JavaScript/TypeScript (MVP)
      - Python, Kotlin, Dart, Swift (future)
      - Language-aware chunking
-  
+
   4. Scalability
      - Handle projects up to 5000 files
      - Index within 15 minutes (1000 files target: 5 min)
@@ -215,7 +215,7 @@ class DiscoveryResult:
 
 class DiscoveryExecutor:
     """Phase 1: Workspace discovery"""
-    
+
     # File extensions by language
     LANGUAGE_EXTENSIONS = {
         'typescript': ['.ts', '.tsx'],
@@ -228,7 +228,7 @@ class DiscoveryExecutor:
         'markdown': ['.md'],
         'yaml': ['.yml', '.yaml'],
     }
-    
+
     # Project type detection patterns
     PROJECT_MARKERS = {
         'react': ['package.json', 'src/App.tsx'],
@@ -243,7 +243,7 @@ class DiscoveryExecutor:
         'swift': ['Package.swift', '*.xcodeproj'],
         'generic': [],
     }
-    
+
     # Default exclude patterns
     DEFAULT_EXCLUDES = [
         'node_modules',
@@ -265,35 +265,35 @@ class DiscoveryExecutor:
         'coverage',
         '.pytest_cache',
     ]
-    
+
     def __init__(self, exclude_patterns: List[str] = None):
         self.exclude_patterns = exclude_patterns or self.DEFAULT_EXCLUDES
-    
+
     async def execute(self, workspace_path: str) -> DiscoveryResult:
         """Execute discovery phase"""
         workspace = Path(workspace_path)
-        
+
         if not workspace.exists():
             raise ValueError(f"Workspace path does not exist: {workspace_path}")
-        
+
         # Scan files
         files = self._scan_files(workspace)
-        
+
         # Categorize by type
         files_by_type = self._categorize_files(files)
-        
+
         # Detect project type
         project_type = self._detect_project_type(workspace)
-        
+
         # Get root files
         root_files = self._get_root_files(workspace)
-        
+
         # Calculate total size
         total_size_mb = sum(f.stat().st_size for f in files) / (1024 * 1024)
-        
+
         # Estimate duration (empirical formula)
         estimated_duration = self._estimate_duration(len(files), total_size_mb)
-        
+
         return DiscoveryResult(
             total_files=len(files),
             files_by_type=files_by_type,
@@ -302,50 +302,50 @@ class DiscoveryExecutor:
             estimated_duration_seconds=estimated_duration,
             total_size_mb=round(total_size_mb, 2)
         )
-    
+
     def _scan_files(self, workspace: Path) -> List[Path]:
         """Scan all files in workspace"""
         files = []
-        
+
         for root, dirs, filenames in os.walk(workspace):
             # Filter out excluded directories
             dirs[:] = [
-                d for d in dirs 
+                d for d in dirs
                 if not self._is_excluded(os.path.join(root, d), workspace)
             ]
-            
+
             for filename in filenames:
                 filepath = Path(root) / filename
-                
+
                 # Skip excluded files
                 if self._is_excluded(filepath, workspace):
                     continue
-                
+
                 # Skip hidden files
                 if filename.startswith('.'):
                     continue
-                
+
                 # Skip binary files (basic check)
                 if self._is_binary(filepath):
                     continue
-                
+
                 files.append(filepath)
-        
+
         return files
-    
+
     def _is_excluded(self, path: Path, workspace: Path) -> bool:
         """Check if path matches exclude patterns"""
         relative = path.relative_to(workspace) if path.is_relative_to(workspace) else path
         path_str = str(relative)
-        
+
         for pattern in self.exclude_patterns:
             if fnmatch.fnmatch(path_str, pattern):
                 return True
             if fnmatch.fnmatch(path.name, pattern):
                 return True
-        
+
         return False
-    
+
     def _is_binary(self, filepath: Path) -> bool:
         """Basic binary file detection"""
         binary_extensions = {
@@ -355,10 +355,10 @@ class DiscoveryExecutor:
             '.woff', '.woff2', '.ttf', '.eot',
             '.mp4', '.mp3', '.wav', '.avi',
         }
-        
+
         if filepath.suffix.lower() in binary_extensions:
             return True
-        
+
         # Try reading first 1024 bytes
         try:
             with open(filepath, 'rb') as f:
@@ -368,40 +368,40 @@ class DiscoveryExecutor:
                     return True
         except:
             return True
-        
+
         return False
-    
+
     def _categorize_files(self, files: List[Path]) -> Dict[str, int]:
         """Categorize files by language"""
         categories = {}
-        
+
         for filepath in files:
             ext = filepath.suffix.lower()
-            
+
             # Find language for extension
             language = 'other'
             for lang, extensions in self.LANGUAGE_EXTENSIONS.items():
                 if ext in extensions:
                     language = lang
                     break
-            
+
             categories[language] = categories.get(language, 0) + 1
-        
+
         return categories
-    
+
     def _detect_project_type(self, workspace: Path) -> str:
         """Detect project type based on markers"""
         workspace_files = set(f.name for f in workspace.iterdir())
-        
+
         for project_type, markers in self.PROJECT_MARKERS.items():
             if all(
                 any(fnmatch.fnmatch(f, marker) for f in workspace_files)
                 for marker in markers
             ):
                 return project_type
-        
+
         return 'generic'
-    
+
     def _get_root_files(self, workspace: Path) -> List[str]:
         """Get important root files"""
         important_files = [
@@ -416,27 +416,27 @@ class DiscoveryExecutor:
             'pubspec.yaml',
             'Package.swift',
         ]
-        
+
         found = []
         for filepath in workspace.iterdir():
             if filepath.name in important_files:
                 found.append(filepath.name)
-        
+
         return found
-    
+
     def _estimate_duration(self, file_count: int, size_mb: float) -> int:
         """Estimate indexing duration in seconds"""
         # Empirical formula based on benchmarks
         # Base: 0.3s per file
         # Complexity factor: +0.1s per MB
         # Embedding factor: +0.2s per file (for embedding generation)
-        
+
         base_time = file_count * 0.3
         size_time = size_mb * 0.1
         embedding_time = file_count * 0.2
-        
+
         total = base_time + size_time + embedding_time
-        
+
         # Add 20% buffer
         return int(total * 1.2)
 ```
@@ -487,7 +487,7 @@ class DocumentChunk:
 
 class DocumentationExecutor:
     """Phase 2: Documentation indexing"""
-    
+
     # Documentation file patterns
     DOC_PATTERNS = [
         'README*.md',
@@ -498,11 +498,11 @@ class DocumentationExecutor:
         'doc/**/*.md',
         '*.rst',
     ]
-    
+
     def __init__(self, embedding_service, vector_store):
         self.embedding_service = embedding_service
         self.vector_store = vector_store
-    
+
     async def execute(
         self,
         workspace_path: str,
@@ -510,32 +510,32 @@ class DocumentationExecutor:
         indexing_id: str
     ) -> int:
         """Execute documentation indexing"""
-        
+
         chunks = []
-        
+
         # 1. Extract markdown documentation
         markdown_files = self._find_markdown_files(files)
         for md_file in markdown_files:
             doc_chunks = await self._process_markdown(md_file, workspace_path)
             chunks.extend(doc_chunks)
-        
+
         # 2. Extract JSDoc/docstrings from code
         code_files = self._find_code_files(files)
         for code_file in code_files:
             doc_chunks = await self._extract_docstrings(code_file, workspace_path)
             chunks.extend(doc_chunks)
-        
+
         # 3. Generate embeddings (batched)
         embeddings = await self.embedding_service.embed_batch(
             [chunk.content for chunk in chunks],
             batch_size=32
         )
-        
+
         # 4. Store in vector DB
         await self._store_chunks(chunks, embeddings, indexing_id)
-        
+
         return len(chunks)
-    
+
     def _find_markdown_files(self, files: List[Path]) -> List[Path]:
         """Find markdown documentation files"""
         markdown = []
@@ -543,28 +543,28 @@ class DocumentationExecutor:
             if filepath.suffix.lower() in ['.md', '.markdown', '.rst']:
                 markdown.append(filepath)
         return markdown
-    
+
     async def _process_markdown(
         self,
         filepath: Path,
         workspace_path: str
     ) -> List[DocumentChunk]:
         """Process markdown file into chunks"""
-        
+
         try:
             content = filepath.read_text(encoding='utf-8')
         except:
             return []
-        
+
         chunks = []
-        
+
         # Split by headers (preserving hierarchy)
         sections = self._split_markdown_sections(content)
-        
+
         for i, section in enumerate(sections):
             if not section['content'].strip():
                 continue
-            
+
             chunk = DocumentChunk(
                 id=f"{filepath.stem}-{i}",
                 content=section['content'],
@@ -574,28 +574,28 @@ class DocumentationExecutor:
                 section=section.get('section')
             )
             chunks.append(chunk)
-        
+
         return chunks
-    
+
     def _split_markdown_sections(self, content: str) -> List[dict]:
         """Split markdown by sections (headers)"""
         sections = []
         current_section = {'content': '', 'title': None, 'section': None}
-        
+
         lines = content.split('\n')
         for line in lines:
             # Check for header
             header_match = re.match(r'^(#{1,6})\s+(.+)$', line)
-            
+
             if header_match:
                 # Save previous section
                 if current_section['content']:
                     sections.append(current_section)
-                
+
                 # Start new section
                 level = len(header_match.group(1))
                 title = header_match.group(2)
-                
+
                 current_section = {
                     'content': line + '\n',
                     'title': title,
@@ -603,32 +603,32 @@ class DocumentationExecutor:
                 }
             else:
                 current_section['content'] += line + '\n'
-        
+
         # Add last section
         if current_section['content']:
             sections.append(current_section)
-        
+
         return sections
-    
+
     def _find_code_files(self, files: List[Path]) -> List[Path]:
         """Find code files with potential docstrings"""
         code_extensions = {'.ts', '.tsx', '.js', '.jsx', '.py', '.kt', '.dart', '.swift'}
         return [f for f in files if f.suffix in code_extensions]
-    
+
     async def _extract_docstrings(
         self,
         filepath: Path,
         workspace_path: str
     ) -> List[DocumentChunk]:
         """Extract docstrings/JSDoc from code"""
-        
+
         try:
             content = filepath.read_text(encoding='utf-8')
         except:
             return []
-        
+
         chunks = []
-        
+
         # TypeScript/JavaScript JSDoc
         if filepath.suffix in ['.ts', '.tsx', '.js', '.jsx']:
             jsdocs = self._extract_jsdoc(content)
@@ -641,7 +641,7 @@ class DocumentationExecutor:
                     title=doc.get('function_name')
                 )
                 chunks.append(chunk)
-        
+
         # Python docstrings
         elif filepath.suffix == '.py':
             docstrings = self._extract_python_docstrings(content)
@@ -654,58 +654,58 @@ class DocumentationExecutor:
                     title=doc.get('function_name')
                 )
                 chunks.append(chunk)
-        
+
         return chunks
-    
+
     def _extract_jsdoc(self, content: str) -> List[dict]:
         """Extract JSDoc comments"""
         # Pattern: /** ... */
         pattern = r'/\*\*\s*(.*?)\s*\*/'
         matches = re.finditer(pattern, content, re.DOTALL)
-        
+
         docs = []
         for match in matches:
             doc_content = match.group(1)
-            
+
             # Clean up asterisks
             lines = doc_content.split('\n')
             cleaned_lines = [re.sub(r'^\s*\*\s?', '', line) for line in lines]
             cleaned = '\n'.join(cleaned_lines).strip()
-            
+
             if len(cleaned) > 20:  # Skip trivial comments
                 # Try to find associated function name
                 after_doc = content[match.end():match.end() + 200]
                 func_match = re.search(r'(?:function\s+)?(\w+)\s*\(', after_doc)
-                
+
                 docs.append({
                     'content': cleaned,
                     'function_name': func_match.group(1) if func_match else None
                 })
-        
+
         return docs
-    
+
     def _extract_python_docstrings(self, content: str) -> List[dict]:
         """Extract Python docstrings"""
         # Pattern: """ ... """ or ''' ... '''
         pattern = r'(?:"""|\'\'\')(.*?)(?:"""|\'\'\')'
         matches = re.finditer(pattern, content, re.DOTALL)
-        
+
         docs = []
         for match in matches:
             doc_content = match.group(1).strip()
-            
+
             if len(doc_content) > 20:
                 # Try to find associated function/class name
                 before_doc = content[max(0, match.start() - 200):match.start()]
                 func_match = re.search(r'(?:def|class)\s+(\w+)', before_doc)
-                
+
                 docs.append({
                     'content': doc_content,
                     'function_name': func_match.group(1) if func_match else None
                 })
-        
+
         return docs
-    
+
     async def _store_chunks(
         self,
         chunks: List[DocumentChunk],
@@ -713,7 +713,7 @@ class DocumentationExecutor:
         indexing_id: str
     ):
         """Store documentation chunks in vector DB"""
-        
+
         documents = []
         for chunk, embedding in zip(chunks, embeddings):
             documents.append({
@@ -728,7 +728,7 @@ class DocumentationExecutor:
                     'indexed_at': datetime.utcnow().isoformat(),
                 }
             })
-        
+
         await self.vector_store.add_documents(documents)
 ```
 
@@ -774,48 +774,48 @@ class Import:
 
 class TreeSitterParser:
     """Tree-sitter based code parser"""
-    
+
     def __init__(self):
         # Initialize parsers for supported languages
         # Note: Tree-sitter language bindings need to be installed
         self.parsers = {}
         self._init_parsers()
-    
+
     def _init_parsers(self):
         """Initialize language parsers"""
         try:
             # TypeScript/JavaScript
             ts_language = Language('build/languages.so', 'typescript')
             js_language = Language('build/languages.so', 'javascript')
-            
+
             ts_parser = Parser()
             ts_parser.set_language(ts_language)
             self.parsers['typescript'] = ts_parser
             self.parsers['tsx'] = ts_parser
-            
+
             js_parser = Parser()
             js_parser.set_language(js_language)
             self.parsers['javascript'] = js_parser
             self.parsers['jsx'] = js_parser
-            
+
             # Python
             py_language = Language('build/languages.so', 'python')
             py_parser = Parser()
             py_parser.set_language(py_language)
             self.parsers['python'] = py_parser
-            
+
             # More languages can be added here
-            
+
         except Exception as e:
             print(f"Warning: Failed to initialize Tree-sitter parsers: {e}")
-    
+
     def parse_file(self, filepath: Path, language: str) -> Optional[Node]:
         """Parse file and return AST"""
-        
+
         parser = self.parsers.get(language)
         if not parser:
             return None
-        
+
         try:
             content = filepath.read_bytes()
             tree = parser.parse(content)
@@ -826,11 +826,11 @@ class TreeSitterParser:
 
 class StructureExecutor:
     """Phase 3: Code structure analysis"""
-    
+
     def __init__(self, metadata_store):
         self.parser = TreeSitterParser()
         self.metadata_store = metadata_store
-    
+
     async def execute(
         self,
         workspace_path: str,
@@ -838,49 +838,49 @@ class StructureExecutor:
         indexing_id: str
     ) -> Dict[str, int]:
         """Execute structure analysis"""
-        
+
         symbols = []
         imports = []
         file_hashes = {}
-        
+
         for filepath in files:
             # Determine language
             language = self._detect_language(filepath)
             if not language:
                 continue
-            
+
             # Parse file
             ast = self.parser.parse_file(filepath, language)
             if not ast:
                 continue
-            
+
             # Extract symbols
             file_symbols = self._extract_symbols(ast, filepath, workspace_path, language)
             symbols.extend(file_symbols)
-            
+
             # Extract imports
             file_imports = self._extract_imports(ast, filepath, workspace_path, language)
             imports.extend(file_imports)
-            
+
             # Calculate file hash
             file_hash = self._calculate_hash(filepath)
             file_hashes[str(filepath.relative_to(workspace_path))] = file_hash
-        
+
         # Store in metadata DB
         await self.metadata_store.store_symbols(symbols, indexing_id)
         await self.metadata_store.store_imports(imports, indexing_id)
         await self.metadata_store.store_file_hashes(file_hashes, indexing_id)
-        
+
         # Build dependency graph
         dep_graph = self._build_dependency_graph(imports)
         await self.metadata_store.store_dependency_graph(dep_graph, indexing_id)
-        
+
         return {
             'symbols': len(symbols),
             'imports': len(imports),
             'files_analyzed': len(file_hashes)
         }
-    
+
     def _detect_language(self, filepath: Path) -> Optional[str]:
         """Detect programming language from extension"""
         ext_map = {
@@ -894,7 +894,7 @@ class StructureExecutor:
             '.swift': 'swift',
         }
         return ext_map.get(filepath.suffix.lower())
-    
+
     def _extract_symbols(
         self,
         ast: Node,
@@ -903,16 +903,16 @@ class StructureExecutor:
         language: str
     ) -> List[Symbol]:
         """Extract symbols from AST"""
-        
+
         symbols = []
-        
+
         if language in ['typescript', 'tsx', 'javascript', 'jsx']:
             symbols = self._extract_ts_symbols(ast, filepath, workspace_path)
         elif language == 'python':
             symbols = self._extract_python_symbols(ast, filepath, workspace_path)
-        
+
         return symbols
-    
+
     def _extract_ts_symbols(
         self,
         node: Node,
@@ -921,15 +921,15 @@ class StructureExecutor:
         parent: Optional[str] = None
     ) -> List[Symbol]:
         """Extract TypeScript/JavaScript symbols"""
-        
+
         symbols = []
-        
+
         # Recursively traverse AST
         if node.type == 'function_declaration':
             symbol = self._parse_ts_function(node, filepath, workspace_path, parent)
             if symbol:
                 symbols.append(symbol)
-        
+
         elif node.type == 'class_declaration':
             symbol = self._parse_ts_class(node, filepath, workspace_path, parent)
             if symbol:
@@ -939,25 +939,25 @@ class StructureExecutor:
                     symbols.extend(
                         self._extract_ts_symbols(child, filepath, workspace_path, symbol.name)
                     )
-        
+
         elif node.type == 'interface_declaration':
             symbol = self._parse_ts_interface(node, filepath, workspace_path)
             if symbol:
                 symbols.append(symbol)
-        
+
         elif node.type == 'type_alias_declaration':
             symbol = self._parse_ts_type(node, filepath, workspace_path)
             if symbol:
                 symbols.append(symbol)
-        
+
         # Recurse into children
         for child in node.children:
             symbols.extend(
                 self._extract_ts_symbols(child, filepath, workspace_path, parent)
             )
-        
+
         return symbols
-    
+
     def _parse_ts_function(
         self,
         node: Node,
@@ -966,33 +966,33 @@ class StructureExecutor:
         parent: Optional[str]
     ) -> Optional[Symbol]:
         """Parse TypeScript function declaration"""
-        
+
         # Get function name
         name_node = node.child_by_field_name('name')
         if not name_node:
             return None
-        
+
         name = self._get_node_text(name_node, filepath)
-        
+
         # Get full definition
         definition = self._get_node_text(node, filepath)
-        
+
         # Get modifiers (export, async, etc.)
         modifiers = []
         for child in node.children:
             if child.type in ['export', 'async', 'static']:
                 modifiers.append(child.type)
-        
+
         # Get signature
         params_node = node.child_by_field_name('parameters')
         return_type_node = node.child_by_field_name('return_type')
-        
+
         signature = name
         if params_node:
             signature += self._get_node_text(params_node, filepath)
         if return_type_node:
             signature += ': ' + self._get_node_text(return_type_node, filepath)
-        
+
         return Symbol(
             name=name,
             type='function',
@@ -1004,7 +1004,7 @@ class StructureExecutor:
             parent=parent,
             modifiers=modifiers
         )
-    
+
     def _parse_ts_class(
         self,
         node: Node,
@@ -1013,19 +1013,19 @@ class StructureExecutor:
         parent: Optional[str]
     ) -> Optional[Symbol]:
         """Parse TypeScript class declaration"""
-        
+
         name_node = node.child_by_field_name('name')
         if not name_node:
             return None
-        
+
         name = self._get_node_text(name_node, filepath)
         definition = self._get_node_text(node, filepath)
-        
+
         modifiers = []
         for child in node.children:
             if child.type in ['export', 'abstract']:
                 modifiers.append(child.type)
-        
+
         return Symbol(
             name=name,
             type='class',
@@ -1036,7 +1036,7 @@ class StructureExecutor:
             parent=parent,
             modifiers=modifiers
         )
-    
+
     def _parse_ts_interface(
         self,
         node: Node,
@@ -1044,14 +1044,14 @@ class StructureExecutor:
         workspace_path: str
     ) -> Optional[Symbol]:
         """Parse TypeScript interface"""
-        
+
         name_node = node.child_by_field_name('name')
         if not name_node:
             return None
-        
+
         name = self._get_node_text(name_node, filepath)
         definition = self._get_node_text(node, filepath)
-        
+
         return Symbol(
             name=name,
             type='interface',
@@ -1061,7 +1061,7 @@ class StructureExecutor:
             definition=definition,
             modifiers=['export'] if 'export' in definition else []
         )
-    
+
     def _parse_ts_type(
         self,
         node: Node,
@@ -1069,14 +1069,14 @@ class StructureExecutor:
         workspace_path: str
     ) -> Optional[Symbol]:
         """Parse TypeScript type alias"""
-        
+
         name_node = node.child_by_field_name('name')
         if not name_node:
             return None
-        
+
         name = self._get_node_text(name_node, filepath)
         definition = self._get_node_text(node, filepath)
-        
+
         return Symbol(
             name=name,
             type='type',
@@ -1086,7 +1086,7 @@ class StructureExecutor:
             definition=definition,
             modifiers=['export'] if 'export' in definition else []
         )
-    
+
     def _extract_python_symbols(
         self,
         node: Node,
@@ -1096,14 +1096,14 @@ class StructureExecutor:
     ) -> List[Symbol]:
         """Extract Python symbols (similar pattern to TypeScript)"""
         symbols = []
-        
+
         if node.type == 'function_definition':
             # Parse Python function
             name_node = node.child_by_field_name('name')
             if name_node:
                 name = self._get_node_text(name_node, filepath)
                 definition = self._get_node_text(node, filepath)
-                
+
                 symbols.append(Symbol(
                     name=name,
                     type='function',
@@ -1113,14 +1113,14 @@ class StructureExecutor:
                     definition=definition,
                     parent=parent
                 ))
-        
+
         elif node.type == 'class_definition':
             # Parse Python class
             name_node = node.child_by_field_name('name')
             if name_node:
                 name = self._get_node_text(name_node, filepath)
                 definition = self._get_node_text(node, filepath)
-                
+
                 symbols.append(Symbol(
                     name=name,
                     type='class',
@@ -1130,26 +1130,26 @@ class StructureExecutor:
                     definition=definition[:500],
                     parent=parent
                 ))
-                
+
                 # Recurse into class
                 for child in node.children:
                     symbols.extend(
                         self._extract_python_symbols(child, filepath, workspace_path, name)
                     )
-        
+
         # Recurse
         for child in node.children:
             symbols.extend(
                 self._extract_python_symbols(child, filepath, workspace_path, parent)
             )
-        
+
         return symbols
-    
+
     def _get_node_text(self, node: Node, filepath: Path) -> str:
         """Get text content of AST node"""
         content = filepath.read_bytes()
         return content[node.start_byte:node.end_byte].decode('utf-8', errors='ignore')
-    
+
     def _extract_imports(
         self,
         ast: Node,
@@ -1159,15 +1159,15 @@ class StructureExecutor:
     ) -> List[Import]:
         """Extract import statements"""
         imports = []
-        
+
         # Language-specific import extraction
         if language in ['typescript', 'tsx', 'javascript', 'jsx']:
             imports = self._extract_ts_imports(ast, filepath, workspace_path)
         elif language == 'python':
             imports = self._extract_python_imports(ast, filepath, workspace_path)
-        
+
         return imports
-    
+
     def _extract_ts_imports(
         self,
         node: Node,
@@ -1176,14 +1176,14 @@ class StructureExecutor:
     ) -> List[Import]:
         """Extract TypeScript/JavaScript imports"""
         imports = []
-        
+
         if node.type == 'import_statement':
             # Parse import statement
             # e.g., import { foo, bar } from 'module'
-            
+
             module_node = None
             imported_names = []
-            
+
             for child in node.children:
                 if child.type == 'string':
                     module_text = self._get_node_text(child, filepath)
@@ -1196,7 +1196,7 @@ class StructureExecutor:
                                 if name_node.type == 'import_specifier':
                                     name = self._get_node_text(name_node, filepath)
                                     imported_names.append(name)
-            
+
             if module_node:
                 imports.append(Import(
                     module=module_node,
@@ -1204,13 +1204,13 @@ class StructureExecutor:
                     file_path=str(filepath.relative_to(workspace_path)),
                     line=node.start_point[0] + 1
                 ))
-        
+
         # Recurse
         for child in node.children:
             imports.extend(self._extract_ts_imports(child, filepath, workspace_path))
-        
+
         return imports
-    
+
     def _extract_python_imports(
         self,
         node: Node,
@@ -1219,18 +1219,18 @@ class StructureExecutor:
     ) -> List[Import]:
         """Extract Python imports"""
         imports = []
-        
+
         if node.type in ['import_statement', 'import_from_statement']:
             module = ''
             imported_names = []
-            
+
             for child in node.children:
                 if child.type == 'dotted_name':
                     module = self._get_node_text(child, filepath)
                 elif child.type == 'aliased_import':
                     name = self._get_node_text(child, filepath)
                     imported_names.append(name)
-            
+
             if module:
                 imports.append(Import(
                     module=module,
@@ -1238,13 +1238,13 @@ class StructureExecutor:
                     file_path=str(filepath.relative_to(workspace_path)),
                     line=node.start_point[0] + 1
                 ))
-        
+
         # Recurse
         for child in node.children:
             imports.extend(self._extract_python_imports(child, filepath, workspace_path))
-        
+
         return imports
-    
+
     def _calculate_hash(self, filepath: Path) -> str:
         """Calculate SHA256 hash of file content"""
         try:
@@ -1252,18 +1252,18 @@ class StructureExecutor:
             return hashlib.sha256(content).hexdigest()
         except:
             return ''
-    
+
     def _build_dependency_graph(self, imports: List[Import]) -> Dict[str, Set[str]]:
         """Build file dependency graph"""
         graph = {}
-        
+
         for imp in imports:
             if imp.file_path not in graph:
                 graph[imp.file_path] = set()
-            
+
             # Add module as dependency (simplified)
             graph[imp.file_path].add(imp.module)
-        
+
         return {k: list(v) for k, v in graph.items()}
 ```
 
@@ -1273,7 +1273,7 @@ class StructureExecutor:
 # Emit progress during structure analysis
 for i, filepath in enumerate(files):
     # ... process file ...
-    
+
     if i % 10 == 0:  # Update every 10 files
         await emit_progress(IndexingProgress(
             indexing_id=indexing_id,
@@ -1353,12 +1353,12 @@ class CodeChunk:
 
 class SemanticChunker:
     """Create semantically meaningful code chunks"""
-    
+
     def __init__(self, target_chunk_size: int = 1000, chunk_overlap: int = 200):
         self.target_chunk_size = target_chunk_size
         self.chunk_overlap = chunk_overlap
         self.tokenizer = tiktoken.get_encoding("cl100k_base")  # GPT-4 tokenizer
-    
+
     def chunk_file(
         self,
         filepath: Path,
@@ -1367,7 +1367,7 @@ class SemanticChunker:
         workspace_path: str
     ) -> List[CodeChunk]:
         """Chunk a file into semantic chunks"""
-        
+
         # Strategy depends on language
         if language in ['typescript', 'tsx', 'javascript', 'jsx']:
             chunks = self._chunk_typescript(filepath, ast, workspace_path)
@@ -1376,9 +1376,9 @@ class SemanticChunker:
         else:
             # Fallback: simple line-based chunking
             chunks = self._chunk_generic(filepath, workspace_path, language)
-        
+
         return chunks
-    
+
     def _chunk_typescript(
         self,
         filepath: Path,
@@ -1386,22 +1386,22 @@ class SemanticChunker:
         workspace_path: str
     ) -> List[CodeChunk]:
         """Chunk TypeScript/JavaScript file"""
-        
+
         content = filepath.read_text(encoding='utf-8')
         lines = content.split('\n')
         chunks = []
-        
+
         # Extract top-level nodes (functions, classes, interfaces, etc.)
         top_level_nodes = self._get_top_level_nodes(ast)
-        
+
         # Extract imports (to include in context)
         imports = self._extract_import_list(ast, filepath)
-        
+
         for node in top_level_nodes:
             # Get node text
             node_text = self._get_node_text(node, filepath)
             tokens = self._count_tokens(node_text)
-            
+
             # If node is small enough, make it a single chunk
             if tokens <= self.target_chunk_size:
                 chunk = self._create_chunk(
@@ -1416,7 +1416,7 @@ class SemanticChunker:
                     imports=imports
                 )
                 chunks.append(chunk)
-            
+
             else:
                 # Node is too large, need to split
                 sub_chunks = self._split_large_node(
@@ -1426,16 +1426,16 @@ class SemanticChunker:
                     imports
                 )
                 chunks.extend(sub_chunks)
-        
+
         # Handle chunks with overlap
         chunks = self._add_overlap(chunks, content)
-        
+
         return chunks
-    
+
     def _get_top_level_nodes(self, ast: Node) -> List[Node]:
         """Get top-level nodes (functions, classes, etc.)"""
         top_level = []
-        
+
         for child in ast.children:
             if child.type in [
                 'function_declaration',
@@ -1447,9 +1447,9 @@ class SemanticChunker:
                 'variable_declaration',
             ]:
                 top_level.append(child)
-        
+
         return top_level
-    
+
     def _split_large_node(
         self,
         node: Node,
@@ -1458,25 +1458,25 @@ class SemanticChunker:
         imports: List[str]
     ) -> List[CodeChunk]:
         """Split large node (e.g., large class) into multiple chunks"""
-        
+
         chunks = []
-        
+
         # If it's a class, split by methods
         if node.type == 'class_declaration':
             class_name = self._get_node_name(node, filepath)
-            
+
             # Get class header (without body)
             class_header = self._get_class_header(node, filepath)
-            
+
             # Get methods
             methods = self._get_class_methods(node)
-            
+
             for method in methods:
                 method_text = self._get_node_text(method, filepath)
-                
+
                 # Include class context
                 full_content = f"{class_header}\n  // ... other methods ...\n\n{method_text}\n}}"
-                
+
                 chunk = self._create_chunk(
                     content=full_content,
                     filepath=filepath,
@@ -1490,17 +1490,17 @@ class SemanticChunker:
                     parent_context=class_name
                 )
                 chunks.append(chunk)
-        
+
         else:
             # Fallback: split by line count
             node_text = self._get_node_text(node, filepath)
             lines = node_text.split('\n')
-            
+
             # Split into chunks of ~target size
             for i in range(0, len(lines), self.target_chunk_size // 10):
                 chunk_lines = lines[i:i + self.target_chunk_size // 10]
                 chunk_content = '\n'.join(chunk_lines)
-                
+
                 if self._count_tokens(chunk_content) > 50:  # Skip tiny chunks
                     chunk = self._create_chunk(
                         content=chunk_content,
@@ -1514,9 +1514,9 @@ class SemanticChunker:
                         imports=imports
                     )
                     chunks.append(chunk)
-        
+
         return chunks
-    
+
     def _get_class_header(self, node: Node, filepath: Path) -> str:
         """Get class header (signature without body)"""
         # Find class body
@@ -1525,28 +1525,28 @@ class SemanticChunker:
             if child.type == 'class_body':
                 body_node = child
                 break
-        
+
         if body_node:
             # Get text before body
             content = filepath.read_bytes()
             header_text = content[node.start_byte:body_node.start_byte].decode('utf-8', errors='ignore')
             return header_text + " {"
-        
+
         # Fallback
         return self._get_node_text(node, filepath)[:200]
-    
+
     def _get_class_methods(self, node: Node) -> List[Node]:
         """Get all methods in a class"""
         methods = []
-        
+
         for child in node.children:
             if child.type == 'class_body':
                 for method_node in child.children:
                     if method_node.type in ['method_definition', 'field_definition']:
                         methods.append(method_node)
-        
+
         return methods
-    
+
     def _chunk_python(
         self,
         filepath: Path,
@@ -1554,26 +1554,26 @@ class SemanticChunker:
         workspace_path: str
     ) -> List[CodeChunk]:
         """Chunk Python file (similar logic to TypeScript)"""
-        
+
         # Implementation similar to _chunk_typescript
         # but adapted for Python AST node types
-        
+
         content = filepath.read_text(encoding='utf-8')
         chunks = []
-        
+
         # Get top-level definitions
         top_level = []
         for child in ast.children:
             if child.type in ['function_definition', 'class_definition']:
                 top_level.append(child)
-        
+
         # Extract imports
         imports = self._extract_python_imports_list(ast, filepath)
-        
+
         for node in top_level:
             node_text = self._get_node_text(node, filepath)
             tokens = self._count_tokens(node_text)
-            
+
             if tokens <= self.target_chunk_size:
                 chunk = self._create_chunk(
                     content=node_text,
@@ -1596,9 +1596,9 @@ class SemanticChunker:
                     imports
                 )
                 chunks.extend(sub_chunks)
-        
+
         return chunks
-    
+
     def _chunk_generic(
         self,
         filepath: Path,
@@ -1606,19 +1606,19 @@ class SemanticChunker:
         language: str
     ) -> List[CodeChunk]:
         """Generic line-based chunking (fallback)"""
-        
+
         content = filepath.read_text(encoding='utf-8')
         lines = content.split('\n')
         chunks = []
-        
+
         # Simple sliding window
         chunk_size_lines = 50
         overlap_lines = 10
-        
+
         for i in range(0, len(lines), chunk_size_lines - overlap_lines):
             chunk_lines = lines[i:i + chunk_size_lines]
             chunk_content = '\n'.join(chunk_lines)
-            
+
             if chunk_content.strip():
                 chunk = self._create_chunk(
                     content=chunk_content,
@@ -1632,9 +1632,9 @@ class SemanticChunker:
                     imports=[]
                 )
                 chunks.append(chunk)
-        
+
         return chunks
-    
+
     def _create_chunk(
         self,
         content: str,
@@ -1649,10 +1649,10 @@ class SemanticChunker:
         parent_context: Optional[str] = None
     ) -> CodeChunk:
         """Create a code chunk"""
-        
+
         relative_path = str(filepath.relative_to(workspace_path))
         chunk_id = f"{relative_path}-{start_line}-{end_line}"
-        
+
         return CodeChunk(
             id=chunk_id,
             content=content,
@@ -1666,16 +1666,16 @@ class SemanticChunker:
             imports=imports,
             parent_context=parent_context
         )
-    
+
     def _add_overlap(self, chunks: List[CodeChunk], full_content: str) -> List[CodeChunk]:
         """Add overlap between chunks for better context"""
-        
+
         # For now, chunks are created with natural boundaries
         # Overlap is handled by including parent context
         # Future: Add explicit overlapping regions
-        
+
         return chunks
-    
+
     def _count_tokens(self, text: str) -> int:
         """Count tokens in text"""
         try:
@@ -1683,54 +1683,54 @@ class SemanticChunker:
         except:
             # Fallback: approximate by words
             return len(text.split()) * 1.3
-    
+
     def _get_node_text(self, node: Node, filepath: Path) -> str:
         """Get text of AST node"""
         content = filepath.read_bytes()
         return content[node.start_byte:node.end_byte].decode('utf-8', errors='ignore')
-    
+
     def _get_node_name(self, node: Node, filepath: Path) -> str:
         """Get name of node (function/class name)"""
         name_node = node.child_by_field_name('name')
         if name_node:
             return self._get_node_text(name_node, filepath)
         return ''
-    
+
     def _extract_import_list(self, ast: Node, filepath: Path) -> List[str]:
         """Extract list of imported modules"""
         imports = []
-        
+
         for child in ast.children:
             if child.type == 'import_statement':
                 for subchild in child.children:
                     if subchild.type == 'string':
                         module = self._get_node_text(subchild, filepath).strip('"\'')
                         imports.append(module)
-        
+
         return imports
-    
+
     def _extract_python_imports_list(self, ast: Node, filepath: Path) -> List[str]:
         """Extract Python imports"""
         imports = []
-        
+
         for child in ast.children:
             if child.type in ['import_statement', 'import_from_statement']:
                 for subchild in child.children:
                     if subchild.type == 'dotted_name':
                         module = self._get_node_text(subchild, filepath)
                         imports.append(module)
-        
+
         return imports
 
 
 class ChunkingExecutor:
     """Phase 4: Semantic chunking executor"""
-    
+
     def __init__(self, embedding_service, vector_store):
         self.chunker = SemanticChunker()
         self.embedding_service = embedding_service
         self.vector_store = vector_store
-    
+
     async def execute(
         self,
         workspace_path: str,
@@ -1739,54 +1739,54 @@ class ChunkingExecutor:
         indexing_id: str
     ) -> int:
         """Execute chunking phase"""
-        
+
         all_chunks = []
-        
+
         for i, filepath in enumerate(files):
             language = self._detect_language(filepath)
             if not language:
                 continue
-            
+
             ast = asts.get(str(filepath))
             if not ast:
                 # Fallback to generic chunking
                 chunks = self.chunker.chunk_generic(filepath, workspace_path, language)
             else:
                 chunks = self.chunker.chunk_file(filepath, ast, language, workspace_path)
-            
+
             all_chunks.extend(chunks)
-            
+
             # Emit progress every 10 files
             if i % 10 == 0:
                 await self._emit_progress(i, len(files), indexing_id)
-        
+
         # Generate embeddings (batched for efficiency)
         embeddings = await self._generate_embeddings_batched(all_chunks)
-        
+
         # Store in vector DB
         await self._store_chunks(all_chunks, embeddings, indexing_id)
-        
+
         return len(all_chunks)
-    
+
     async def _generate_embeddings_batched(
         self,
         chunks: List[CodeChunk],
         batch_size: int = 32
     ) -> List[List[float]]:
         """Generate embeddings in batches"""
-        
+
         all_embeddings = []
-        
+
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i:i + batch_size]
             texts = [chunk.content for chunk in batch]
-            
+
             # Call embedding service (bge-m3 via Ollama)
             batch_embeddings = await self.embedding_service.embed_batch(texts)
             all_embeddings.extend(batch_embeddings)
-        
+
         return all_embeddings
-    
+
     async def _store_chunks(
         self,
         chunks: List[CodeChunk],
@@ -1794,7 +1794,7 @@ class ChunkingExecutor:
         indexing_id: str
     ):
         """Store chunks in vector DB"""
-        
+
         documents = []
         for chunk, embedding in zip(chunks, embeddings):
             documents.append({
@@ -1814,9 +1814,9 @@ class ChunkingExecutor:
                     'indexed_at': datetime.utcnow().isoformat(),
                 }
             })
-        
+
         await self.vector_store.add_documents(documents)
-    
+
     def _detect_language(self, filepath: Path) -> Optional[str]:
         """Detect language from extension"""
         ext_map = {
@@ -1827,7 +1827,7 @@ class ChunkingExecutor:
             '.py': 'python',
         }
         return ext_map.get(filepath.suffix.lower())
-    
+
     async def _emit_progress(self, current: int, total: int, indexing_id: str):
         """Emit progress event"""
         percentage = 50 + (current / total) * 30  # 50-80%
@@ -1886,12 +1886,12 @@ class ProjectSummary:
 
 class SummarizationExecutor:
     """Phase 5: Summary generation"""
-    
+
     def __init__(self, llm_service, metadata_store, vector_store):
         self.llm_service = llm_service
         self.metadata_store = metadata_store
         self.vector_store = vector_store
-    
+
     async def execute(
         self,
         workspace_path: str,
@@ -1900,7 +1900,7 @@ class SummarizationExecutor:
         indexing_id: str
     ) -> ProjectSummary:
         """Execute summarization phase"""
-        
+
         # 1. Generate file summaries (sample representative files)
         file_summaries = await self._generate_file_summaries(
             workspace_path,
@@ -1908,13 +1908,13 @@ class SummarizationExecutor:
             symbols,
             sample_size=20  # Summarize top 20 files
         )
-        
+
         # 2. Generate directory summaries
         directory_summaries = await self._generate_directory_summaries(
             workspace_path,
             files
         )
-        
+
         # 3. Generate overall project summary
         project_summary = await self._generate_project_summary(
             workspace_path,
@@ -1922,7 +1922,7 @@ class SummarizationExecutor:
             directory_summaries,
             symbols
         )
-        
+
         # 4. Store summaries
         await self._store_summaries(
             file_summaries,
@@ -1930,9 +1930,9 @@ class SummarizationExecutor:
             project_summary,
             indexing_id
         )
-        
+
         return project_summary
-    
+
     async def _generate_file_summaries(
         self,
         workspace_path: str,
@@ -1941,38 +1941,38 @@ class SummarizationExecutor:
         sample_size: int = 20
     ) -> List[FileSummary]:
         """Generate summaries for important files"""
-        
+
         # Select important files
         important_files = self._select_important_files(files, symbols, sample_size)
-        
+
         summaries = []
         for filepath in important_files:
             try:
                 # Read file content
                 content = filepath.read_text(encoding='utf-8')
-                
+
                 # Get symbols in this file
                 file_symbols = [
-                    s for s in symbols 
+                    s for s in symbols
                     if s.file_path == str(filepath.relative_to(workspace_path))
                 ]
-                
+
                 # Generate summary using LLM
                 summary = await self._summarize_file(content, file_symbols, filepath)
-                
+
                 summaries.append(FileSummary(
                     file_path=str(filepath.relative_to(workspace_path)),
                     summary=summary['summary'],
                     key_components=summary['key_components'],
                     purpose=summary['purpose']
                 ))
-                
+
             except Exception as e:
                 print(f"Error summarizing {filepath}: {e}")
                 continue
-        
+
         return summaries
-    
+
     def _select_important_files(
         self,
         files: List[Path],
@@ -1980,37 +1980,37 @@ class SummarizationExecutor:
         sample_size: int
     ) -> List[Path]:
         """Select most important files to summarize"""
-        
+
         # Score files by importance
         file_scores = {}
-        
+
         for filepath in files:
             score = 0
-            
+
             # Higher score for files with more symbols
             file_symbol_count = sum(
-                1 for s in symbols 
+                1 for s in symbols
                 if Path(s.file_path).name == filepath.name
             )
             score += file_symbol_count * 10
-            
+
             # Higher score for entry points
             if filepath.name in ['index.ts', 'main.py', 'App.tsx', 'main.dart']:
                 score += 100
-            
+
             # Higher score for files in src/app directories
             if 'src' in filepath.parts or 'app' in filepath.parts:
                 score += 20
-            
+
             # Higher score for shorter paths (likely more important)
             score -= len(filepath.parts)
-            
+
             file_scores[filepath] = score
-        
+
         # Sort by score and take top N
         sorted_files = sorted(file_scores.items(), key=lambda x: x[1], reverse=True)
         return [f[0] for f in sorted_files[:sample_size]]
-    
+
     async def _summarize_file(
         self,
         content: str,
@@ -2018,12 +2018,12 @@ class SummarizationExecutor:
         filepath: Path
     ) -> Dict[str, any]:
         """Generate summary for a single file using LLM"""
-        
+
         # Build prompt
         symbol_list = "\n".join([
             f"- {s.type}: {s.name}" for s in symbols[:10]  # Top 10 symbols
         ])
-        
+
         prompt = f"""Analyze this code file and provide a concise summary.
 
 File: {filepath.name}
@@ -2041,7 +2041,7 @@ Provide a JSON response with:
 3. "purpose": The primary purpose of this file (e.g., "API routes", "Data model", "UI component")
 
 Keep it concise and technical."""
-        
+
         # Call LLM (using qwen2.5-coder:7b for speed)
         response = await self.llm_service.generate(
             prompt,
@@ -2049,7 +2049,7 @@ Keep it concise and technical."""
             temperature=0.3,
             max_tokens=300
         )
-        
+
         # Parse JSON response
         try:
             import json
@@ -2061,16 +2061,16 @@ Keep it concise and technical."""
                 'key_components': [s.name for s in symbols[:5]],
                 'purpose': 'Unknown'
             }
-        
+
         return result
-    
+
     async def _generate_directory_summaries(
         self,
         workspace_path: str,
         files: List[Path]
     ) -> List[DirectorySummary]:
         """Generate summaries for directories"""
-        
+
         # Group files by directory
         directories = {}
         for filepath in files:
@@ -2078,42 +2078,42 @@ Keep it concise and technical."""
             if dir_path not in directories:
                 directories[dir_path] = []
             directories[dir_path].append(filepath)
-        
+
         summaries = []
-        
+
         # Focus on important directories (src, app, lib, etc.)
         important_dirs = [
             d for d in directories.keys()
             if any(part in d.parts for part in ['src', 'app', 'lib', 'components', 'services'])
         ]
-        
+
         for dir_path in important_dirs[:10]:  # Top 10 directories
             dir_files = directories[dir_path]
-            
+
             # Infer purpose from directory name and contents
             purpose = self._infer_directory_purpose(dir_path, dir_files)
-            
+
             # Create summary
             summary_text = f"Contains {len(dir_files)} files. {purpose}"
-            
+
             summaries.append(DirectorySummary(
                 directory_path=str(dir_path.relative_to(workspace_path)),
                 summary=summary_text,
                 file_count=len(dir_files),
                 main_purpose=purpose
             ))
-        
+
         return summaries
-    
+
     def _infer_directory_purpose(
         self,
         dir_path: Path,
         files: List[Path]
     ) -> str:
         """Infer the purpose of a directory"""
-        
+
         dir_name = dir_path.name.lower()
-        
+
         # Common directory patterns
         if dir_name == 'components':
             return "UI components"
@@ -2133,16 +2133,16 @@ Keep it concise and technical."""
             return "State management"
         elif dir_name == 'tests' or dir_name == 'test':
             return "Test files"
-        
+
         # Infer from file types
         file_types = [f.suffix for f in files]
         if '.tsx' in file_types or '.jsx' in file_types:
             return "React components"
         elif '.test.ts' in [f.name for f in files]:
             return "Test files"
-        
+
         return "General code files"
-    
+
     async def _generate_project_summary(
         self,
         workspace_path: str,
@@ -2151,21 +2151,21 @@ Keep it concise and technical."""
         symbols: List[Symbol]
     ) -> ProjectSummary:
         """Generate overall project summary using LLM"""
-        
+
         # Build context for LLM
         file_summary_text = "\n".join([
-            f"- {fs.file_path}: {fs.purpose}" 
+            f"- {fs.file_path}: {fs.purpose}"
             for fs in file_summaries[:10]
         ])
-        
+
         dir_summary_text = "\n".join([
             f"- {ds.directory_path}: {ds.main_purpose}"
             for ds in directory_summaries[:10]
         ])
-        
+
         # Detect tech stack from files and symbols
         tech_stack = self._detect_tech_stack(workspace_path, symbols)
-        
+
         # Build prompt
         prompt = f"""Analyze this software project and provide a comprehensive summary.
 
@@ -2188,7 +2188,7 @@ Provide a JSON response with:
 4. "architecture_style": Architecture pattern used (e.g., "MVC", "Microservices", "Component-Based")
 
 Be concise and technical."""
-        
+
         # Call LLM (using 7b model for summary)
         response = await self.llm_service.generate(
             prompt,
@@ -2196,7 +2196,7 @@ Be concise and technical."""
             temperature=0.3,
             max_tokens=400
         )
-        
+
         # Parse response
         try:
             import json
@@ -2209,7 +2209,7 @@ Be concise and technical."""
                 'key_features': [],
                 'architecture_style': 'Unknown'
             }
-        
+
         return ProjectSummary(
             summary=result['summary'],
             project_type=result['project_type'],
@@ -2217,17 +2217,17 @@ Be concise and technical."""
             key_features=result['key_features'],
             architecture_style=result['architecture_style']
         )
-    
+
     def _detect_tech_stack(
         self,
         workspace_path: str,
         symbols: List[Symbol]
     ) -> List[str]:
         """Detect technologies used in the project"""
-        
+
         tech_stack = []
         workspace = Path(workspace_path)
-        
+
         # Check for package.json
         package_json = workspace / 'package.json'
         if package_json.exists():
@@ -2235,7 +2235,7 @@ Be concise and technical."""
                 import json
                 pkg = json.loads(package_json.read_text())
                 deps = {**pkg.get('dependencies', {}), **pkg.get('devDependencies', {})}
-                
+
                 if 'react' in deps:
                     tech_stack.append('React')
                 if 'next' in deps:
@@ -2246,35 +2246,35 @@ Be concise and technical."""
                     tech_stack.append('Express')
                 if 'typescript' in deps:
                     tech_stack.append('TypeScript')
-                
+
             except:
                 pass
-        
+
         # Check for Python files
         if any(s.file_path.endswith('.py') for s in symbols):
             tech_stack.append('Python')
-            
+
             # Check for specific frameworks
             if workspace.joinpath('manage.py').exists():
                 tech_stack.append('Django')
             elif workspace.joinpath('app/main.py').exists():
                 tech_stack.append('FastAPI')
-        
+
         # Check for Flutter
         if workspace.joinpath('pubspec.yaml').exists():
             tech_stack.append('Flutter')
             tech_stack.append('Dart')
-        
+
         # Check for Kotlin
         if any(s.file_path.endswith('.kt') for s in symbols):
             tech_stack.append('Kotlin')
-        
+
         # Check for Swift
         if any(s.file_path.endswith('.swift') for s in symbols):
             tech_stack.append('Swift')
-        
+
         return tech_stack
-    
+
     async def _store_summaries(
         self,
         file_summaries: List[FileSummary],
@@ -2283,15 +2283,15 @@ Be concise and technical."""
         indexing_id: str
     ):
         """Store summaries in metadata DB and vector DB"""
-        
+
         # Store in metadata DB (SQLite)
         await self.metadata_store.store_project_summary(project_summary, indexing_id)
         await self.metadata_store.store_file_summaries(file_summaries, indexing_id)
         await self.metadata_store.store_directory_summaries(directory_summaries, indexing_id)
-        
+
         # Also store project summary as embedding (for retrieval)
         summary_embedding = await self.llm_service.embed(project_summary.summary)
-        
+
         await self.vector_store.add_documents([{
             'id': f"{indexing_id}-project-summary",
             'embedding': summary_embedding,
@@ -2377,17 +2377,17 @@ Process:
   1. Detect Changed Files
      - Compare file hashes with cached hashes
      - Use file modification timestamps
-  
+
   2. Categorize Changes
      - Modified: Re-index file
      - Deleted: Remove from index
      - Created: Add to index
-  
+
   3. Update Index
      - Remove old embeddings for modified/deleted files
      - Generate new embeddings for modified/created files
      - Update metadata DB
-  
+
   4. Partial Summary Update
      - Update file summaries for changed files
      - Optionally regenerate project summary (if major changes)
@@ -2421,7 +2421,7 @@ class FileChange:
 
 class IncrementalIndexer:
     """Handles incremental indexing"""
-    
+
     def __init__(
         self,
         metadata_store,
@@ -2435,32 +2435,32 @@ class IncrementalIndexer:
         self.embedding_service = embedding_service
         self.parser = tree_sitter_parser
         self.chunker = chunker
-    
+
     async def detect_changes(
         self,
         workspace_path: str,
         indexing_id: str
     ) -> List[FileChange]:
         """Detect changed files since last indexing"""
-        
+
         workspace = Path(workspace_path)
-        
+
         # Get cached file hashes
         cached_hashes = await self.metadata_store.get_file_hashes(indexing_id)
-        
+
         # Scan current files
         current_files = {}
         for filepath in self._scan_workspace(workspace):
             file_hash = self._calculate_hash(filepath)
             relative_path = str(filepath.relative_to(workspace))
             current_files[relative_path] = file_hash
-        
+
         changes = []
-        
+
         # Detect modified and created files
         for file_path, current_hash in current_files.items():
             cached_hash = cached_hashes.get(file_path)
-            
+
             if cached_hash is None:
                 # New file
                 changes.append(FileChange(
@@ -2475,7 +2475,7 @@ class IncrementalIndexer:
                     change_type=ChangeType.MODIFIED,
                     timestamp=datetime.utcnow().isoformat()
                 ))
-        
+
         # Detect deleted files
         for file_path in cached_hashes.keys():
             if file_path not in current_files:
@@ -2484,9 +2484,9 @@ class IncrementalIndexer:
                     change_type=ChangeType.DELETED,
                     timestamp=datetime.utcnow().isoformat()
                 ))
-        
+
         return changes
-    
+
     async def apply_changes(
         self,
         workspace_path: str,
@@ -2494,9 +2494,9 @@ class IncrementalIndexer:
         indexing_id: str
     ) -> Dict[str, int]:
         """Apply incremental changes to index"""
-        
+
         workspace = Path(workspace_path)
-        
+
         stats = {
             'created': 0,
             'modified': 0,
@@ -2504,16 +2504,16 @@ class IncrementalIndexer:
             'chunks_added': 0,
             'chunks_removed': 0
         }
-        
+
         for change in changes:
             filepath = workspace / change.file_path
-            
+
             if change.change_type == ChangeType.DELETED:
                 # Remove from index
                 await self._remove_file_from_index(change.file_path, indexing_id)
                 stats['deleted'] += 1
                 stats['chunks_removed'] += await self._count_chunks(change.file_path, indexing_id)
-            
+
             elif change.change_type in [ChangeType.CREATED, ChangeType.MODIFIED]:
                 # Remove old chunks if modified
                 if change.change_type == ChangeType.MODIFIED:
@@ -2523,11 +2523,11 @@ class IncrementalIndexer:
                     stats['modified'] += 1
                 else:
                     stats['created'] += 1
-                
+
                 # Re-index file
                 new_chunks = await self._index_file(filepath, workspace_path, indexing_id)
                 stats['chunks_added'] += len(new_chunks)
-                
+
                 # Update file hash
                 file_hash = self._calculate_hash(filepath)
                 await self.metadata_store.update_file_hash(
@@ -2535,28 +2535,28 @@ class IncrementalIndexer:
                     file_hash,
                     indexing_id
                 )
-        
+
         return stats
-    
+
     async def _remove_file_from_index(
         self,
         file_path: str,
         indexing_id: str
     ):
         """Remove all data for a file from index"""
-        
+
         # Remove chunks from vector DB
         await self.vector_store.delete_by_metadata({
             'file_path': file_path,
             'indexing_id': indexing_id
         })
-        
+
         # Remove symbols from metadata DB
         await self.metadata_store.delete_symbols_by_file(file_path, indexing_id)
-        
+
         # Remove imports
         await self.metadata_store.delete_imports_by_file(file_path, indexing_id)
-    
+
     async def _index_file(
         self,
         filepath: Path,
@@ -2564,27 +2564,27 @@ class IncrementalIndexer:
         indexing_id: str
     ) -> List[CodeChunk]:
         """Index a single file"""
-        
+
         language = self._detect_language(filepath)
         if not language:
             return []
-        
+
         # Parse AST
         ast = self.parser.parse_file(filepath, language)
-        
+
         # Extract symbols
         if ast:
             symbols = self._extract_symbols(ast, filepath, workspace_path, language)
             await self.metadata_store.store_symbols(symbols, indexing_id)
-        
+
         # Create chunks
         chunks = self.chunker.chunk_file(filepath, ast, language, workspace_path)
-        
+
         # Generate embeddings
         embeddings = await self.embedding_service.embed_batch(
             [chunk.content for chunk in chunks]
         )
-        
+
         # Store in vector DB
         documents = []
         for chunk, embedding in zip(chunks, embeddings):
@@ -2603,11 +2603,11 @@ class IncrementalIndexer:
                     'indexing_id': indexing_id,
                 }
             })
-        
+
         await self.vector_store.add_documents(documents)
-        
+
         return chunks
-    
+
     async def _count_chunks(
         self,
         file_path: str,
@@ -2618,12 +2618,12 @@ class IncrementalIndexer:
             'file_path': file_path,
             'indexing_id': indexing_id
         })
-    
+
     def _scan_workspace(self, workspace: Path) -> List[Path]:
         """Scan workspace for files (reuse from DiscoveryExecutor)"""
         # ... (similar to DiscoveryExecutor._scan_files)
         pass
-    
+
     def _calculate_hash(self, filepath: Path) -> str:
         """Calculate file hash"""
         import hashlib
@@ -2632,7 +2632,7 @@ class IncrementalIndexer:
             return hashlib.sha256(content).hexdigest()
         except:
             return ''
-    
+
     def _detect_language(self, filepath: Path) -> Optional[str]:
         """Detect language from extension"""
         ext_map = {
@@ -2643,7 +2643,7 @@ class IncrementalIndexer:
             '.py': 'python',
         }
         return ext_map.get(filepath.suffix.lower())
-    
+
     def _extract_symbols(self, ast, filepath, workspace_path, language):
         """Extract symbols (reuse from StructureExecutor)"""
         # ... (similar to StructureExecutor)
@@ -2661,52 +2661,52 @@ export class FileWatcherService {
   private watcher: vscode.FileSystemWatcher | null = null;
   private changeQueue: Set<string> = new Set();
   private debounceTimer: NodeJS.Timeout | null = null;
-  
+
   initialize(workspacePath: string) {
     // Watch for file changes
     this.watcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(workspacePath, '**/*')
     );
-    
+
     // On file change
     this.watcher.onDidChange((uri) => {
       this.queueFileChange(uri.fsPath);
     });
-    
+
     // On file create
     this.watcher.onDidCreate((uri) => {
       this.queueFileChange(uri.fsPath);
     });
-    
+
     // On file delete
     this.watcher.onDidDelete((uri) => {
       this.queueFileChange(uri.fsPath);
     });
   }
-  
+
   private queueFileChange(filePath: string) {
     this.changeQueue.add(filePath);
-    
+
     // Debounce: wait 2 seconds after last change
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
-    
+
     this.debounceTimer = setTimeout(() => {
       this.processChanges();
     }, 2000);
   }
-  
+
   private async processChanges() {
     if (this.changeQueue.size === 0) return;
-    
+
     const changedFiles = Array.from(this.changeQueue);
     this.changeQueue.clear();
-    
+
     // Send to backend for incremental indexing
     await BackendService.incrementalIndex(changedFiles);
   }
-  
+
   dispose() {
     if (this.watcher) {
       this.watcher.dispose();
@@ -2733,7 +2733,7 @@ from typing import List, Dict, Optional
 
 class VectorStore:
     """ChromaDB vector store wrapper"""
-    
+
     def __init__(self, persist_directory: str):
         self.client = chromadb.PersistentClient(
             path=persist_directory,
@@ -2742,7 +2742,7 @@ class VectorStore:
                 allow_reset=True
             )
         )
-        
+
         # Create or get collection
         self.collection = self.client.get_or_create_collection(
             name="localpilot_codebase",
@@ -2752,22 +2752,22 @@ class VectorStore:
                 "hnsw:M": 16,  # Connections per element
             }
         )
-    
+
     async def add_documents(self, documents: List[Dict]):
         """Add documents to vector store"""
-        
+
         ids = [doc['id'] for doc in documents]
         embeddings = [doc['embedding'] for doc in documents]
         contents = [doc['content'] for doc in documents]
         metadatas = [doc['metadata'] for doc in documents]
-        
+
         self.collection.add(
             ids=ids,
             embeddings=embeddings,
             documents=contents,
             metadatas=metadatas
         )
-    
+
     async def search(
         self,
         query_embedding: List[float],
@@ -2775,14 +2775,14 @@ class VectorStore:
         filters: Optional[Dict] = None
     ) -> List[Dict]:
         """Search for similar documents"""
-        
+
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k,
             where=filters if filters else None,
             include=['documents', 'metadatas', 'distances']
         )
-        
+
         # Format results
         formatted = []
         for i in range(len(results['ids'][0])):
@@ -2792,36 +2792,36 @@ class VectorStore:
                 'metadata': results['metadatas'][0][i],
                 'score': 1 - results['distances'][0][i],  # Convert distance to similarity
             })
-        
+
         return formatted
-    
+
     async def delete_by_metadata(self, filters: Dict):
         """Delete documents matching metadata filters"""
-        
+
         # Get matching documents
         results = self.collection.get(
             where=filters,
             include=['metadatas']
         )
-        
+
         if results['ids']:
             self.collection.delete(ids=results['ids'])
-    
+
     async def count_by_metadata(self, filters: Dict) -> int:
         """Count documents matching metadata filters"""
-        
+
         results = self.collection.get(
             where=filters,
             include=[]
         )
-        
+
         return len(results['ids'])
-    
+
     async def get_stats(self) -> Dict:
         """Get collection statistics"""
-        
+
         count = self.collection.count()
-        
+
         return {
             'total_documents': count,
             'collection_name': self.collection.name,
@@ -2844,37 +2844,37 @@ from dataclasses import dataclass
 @dataclass
 class QualityMetrics:
     """Indexing quality metrics"""
-    
+
     # Retrieval metrics
     precision_at_5: float  # % of top-5 results that are relevant
     recall_at_10: float    # % of relevant docs in top-10
     mrr: float             # Mean Reciprocal Rank
-    
+
     # Chunking metrics
     avg_chunk_size: int    # Average tokens per chunk
     chunk_boundary_score: float  # % of chunks with clean boundaries
-    
+
     # Coverage metrics
     indexing_success_rate: float  # % of files successfully indexed
     symbol_extraction_rate: float  # % of expected symbols found
-    
+
     # Overall score
     quality_score: float   # Weighted average (0-1)
 
 class QualityEvaluator:
     """Evaluate indexing quality"""
-    
+
     def __init__(self, vector_store, metadata_store):
         self.vector_store = vector_store
         self.metadata_store = metadata_store
-    
+
     async def evaluate(
         self,
         indexing_id: str,
         test_queries: Optional[List[Dict]] = None
     ) -> QualityMetrics:
         """Evaluate indexing quality"""
-        
+
         # 1. Retrieval quality (if test queries provided)
         if test_queries:
             precision_at_5 = await self._evaluate_precision_at_k(test_queries, k=5)
@@ -2882,20 +2882,20 @@ class QualityEvaluator:
             mrr = await self._evaluate_mrr(test_queries)
         else:
             precision_at_5 = recall_at_10 = mrr = 0.0
-        
+
         # 2. Chunking quality
         chunk_stats = await self._evaluate_chunking(indexing_id)
-        
+
         # 3. Coverage quality
         coverage_stats = await self._evaluate_coverage(indexing_id)
-        
+
         # 4. Calculate overall quality score
         quality_score = self._calculate_quality_score(
             precision_at_5,
             chunk_stats['boundary_score'],
             coverage_stats['success_rate']
         )
-        
+
         return QualityMetrics(
             precision_at_5=precision_at_5,
             recall_at_10=recall_at_10,
@@ -2906,80 +2906,80 @@ class QualityEvaluator:
             symbol_extraction_rate=coverage_stats['symbol_rate'],
             quality_score=quality_score
         )
-    
+
     async def _evaluate_precision_at_k(
         self,
         test_queries: List[Dict],
         k: int
     ) -> float:
         """Evaluate precision@k"""
-        
+
         precisions = []
-        
+
         for query in test_queries:
             # Search
             results = await self.vector_store.search(
                 query['embedding'],
                 top_k=k
             )
-            
+
             # Count relevant results
             relevant_count = sum(
-                1 for r in results 
+                1 for r in results
                 if r['metadata']['file_path'] in query['relevant_files']
             )
-            
+
             precision = relevant_count / k
             precisions.append(precision)
-        
+
         return sum(precisions) / len(precisions) if precisions else 0.0
-    
+
     async def _evaluate_chunking(self, indexing_id: str) -> Dict:
         """Evaluate chunking quality"""
-        
+
         # Get all chunks
         chunks = await self.metadata_store.get_all_chunks(indexing_id)
-        
+
         if not chunks:
             return {'avg_size': 0, 'boundary_score': 0.0}
-        
+
         # Calculate average size
         total_tokens = sum(c['tokens'] for c in chunks)
         avg_size = total_tokens / len(chunks)
-        
+
         # Evaluate boundary quality
         # (Chunks should end at function/class boundaries)
         clean_boundaries = sum(
-            1 for c in chunks 
+            1 for c in chunks
             if c['chunk_type'] in ['function', 'class', 'interface']
         )
         boundary_score = clean_boundaries / len(chunks)
-        
+
         return {
             'avg_size': int(avg_size),
             'boundary_score': boundary_score
         }
-    
+
     async def _evaluate_coverage(self, indexing_id: str) -> Dict:
         """Evaluate indexing coverage"""
-        
+
         stats = await self.metadata_store.get_indexing_stats(indexing_id)
-        
+
         total_files = stats['total_files']
         indexed_files = stats['indexed_files']
-        
+
         success_rate = indexed_files / total_files if total_files > 0 else 0.0
-        
+
         # Symbol extraction rate (heuristic: expect ~5 symbols per file)
         expected_symbols = indexed_files * 5
         actual_symbols = stats['total_symbols']
         symbol_rate = min(actual_symbols / expected_symbols, 1.0) if expected_symbols > 0 else 0.0
-        
+
         return {
             'success_rate': success_rate,
             'symbol_rate': symbol_rate
         }
-    
+
     def _calculate_quality_score(
         self,
         precision: float,
@@ -2987,20 +2987,20 @@ class QualityEvaluator:
         success_rate: float
     ) -> float:
         """Calculate overall quality score"""
-        
+
         # Weighted average
         weights = {
             'precision': 0.4,      # Most important: retrieval quality
             'boundaries': 0.3,     # Important: clean chunks
             'coverage': 0.3,       # Important: complete indexing
         }
-        
+
         score = (
             precision * weights['precision'] +
             boundary_score * weights['boundaries'] +
             success_rate * weights['coverage']
         )
-        
+
         return round(score, 3)
 ```
 
@@ -3020,12 +3020,12 @@ import multiprocessing
 
 class IndexingOptimizer:
     """Performance optimizations for indexing"""
-    
+
     def __init__(self, max_workers: int = None):
         # Use CPU count for parallel processing
         self.max_workers = max_workers or multiprocessing.cpu_count()
         self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
-    
+
     async def parallel_file_processing(
         self,
         files: List[Path],
@@ -3033,13 +3033,13 @@ class IndexingOptimizer:
         batch_size: int = 10
     ):
         """Process files in parallel batches"""
-        
+
         results = []
-        
+
         # Process in batches to avoid overwhelming system
         for i in range(0, len(files), batch_size):
             batch = files[i:i + batch_size]
-            
+
             # Process batch in parallel
             batch_tasks = [
                 asyncio.get_event_loop().run_in_executor(
@@ -3049,12 +3049,12 @@ class IndexingOptimizer:
                 )
                 for filepath in batch
             ]
-            
+
             batch_results = await asyncio.gather(*batch_tasks)
             results.extend(batch_results)
-        
+
         return results
-    
+
     async def batch_embeddings(
         self,
         texts: List[str],
@@ -3062,66 +3062,66 @@ class IndexingOptimizer:
         batch_size: int = 32
     ) -> List[List[float]]:
         """Generate embeddings in optimized batches"""
-        
+
         all_embeddings = []
-        
+
         for i in range(0, len(texts), batch_size):
             batch = texts[i:i + batch_size]
-            
+
             # Call embedding service with batch
             batch_embeddings = await embedding_func(batch)
             all_embeddings.extend(batch_embeddings)
-            
+
             # Small delay to avoid overwhelming Ollama
             if i + batch_size < len(texts):
                 await asyncio.sleep(0.1)
-        
+
         return all_embeddings
-    
+
     def optimize_tree_sitter_parsing(self):
         """Optimizations for Tree-sitter parsing"""
-        
+
         # Cache parsed grammars
         # Reuse parser instances
         # Parse in parallel for large files
-        
+
         pass
-    
+
     async def cache_file_hashes(
         self,
         files: List[Path],
         cache_dir: Path
     ):
         """Pre-compute and cache file hashes"""
-        
+
         cache_file = cache_dir / 'file_hashes.json'
-        
+
         # Load existing cache
         if cache_file.exists():
             import json
             cache = json.loads(cache_file.read_text())
         else:
             cache = {}
-        
+
         # Compute hashes for new/modified files
         for filepath in files:
             mtime = filepath.stat().st_mtime
-            
+
             if str(filepath) in cache and cache[str(filepath)]['mtime'] == mtime:
                 # Use cached hash
                 continue
-            
+
             # Compute new hash
             file_hash = self._calculate_hash(filepath)
             cache[str(filepath)] = {
                 'hash': file_hash,
                 'mtime': mtime
             }
-        
+
         # Save cache
         import json
         cache_file.write_text(json.dumps(cache, indent=2))
-        
+
         return cache
 ```
 
@@ -3190,11 +3190,11 @@ class IndexingError:
 
 class ErrorHandler:
     """Handle indexing errors gracefully"""
-    
+
     def __init__(self):
         self.errors: List[IndexingError] = []
         self.failed_files: Set[str] = set()
-    
+
     def handle_file_error(
         self,
         filepath: Path,
@@ -3202,7 +3202,7 @@ class ErrorHandler:
         phase: str
     ) -> IndexingError:
         """Handle error processing a file"""
-        
+
         error_obj = IndexingError(
             severity=ErrorSeverity.ERROR,
             phase=phase,
@@ -3212,22 +3212,22 @@ class ErrorHandler:
             recoverable=True,
             recovery_action='skip_file'
         )
-        
+
         self.errors.append(error_obj)
         self.failed_files.add(str(filepath))
-        
+
         # Log error
         logger.error(f"Error processing {filepath} in {phase}: {error}")
-        
+
         return error_obj
-    
+
     def handle_critical_error(
         self,
         error: Exception,
         phase: str
     ) -> IndexingError:
         """Handle critical error that stops indexing"""
-        
+
         error_obj = IndexingError(
             severity=ErrorSeverity.CRITICAL,
             phase=phase,
@@ -3236,30 +3236,30 @@ class ErrorHandler:
             error_message=str(error),
             recoverable=False
         )
-        
+
         self.errors.append(error_obj)
-        
+
         # Log critical error
         logger.critical(f"Critical error in {phase}: {error}")
-        
+
         return error_obj
-    
+
     def should_continue(self) -> bool:
         """Determine if indexing should continue"""
-        
+
         # Stop if critical error
         if any(e.severity == ErrorSeverity.CRITICAL for e in self.errors):
             return False
-        
+
         # Stop if too many files failed (>20%)
         if len(self.failed_files) > 100:  # Arbitrary limit
             return False
-        
+
         return True
-    
+
     def get_summary(self) -> Dict:
         """Get error summary"""
-        
+
         return {
             'total_errors': len(self.errors),
             'critical_errors': sum(1 for e in self.errors if e.severity == ErrorSeverity.CRITICAL),
@@ -3275,12 +3275,12 @@ class ErrorHandler:
                 for e in self.errors
             ]
         }
-    
+
     def _get_error_code(self, error: Exception) -> str:
         """Map exception to error code"""
-        
+
         error_type = type(error).__name__
-        
+
         code_map = {
             'UnicodeDecodeError': 'ENCODING_ERROR',
             'PermissionError': 'PERMISSION_DENIED',
@@ -3289,7 +3289,7 @@ class ErrorHandler:
             'TimeoutError': 'TIMEOUT',
             'SyntaxError': 'PARSING_FAILED',
         }
-        
+
         return code_map.get(error_type, 'UNKNOWN_ERROR')
 ```
 

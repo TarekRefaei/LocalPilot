@@ -94,7 +94,9 @@ class MultiLevelRetriever:
         symbol_results = await self._level2_symbol_search(query)
 
         # Level 3: Semantic Vector Search (PRIMARY)
-        semantic_results = await self._level3_semantic_search(query, user_context, top_k=top_k * 2)
+        semantic_results = await self._level3_semantic_search(
+            query, user_context, top_k=top_k * 2
+        )
 
         # Level 4: Keyword/Lexical Search (ablatable)
         keyword_results: list[dict[str, Any]] = []
@@ -347,7 +349,9 @@ class MultiLevelRetriever:
         top_k: int,
     ) -> str:
         rounded = [round(x, 4) for x in embedding]
-        payload = json.dumps({"e": rounded, "f": filters or {}, "k": top_k}, sort_keys=True)
+        payload = json.dumps(
+            {"e": rounded, "f": filters or {}, "k": top_k}, sort_keys=True
+        )
         return hashlib.sha1(payload.encode("utf-8")).hexdigest()
 
     def _extract_symbols(self, query: str) -> list[str]:

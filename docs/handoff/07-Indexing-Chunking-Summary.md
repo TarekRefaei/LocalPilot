@@ -7,7 +7,7 @@
 # ============================================================================
 #
 # Agent 07 has successfully implemented Phase 4: Semantic Code Chunking
-# 
+#
 # Mission: AST-first chunking with Tree-sitter; lexical fallback; symbol/import maps.
 # Deliverables: Deterministic chunk boundaries; partial-ready events.
 # Acceptance: Boundary precision checks; unit tests for chunkers.

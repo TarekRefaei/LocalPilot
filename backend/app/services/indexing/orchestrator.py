@@ -23,7 +23,9 @@ class IndexingOrchestrator:
     def __init__(self, manager: ConnectionManager) -> None:
         self.manager = manager
 
-    async def run(self, workspace_path: str, options: dict[str, Any] | None = None) -> None:
+    async def run(
+        self, workspace_path: str, options: dict[str, Any] | None = None
+    ) -> None:
         indexing_id = str(uuid.uuid4())
         started = datetime.utcnow()
 
@@ -80,7 +82,9 @@ class IndexingOrchestrator:
                     current_file=processed,
                     total_files=max(1, total_to_process),
                     current_file_path=str(Path(f).resolve()),
-                    percentage=min(90.0, 10.0 + 80.0 * (processed / max(1, total_to_process))),
+                    percentage=min(
+                        90.0, 10.0 + 80.0 * (processed / max(1, total_to_process))
+                    ),
                     message=f"Processed documentation: {f.name}",
                 )
 
@@ -96,7 +100,9 @@ class IndexingOrchestrator:
                     current_file=processed,
                     total_files=max(1, total_to_process),
                     current_file_path=str(Path(f).resolve()),
-                    percentage=min(95.0, 10.0 + 80.0 * (processed / max(1, total_to_process))),
+                    percentage=min(
+                        95.0, 10.0 + 80.0 * (processed / max(1, total_to_process))
+                    ),
                     message=f"Extracted docstrings: {f.name}",
                 )
 
@@ -113,7 +119,9 @@ class IndexingOrchestrator:
                 message="Starting semantic code chunking...",
             )
 
-            code_chunks, chunk_metrics = await chunking.execute(workspace_path, dres.files)
+            code_chunks, chunk_metrics = await chunking.execute(
+                workspace_path, dres.files
+            )
 
             await self._emit_progress(
                 indexing_id,
@@ -207,7 +215,9 @@ class IndexingOrchestrator:
             for p in dres.files:
                 rel = cache.normalize_path(Path(workspace_path).resolve(), p)
                 h, size, mtime = cache.hash_file(p)
-                records.append(FileHashRecord(file_path=rel, hash=h, size=size, mtime=mtime))
+                records.append(
+                    FileHashRecord(file_path=rel, hash=h, size=size, mtime=mtime)
+                )
             cache.update_files(records)
 
             duration = int((datetime.utcnow() - started).total_seconds())
@@ -263,7 +273,9 @@ class IndexingOrchestrator:
             estimated_time_remaining_seconds=max(0, 0),
             message=message,
         )
-        envelope = WebSocketEnvelope(event="indexing.progress", data=payload.model_dump())
+        envelope = WebSocketEnvelope(
+            event="indexing.progress", data=payload.model_dump()
+        )
         await self.manager.broadcast(envelope.model_dump())
 
     async def _emit_complete(
@@ -279,5 +291,7 @@ class IndexingOrchestrator:
             project_summary=None,
             failed_files=None,
         )
-        envelope = WebSocketEnvelope(event="indexing.complete", data=payload.model_dump())
+        envelope = WebSocketEnvelope(
+            event="indexing.complete", data=payload.model_dump()
+        )
         await self.manager.broadcast(envelope.model_dump())

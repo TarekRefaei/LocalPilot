@@ -81,11 +81,15 @@ class TestSemanticChunkerDeterminism:
         for chunk in chunks:
             # Function chunks should end with }
             if "function" in chunk.content.lower():
-                assert chunk.content.strip().endswith("}"), "Function chunks must be complete"
+                assert chunk.content.strip().endswith(
+                    "}"
+                ), "Function chunks must be complete"
 
             # Interface chunks should end with }
             if "interface" in chunk.content.lower():
-                assert chunk.content.strip().endswith("}"), "Interface chunks must be complete"
+                assert chunk.content.strip().endswith(
+                    "}"
+                ), "Interface chunks must be complete"
 
     def test_chunk_ids_are_deterministic(self, tmp_path: Path) -> None:
         """Chunk IDs must be deterministic based on file path and line numbers."""
@@ -103,7 +107,9 @@ class TestSemanticChunkerDeterminism:
             # ID should be meaningful and deterministic
             assert len(chunk.id) > 0, "Chunk ID must not be empty"
             # Should either have file ref or # notation for boundaries
-            assert "#" in chunk.id or "app" in chunk.id, "Chunk ID should reference file or lines"
+            assert (
+                "#" in chunk.id or "app" in chunk.id
+            ), "Chunk ID should reference file or lines"
 
 
 class TestChunkBoundaryPrecision:
@@ -158,7 +164,9 @@ class TestChunkBoundaryPrecision:
 
             # Chunks should be complete (end with closing brace for TS functions)
             if chunk.chunk_type == "function":
-                assert chunk.content.strip().endswith("}"), "Function chunk should end with }"
+                assert chunk.content.strip().endswith(
+                    "}"
+                ), "Function chunk should end with }"
 
     def test_boundary_precision_for_python_classes(self, tmp_path: Path) -> None:
         """Python class chunks must have precise line boundaries."""
@@ -330,7 +338,9 @@ class TestSymbolMap:
         src_dir.mkdir()
 
         py_file = src_dir / "utils.py"
-        py_content = "def helper():\n" "    return 42\n" "\n" "class Utils:\n" "    pass\n"
+        py_content = (
+            "def helper():\n" "    return 42\n" "\n" "class Utils:\n" "    pass\n"
+        )
         py_file.write_text(py_content, encoding="utf-8")
 
         chunker = SemanticChunker()
@@ -341,7 +351,9 @@ class TestSymbolMap:
         map2, _ = SymbolImportMapBuilder.build(chunks2)
 
         # Both maps should have same symbols
-        assert len(map1.symbol_index) == len(map2.symbol_index), "Symbol counts should match"
+        assert len(map1.symbol_index) == len(
+            map2.symbol_index
+        ), "Symbol counts should match"
         assert set(map1.symbol_index.keys()) == set(
             map2.symbol_index.keys()
         ), "Symbol names should match"
@@ -439,7 +451,9 @@ class TestChunkingExecutor:
         chunks, metrics = await executor.execute(str(tmp_path), files)
 
         # Should still process valid files
-        assert metrics["files_chunked"] >= 1, "Should process valid files despite errors"
+        assert (
+            metrics["files_chunked"] >= 1
+        ), "Should process valid files despite errors"
 
 
 class TestLexicalChunkingFallback:
@@ -452,14 +466,18 @@ class TestLexicalChunkingFallback:
 
         # Create a .go file (not supported by Tree-sitter in basic setup)
         go_file = src_dir / "main.go"
-        go_content = "package main\n" "\n" "func main() {\n" '    println("Hello")\n' "}\n"
+        go_content = (
+            "package main\n" "\n" "func main() {\n" '    println("Hello")\n' "}\n"
+        )
         go_file.write_text(go_content, encoding="utf-8")
 
         chunker = SemanticChunker()
         chunks = chunker.chunk_file(go_file, "go", str(tmp_path))
 
         # Should produce chunks via lexical method
-        assert len(chunks) > 0, f"Lexical fallback should produce chunks, got {len(chunks)}"
+        assert (
+            len(chunks) > 0
+        ), f"Lexical fallback should produce chunks, got {len(chunks)}"
 
         for chunk in chunks:
             # Fallback chunks can be 'module' or 'block' type

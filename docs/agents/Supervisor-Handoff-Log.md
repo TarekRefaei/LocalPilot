@@ -19,7 +19,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: monorepo layout, strict configs, CI workflows, VS Code tasks
 - Open Risks: VS Code engine pin; Windows onboarding
 - Branch/PR: feat/01-tooling-monorepo — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 02 — Extension Views & Commands
 - Week: Week 1 — Foundations & Cleanup
@@ -30,7 +30,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: TreeDataProviders, commands, contexts, keybindings
 - Open Risks: ID churn vs Chat participant
 - Branch/PR: feat/02-views-commands — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 03 — Chat Participant
 - Week: Week 6 — Retrieval & Chat Integration
@@ -41,7 +41,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: participant id, schemas, mocks
 - Open Risks: schema drift with WS/Backend
 - Branch/PR: feat/03-chat-participant — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 04 — WebSocket Client & Contract
 - Week: Week 2 — Contracts & Messaging
@@ -52,7 +52,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: envelope spec, topics, mock server
 - Open Risks: versioning policy
 - Branch/PR: feat/04-ws-client-contract — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 05 — Backend API Gateway
 - Week: Week 2 — Contracts & Messaging
@@ -63,7 +63,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: FastAPI app, Pydantic models, WS topics
 - Open Risks: Windows env/path
 - Branch/PR: feat/05-backend-gateway — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 06 — Indexing: Discovery & Docs
 - Week: Week 3 — Indexing I
@@ -74,7 +74,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: discovery outputs, doc metadata, file-hash cache
 - Open Risks: .gitignore nuances
 - Branch/PR: feat/06-indexing-discovery — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 07 — Indexing: Structure & Chunking
 - Week: Week 4 — Indexing II
@@ -85,7 +85,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: chunk format; symbol/import maps
 - Open Risks: Tree-sitter on Windows
 - Branch/PR: feat/07-indexing-chunking — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 08 — Embeddings & Vector Store
 - Week: Week 5 — Embeddings & Vector Search
@@ -96,7 +96,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: embeddings service; Chroma integration
 - Open Risks: VRAM constraints
 - Branch/PR: feat/08-embeddings-vector-store — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 09 — Retrieval & Ranking
 - Week: Week 6 — Retrieval & Chat Integration
@@ -107,7 +107,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: retrieval API; fusion/rerank; evaluators
 - Open Risks: index quality drift
 - Branch/PR: feat/09-retrieval-ranking — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 10 — Plan Mode
 - Week: Week 7 — Plans View
@@ -118,7 +118,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: plan schema; acceptance criteria; storage
 - Open Risks: backward compatibility
 - Branch/PR: feat/10-plan-mode — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 11 — Act Mode
 - Week: Week 8 — Act Mode
@@ -129,7 +129,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: diff engine; approval states; git safety
 - Open Risks: idempotent rollback
 - Branch/PR: feat/11-act-mode — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 12 — Integration & E2E
 - Week: Weeks 6–10 (stabilize by Week 9)
@@ -140,7 +140,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: harness; fixtures; dashboards
 - Open Risks: Windows runner stability
 - Branch/PR: test/12-integration-e2e — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 13 — Testing & Coverage
 - Week: Week 9 — Hardening & Coverage
@@ -151,7 +151,7 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: regression packs; perf harness
 - Open Risks: superficial tests
 - Branch/PR: test/13-coverage-hardening — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:
 
 ### Agent 14 — Docs & DX
 - Week: Week 10 — Release Readiness
@@ -162,4 +162,4 @@ Track cross-agent handoffs, acceptance gates, and risks. All work adheres to TDD
 - Key Artifacts: master docs; changelog; onboarding
 - Open Risks: drift vs latest IDs
 - Branch/PR: docs/14-docs-dx — PR: <link>
-- Supervisor Notes: 
+- Supervisor Notes:

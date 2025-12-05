@@ -8,10 +8,16 @@ coverage/
 
 # Python
 backend/.venv/
+backend.venv/
 **/__pycache__/
 .pytest_cache/
 .mypy_cache/
 .coverage
+
+# Local data/db artifacts
+backend/localpilot_data.db
+data/
+.localpilot/
 
 # OS/Editor
 .DS_Store
@@ -26,4 +32,3 @@ Thumbs.db
 .env
 .env.*
 extension/.vscode-test/
-

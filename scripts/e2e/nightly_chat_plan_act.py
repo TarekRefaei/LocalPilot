@@ -24,7 +24,6 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -86,7 +85,9 @@ def is_transient_error(e: Exception) -> bool:
         "Cannot connect to host",
         "TimeoutError",
     ]
-    return isinstance(e, TimeoutError) or any(m.lower() in msg.lower() for m in transient_markers)
+    return isinstance(e, TimeoutError) or any(
+        m.lower() in msg.lower() for m in transient_markers
+    )
 
 
 async def is_ollama_online() -> bool:
@@ -226,7 +227,9 @@ async def wait_for_health(timeout_s: float = 30.0) -> None:
     raise RuntimeError(f"Backend health check failed: {last_err}")
 
 
-def make_envelope(event: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> Dict[str, Any]:
+def make_envelope(
+    event: str, data: Dict[str, Any], correlation_id: Optional[str] = None
+) -> Dict[str, Any]:
     env = {
         "event": event,
         "data": data,
@@ -238,7 +241,12 @@ def make_envelope(event: str, data: Dict[str, Any], correlation_id: Optional[str
     return env
 
 
-async def ws_send_recv_until(ws, want_event: str, send_first: Optional[Dict[str, Any]] = None, timeout_s: float = 10.0) -> Dict[str, Any]:
+async def ws_send_recv_until(
+    ws,
+    want_event: str,
+    send_first: Optional[Dict[str, Any]] = None,
+    timeout_s: float = 10.0,
+) -> Dict[str, Any]:
     if send_first is not None:
         await ws.send(json.dumps(send_first))
     deadline = time.time() + timeout_s
@@ -274,17 +282,29 @@ async def run_scenario() -> Dict[str, Any]:
         timings: Dict[str, float] = {}
 
         # 2) Health
-        _t0 = time.time(); await wait_for_health(); timings["health_ms"] = (time.time() - _t0) * 1000
+        _t0 = time.time()
+        await wait_for_health()
+        timings["health_ms"] = (time.time() - _t0) * 1000
 
         # 3) WebSocket handshake + heartbeat
         ws_url = f"{WS_URL_BASE}?client_id={CLIENT_ID}"
         async with websockets.connect(ws_url) as ws:
             hs = make_envelope("handshake", {"version": "0.1.0", "clientId": CLIENT_ID})
-            msg = await ws_send_recv_until(ws, "handshake_ack", send_first=hs, timeout_s=10.0)
+            msg = await ws_send_recv_until(
+                ws, "handshake_ack", send_first=hs, timeout_s=10.0
+            )
             assert msg["data"]["clientId"] == CLIENT_ID
 
-            hb = make_envelope("heartbeat", {"clientId": CLIENT_ID, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
-            hb_msg = await ws_send_recv_until(ws, "heartbeat_ack", send_first=hb, timeout_s=10.0)
+            hb = make_envelope(
+                "heartbeat",
+                {
+                    "clientId": CLIENT_ID,
+                    "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                },
+            )
+            hb_msg = await ws_send_recv_until(
+                ws, "heartbeat_ack", send_first=hb, timeout_s=10.0
+            )
             assert "serverTime" in hb_msg.get("data", {})
 
             # 4) indexing.start broadcast round-trip
@@ -294,14 +314,18 @@ async def run_scenario() -> Dict[str, Any]:
             )
             # server broadcasts original event; we wait to see it echoed
             _t = time.time()
-            echo = await ws_send_recv_until(ws, "indexing.start", send_first=idx, timeout_s=10.0)
+            echo = await ws_send_recv_until(
+                ws, "indexing.start", send_first=idx, timeout_s=10.0
+            )
             timings["indexing_broadcast_ms"] = (time.time() - _t) * 1000
             assert echo.get("event") == "indexing.start"
 
             # 5) REST chat echo smoke (short prompt)
             _t = time.time()
             async with httpx.AsyncClient(timeout=10.0) as client:
-                r = await client.post(f"{HTTP_BASE}/chat/echo", json={"prompt": "E2E", "model": "local"})
+                r = await client.post(
+                    f"{HTTP_BASE}/chat/echo", json={"prompt": "E2E", "model": "local"}
+                )
                 r.raise_for_status()
             timings["chat_echo_ms"] = (time.time() - _t) * 1000
 
@@ -341,7 +365,8 @@ async def run_scenario() -> Dict[str, Any]:
 
             # 6) act.request_approval
             op = {"type": "create", "path": TARGET_FILE, "content": TARGET_CONTENT}
-            _t = time.time(); dry = make_envelope(
+            _t = time.time()
+            dry = make_envelope(
                 "act.request_approval",
                 {
                     "workspace_path": str(workspace),
@@ -351,7 +376,9 @@ async def run_scenario() -> Dict[str, Any]:
                 },
                 correlation_id=EXECUTION_ID,
             )
-            preview = await ws_send_recv_until(ws, "act.request_approval", send_first=dry, timeout_s=20.0)
+            preview = await ws_send_recv_until(
+                ws, "act.request_approval", send_first=dry, timeout_s=20.0
+            )
             data = preview.get("data", {})
             ops = data.get("operations", [])
             assert isinstance(ops, list) and len(ops) == 1
@@ -360,7 +387,8 @@ async def run_scenario() -> Dict[str, Any]:
             # 7) act.apply (approved)
             # Ensure workspace is clean to satisfy strict safety policy
             ensure_clean_git(workspace)
-            _t = time.time(); apply_env = make_envelope(
+            _t = time.time()
+            apply_env = make_envelope(
                 "act.apply",
                 {
                     "workspace_path": str(workspace),
@@ -372,7 +400,9 @@ async def run_scenario() -> Dict[str, Any]:
                 },
                 correlation_id=EXECUTION_ID,
             )
-            apply_res = await ws_send_recv_until(ws, "act.apply_result", send_first=apply_env, timeout_s=20.0)
+            apply_res = await ws_send_recv_until(
+                ws, "act.apply_result", send_first=apply_env, timeout_s=20.0
+            )
             written = apply_res.get("data", {}).get("written", [])
             assert any(p.endswith(TARGET_FILE.replace("\\", "/")) for p in written)
             timings["act_apply_create_ms"] = (time.time() - _t) * 1000
@@ -396,7 +426,8 @@ async def run_scenario() -> Dict[str, Any]:
         mod_content = "E2E modified\n"
         mod_op = {"type": "modify", "path": TARGET_FILE, "content": mod_content}
         ensure_clean_git(workspace)
-        _t = time.time(); mod_env = make_envelope(
+        _t = time.time()
+        mod_env = make_envelope(
             "act.apply",
             {
                 "workspace_path": str(workspace),
@@ -409,14 +440,17 @@ async def run_scenario() -> Dict[str, Any]:
             correlation_id=EXECUTION_ID,
         )
         async with websockets.connect(f"{WS_URL_BASE}?client_id={CLIENT_ID}") as ws2:
-            _ = await ws_send_recv_until(ws2, "act.apply_result", send_first=mod_env, timeout_s=20.0)
+            _ = await ws_send_recv_until(
+                ws2, "act.apply_result", send_first=mod_env, timeout_s=20.0
+            )
         timings["act_apply_modify_ms"] = (time.time() - _t) * 1000
         assert target.read_text(encoding="utf-8") == mod_content
 
         # Delete
         del_op = {"type": "delete", "path": TARGET_FILE, "content": None}
         ensure_clean_git(workspace)
-        _t = time.time(); del_env = make_envelope(
+        _t = time.time()
+        del_env = make_envelope(
             "act.apply",
             {
                 "workspace_path": str(workspace),
@@ -429,7 +463,9 @@ async def run_scenario() -> Dict[str, Any]:
             correlation_id=EXECUTION_ID,
         )
         async with websockets.connect(f"{WS_URL_BASE}?client_id={CLIENT_ID}") as ws3:
-            _ = await ws_send_recv_until(ws3, "act.apply_result", send_first=del_env, timeout_s=20.0)
+            _ = await ws_send_recv_until(
+                ws3, "act.apply_result", send_first=del_env, timeout_s=20.0
+            )
         timings["act_apply_delete_ms"] = (time.time() - _t) * 1000
         assert not target.exists()
 
@@ -451,7 +487,10 @@ async def run_scenario() -> Dict[str, Any]:
         stop_backend(proc)
         # Persist minimal tree snapshot for diagnostics
         try:
-            (ARTIFACTS_DIR / "tree.txt").write_text("\n".join(str(p.relative_to(REPO_ROOT)) for p in REPO_ROOT.rglob("*")), encoding="utf-8")
+            (ARTIFACTS_DIR / "tree.txt").write_text(
+                "\n".join(str(p.relative_to(REPO_ROOT)) for p in REPO_ROOT.rglob("*")),
+                encoding="utf-8",
+            )
         except Exception:
             pass
 
@@ -467,7 +506,6 @@ def main() -> None:
         print("E2E skipped (quarantined):", json.dumps(result))
         sys.exit(0)
 
-    retry_used = False
     try:
         result = asyncio.run(run_scenario())
         result.update({"scenario": SCENARIO_ID, "retry": False, "flaky": False})
@@ -476,7 +514,6 @@ def main() -> None:
         sys.exit(0)
     except Exception as first_err:  # noqa: BLE001
         if is_transient_error(first_err):
-            retry_used = True
             time.sleep(3)
             try:
                 result = asyncio.run(run_scenario())

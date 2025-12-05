@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #9: TESTING_STRATEGY.md
 # LocalPilot - Testing Strategy
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation
 **Author:** LocalPilot QA Team
 
 ---
@@ -108,15 +108,15 @@ Target Execution Times:
 Unit Tests:
   Total: < 30 seconds
   Individual: < 100ms average
-  
+
 Integration Tests:
   Total: < 5 minutes
   Individual: < 5 seconds average
-  
+
 E2E Tests:
   Total: < 15 minutes
   Individual: < 2 minutes average
-  
+
 Full Suite: < 20 minutes
 ```
 
@@ -141,110 +141,110 @@ jest.mock('ws');
 describe('WebSocketService', () => {
   let service: WebSocketService;
   let mockWs: jest.Mocked<WS>;
-  
+
   beforeEach(() => {
     // Setup
     service = new WebSocketService();
     mockWs = new WS('ws://localhost:8765') as jest.Mocked<WS>;
   });
-  
+
   afterEach(() => {
     // Cleanup
     service.disconnect();
     jest.clearAllMocks();
   });
-  
+
   describe('connect', () => {
     it('should establish connection successfully', async () => {
       // Arrange
       const url = 'ws://localhost:8765';
-      
+
       // Act
       await service.connect(url);
-      
+
       // Assert
       expect(service.isConnected()).toBe(true);
       expect(WS).toHaveBeenCalledWith(url);
     });
-    
+
     it('should emit connected event on successful connection', async () => {
       // Arrange
       const onConnected = jest.fn();
       service.on('connected', onConnected);
-      
+
       // Simulate WebSocket open
       mockWs.readyState = WS.OPEN;
       mockWs.emit('open');
-      
+
       // Act
       await service.connect('ws://localhost:8765');
-      
+
       // Assert
       expect(onConnected).toHaveBeenCalled();
     });
-    
+
     it('should retry on connection failure with exponential backoff', async () => {
       // Arrange
       jest.useFakeTimers();
       const connectSpy = jest.spyOn(service as any, '_attemptConnect');
-      
+
       // Simulate failures
       connectSpy
         .mockRejectedValueOnce(new Error('Connection failed'))
         .mockRejectedValueOnce(new Error('Connection failed'))
         .mockResolvedValueOnce(undefined);
-      
+
       // Act
       const connectPromise = service.connect('ws://localhost:8765');
-      
+
       // Fast-forward time for retries
       await jest.advanceTimersByTimeAsync(2000); // First retry
       await jest.advanceTimersByTimeAsync(4000); // Second retry
-      
+
       await connectPromise;
-      
+
       // Assert
       expect(connectSpy).toHaveBeenCalledTimes(3);
-      
+
       jest.useRealTimers();
     });
-    
+
     it('should throw error after max retry attempts', async () => {
       // Arrange
       jest.useFakeTimers();
       const connectSpy = jest.spyOn(service as any, '_attemptConnect');
       connectSpy.mockRejectedValue(new Error('Connection failed'));
-      
+
       // Act & Assert
       await expect(async () => {
         const connectPromise = service.connect('ws://localhost:8765');
-        
+
         // Advance through all retry attempts
         for (let i = 0; i < 5; i++) {
           await jest.advanceTimersByTimeAsync(Math.pow(2, i) * 1000);
         }
-        
+
         await connectPromise;
       }).rejects.toThrow('Max retry attempts reached');
-      
+
       jest.useRealTimers();
     });
   });
-  
+
   describe('send', () => {
     beforeEach(async () => {
       await service.connect('ws://localhost:8765');
       mockWs.readyState = WS.OPEN;
     });
-    
+
     it('should send message when connected', () => {
       // Arrange
       const event = 'test.event';
       const payload = { data: 'test' };
-      
+
       // Act
       service.send(event, payload);
-      
+
       // Assert
       expect(mockWs.send).toHaveBeenCalledWith(
         JSON.stringify({
@@ -255,68 +255,68 @@ describe('WebSocketService', () => {
         })
       );
     });
-    
+
     it('should throw error when not connected', () => {
       // Arrange
       service.disconnect();
-      
+
       // Act & Assert
       expect(() => {
         service.send('test.event', {});
       }).toThrow('WebSocket is not connected');
     });
-    
+
     it('should queue messages when connection is pending', async () => {
       // Arrange
       service.disconnect();
       mockWs.readyState = WS.CONNECTING;
-      
+
       // Act
       service.send('event1', { data: 1 });
       service.send('event2', { data: 2 });
-      
+
       // Simulate connection established
       mockWs.readyState = WS.OPEN;
       mockWs.emit('open');
-      
+
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Assert
       expect(mockWs.send).toHaveBeenCalledTimes(2);
     });
   });
-  
+
   describe('message handling', () => {
     it('should emit event on message received', async () => {
       // Arrange
       await service.connect('ws://localhost:8765');
       const handler = jest.fn();
       service.on('test.event', handler);
-      
+
       const message = {
         type: 'test.event',
         payload: { data: 'test' },
       };
-      
+
       // Act
       mockWs.emit('message', JSON.stringify(message));
-      
+
       // Assert
       expect(handler).toHaveBeenCalledWith(message.payload);
     });
-    
+
     it('should handle malformed messages gracefully', async () => {
       // Arrange
       await service.connect('ws://localhost:8765');
       const errorSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       // Act
       mockWs.emit('message', 'invalid json{');
-      
+
       // Assert
       expect(errorSpy).toHaveBeenCalled();
       expect(service.isConnected()).toBe(true); // Still connected
-      
+
       errorSpy.mockRestore();
     });
   });
@@ -382,7 +382,7 @@ from src.models.indexing import IndexingPhase, IndexingStatus
 
 class TestIndexingService:
     """Unit tests for IndexingService"""
-    
+
     @pytest.fixture
     def mock_vector_store(self):
         """Mock vector store"""
@@ -390,7 +390,7 @@ class TestIndexingService:
         store.add_documents = AsyncMock()
         store.search = AsyncMock(return_value=[])
         return store
-    
+
     @pytest.fixture
     def mock_embedding_service(self):
         """Mock embedding service"""
@@ -398,14 +398,14 @@ class TestIndexingService:
         service.embed = AsyncMock(return_value=[0.1] * 1024)
         service.embed_batch = AsyncMock(return_value=[[0.1] * 1024])
         return service
-    
+
     @pytest.fixture
     def mock_llm_service(self):
         """Mock LLM service"""
         service = Mock()
         service.generate = AsyncMock(return_value='{"summary": "Test project"}')
         return service
-    
+
     @pytest.fixture
     def service(self, mock_vector_store, mock_embedding_service, mock_llm_service):
         """Create IndexingService with mocked dependencies"""
@@ -414,7 +414,7 @@ class TestIndexingService:
             embedding_service=mock_embedding_service,
             llm_service=mock_llm_service
         )
-    
+
     @pytest.mark.asyncio
     async def test_index_workspace_success(self, service, tmp_path):
         """Test successful workspace indexing"""
@@ -424,15 +424,15 @@ class TestIndexingService:
         (workspace / "src").mkdir()
         (workspace / "src" / "index.ts").write_text("console.log('hello');")
         (workspace / "README.md").write_text("# Test Project")
-        
+
         # Act
         result = await service.index_workspace(str(workspace))
-        
+
         # Assert
         assert result.status == IndexingStatus.COMPLETED
         assert result.statistics.indexed_files > 0
         assert result.project_summary is not None
-    
+
     @pytest.mark.asyncio
     async def test_index_workspace_emits_progress(self, service, tmp_path):
         """Test that progress events are emitted during indexing"""
@@ -440,13 +440,13 @@ class TestIndexingService:
         workspace = tmp_path / "test-project"
         workspace.mkdir()
         (workspace / "index.ts").write_text("console.log('test');")
-        
+
         progress_events = []
-        
+
         # Act
         async for progress in service.index_workspace(str(workspace)):
             progress_events.append(progress)
-        
+
         # Assert
         phases = [e.phase for e in progress_events]
         assert IndexingPhase.DISCOVERY in phases
@@ -454,36 +454,36 @@ class TestIndexingService:
         assert IndexingPhase.STRUCTURE in phases
         assert IndexingPhase.CHUNKING in phases
         assert IndexingPhase.SUMMARIZATION in phases
-        
+
         # Verify progress percentages increase
         percentages = [e.percentage for e in progress_events]
         assert percentages == sorted(percentages)
         assert percentages[0] >= 0
         assert percentages[-1] == 100
-    
+
     @pytest.mark.asyncio
     async def test_handles_file_parsing_errors(self, service, tmp_path):
         """Test graceful handling of unparseable files"""
         # Arrange
         workspace = tmp_path / "test-project"
         workspace.mkdir()
-        
+
         # Create valid file
         (workspace / "valid.ts").write_text("const x = 1;")
-        
+
         # Create invalid file
         (workspace / "broken.ts").write_text("const x = {{{")
-        
+
         # Act
         result = await service.index_workspace(str(workspace))
-        
+
         # Assert
         assert result.status == IndexingStatus.COMPLETED
         assert result.statistics.failed_files == 1
         assert result.statistics.indexed_files == 1
         assert len(result.failed_files) == 1
         assert result.failed_files[0].path == "broken.ts"
-    
+
     @pytest.mark.asyncio
     async def test_stops_on_critical_error(self, service, tmp_path, mock_vector_store):
         """Test that critical errors stop indexing"""
@@ -491,14 +491,14 @@ class TestIndexingService:
         workspace = tmp_path / "test-project"
         workspace.mkdir()
         (workspace / "index.ts").write_text("test")
-        
+
         # Simulate vector store failure
         mock_vector_store.add_documents.side_effect = Exception("Database connection failed")
-        
+
         # Act & Assert
         with pytest.raises(Exception, match="Database connection failed"):
             await service.index_workspace(str(workspace))
-    
+
     @pytest.mark.asyncio
     async def test_incremental_reindex_only_changed_files(self, service, tmp_path):
         """Test incremental indexing updates only changed files"""
@@ -509,16 +509,16 @@ class TestIndexingService:
         file2 = workspace / "file2.ts"
         file1.write_text("const x = 1;")
         file2.write_text("const y = 2;")
-        
+
         # Initial index
         await service.index_workspace(str(workspace))
-        
+
         # Modify only file1
         file1.write_text("const x = 10;")
-        
+
         # Act
         changes = await service.detect_changes(str(workspace))
-        
+
         # Assert
         assert len(changes) == 1
         assert changes[0].file_path == "file1.ts"
@@ -527,54 +527,54 @@ class TestIndexingService:
 
 class TestDiscoveryExecutor:
     """Unit tests for DiscoveryExecutor"""
-    
+
     @pytest.fixture
     def executor(self):
         return DiscoveryExecutor()
-    
+
     @pytest.fixture
     def sample_workspace(self, tmp_path):
         """Create a sample workspace"""
         workspace = tmp_path / "test-project"
         workspace.mkdir()
-        
+
         # Source files
         src = workspace / "src"
         src.mkdir()
         (src / "index.ts").write_text("console.log('hello');")
         (src / "utils.ts").write_text("export function test() {}")
-        
+
         # Docs
         (workspace / "README.md").write_text("# Test Project")
-        
+
         # Should be excluded
         node_modules = workspace / "node_modules"
         node_modules.mkdir()
         (node_modules / "package").write_text("excluded")
-        
+
         # Config
         (workspace / "package.json").write_text('{"name": "test"}')
-        
+
         return workspace
-    
+
     @pytest.mark.asyncio
     async def test_discovers_all_files(self, executor, sample_workspace):
         """Test that all non-excluded files are discovered"""
         result = await executor.execute(str(sample_workspace))
-        
+
         assert result.total_files == 4  # index.ts, utils.ts, README.md, package.json
         assert result.files_by_type['typescript'] == 2
         assert result.files_by_type['markdown'] == 1
         assert result.files_by_type['json'] == 1
-    
+
     @pytest.mark.asyncio
     async def test_excludes_patterns(self, executor, sample_workspace):
         """Test that exclude patterns work correctly"""
         result = await executor.execute(str(sample_workspace))
-        
+
         # Verify node_modules was excluded
         assert not any('node_modules' in str(f) for f in result.files)
-    
+
     @pytest.mark.asyncio
     async def test_detects_project_type(self, executor, tmp_path):
         """Test project type detection"""
@@ -582,41 +582,41 @@ class TestDiscoveryExecutor:
         react_workspace = tmp_path / "react-project"
         react_workspace.mkdir()
         (react_workspace / "package.json").write_text('{"dependencies": {"react": "^18"}}')
-        
+
         result = await executor.execute(str(react_workspace))
         assert result.project_type == 'react'
-        
+
         # Python project
         python_workspace = tmp_path / "python-project"
         python_workspace.mkdir()
         (python_workspace / "setup.py").write_text("from setuptools import setup")
-        
+
         result = await executor.execute(str(python_workspace))
         assert result.project_type == 'python'
-    
+
     @pytest.mark.asyncio
     async def test_estimates_indexing_duration(self, executor, sample_workspace):
         """Test duration estimation"""
         result = await executor.execute(str(sample_workspace))
-        
+
         # Should estimate some duration
         assert result.estimated_duration_seconds > 0
-        
+
         # For small project, should be quick
         assert result.estimated_duration_seconds < 30
-    
+
     def test_is_binary_detects_binary_files(self, executor, tmp_path):
         """Test binary file detection"""
         # Text file
         text_file = tmp_path / "text.txt"
         text_file.write_text("Hello, world!")
         assert not executor._is_binary(text_file)
-        
+
         # Binary file (create a simple binary file)
         binary_file = tmp_path / "binary.bin"
         binary_file.write_bytes(b'\x00\x01\x02\x03')
         assert executor._is_binary(binary_file)
-        
+
         # Image (by extension)
         image_file = tmp_path / "image.png"
         image_file.write_bytes(b'\x89PNG')
@@ -625,12 +625,12 @@ class TestDiscoveryExecutor:
 
 class TestSemanticChunker:
     """Unit tests for SemanticChunker"""
-    
+
     @pytest.fixture
     def chunker(self):
         from src.services.indexing.chunking import SemanticChunker
         return SemanticChunker(target_chunk_size=1000, chunk_overlap=200)
-    
+
     def test_chunk_small_function_single_chunk(self, chunker, tmp_path):
         """Test that small functions become single chunks"""
         # Arrange
@@ -641,18 +641,18 @@ function greet(name: string): string {
 """
         file = tmp_path / "test.ts"
         file.write_text(code)
-        
+
         # Mock AST (simplified)
         mock_ast = Mock()
-        
+
         # Act
         chunks = chunker.chunk_file(file, mock_ast, 'typescript', str(tmp_path))
-        
+
         # Assert
         assert len(chunks) == 1
         assert chunks[0].chunk_type in ['function', 'block']
         assert 'greet' in chunks[0].content
-    
+
     def test_chunk_large_class_multiple_chunks(self, chunker, tmp_path):
         """Test that large classes are split into chunks"""
         # Arrange
@@ -666,18 +666,18 @@ class LargeClass {
 """
         file = tmp_path / "test.ts"
         file.write_text(code * 50)  # Make it large
-        
+
         mock_ast = Mock()
-        
+
         # Act
         chunks = chunker.chunk_file(file, mock_ast, 'typescript', str(tmp_path))
-        
+
         # Assert
         assert len(chunks) > 1
         # Each chunk should preserve class context
         for chunk in chunks:
             assert 'LargeClass' in chunk.content or chunk.parent_context == 'LargeClass'
-    
+
     def test_preserves_semantic_boundaries(self, chunker, tmp_path):
         """Test that chunks don't split in middle of functions"""
         code = """
@@ -695,10 +695,10 @@ function func2() {
 """
         file = tmp_path / "test.ts"
         file.write_text(code)
-        
+
         mock_ast = Mock()
         chunks = chunker.chunk_file(file, mock_ast, 'typescript', str(tmp_path))
-        
+
         # Each chunk should be a complete function
         for chunk in chunks:
             # Should have matching braces
@@ -716,7 +716,7 @@ from src.utils.validators import Validators
 
 class TestValidators:
     """Unit tests for validation utilities"""
-    
+
     def test_validate_file_path_accepts_valid_paths(self):
         """Test that valid file paths are accepted"""
         valid_paths = [
@@ -724,11 +724,11 @@ class TestValidators:
             "README.md",
             "path/to/file.py",
         ]
-        
+
         for path in valid_paths:
             result = Validators.validate_file_path(path)
             assert result == path
-    
+
     def test_validate_file_path_rejects_parent_traversal(self):
         """Test that parent directory traversal is rejected"""
         invalid_paths = [
@@ -736,19 +736,19 @@ class TestValidators:
             "src/../../secrets.txt",
             "path/../../../file.txt",
         ]
-        
+
         for path in invalid_paths:
             with pytest.raises(ValueError, match="cannot contain"):
                 Validators.validate_file_path(path)
-    
+
     def test_validate_file_path_rejects_empty_paths(self):
         """Test that empty paths are rejected"""
         with pytest.raises(ValueError, match="cannot be empty"):
             Validators.validate_file_path("")
-        
+
         with pytest.raises(ValueError, match="cannot be empty"):
             Validators.validate_file_path("   ")
-    
+
     @pytest.mark.parametrize("value,expected", [
         (0, 0.0),
         (50, 50.0),
@@ -760,24 +760,24 @@ class TestValidators:
         """Test percentage validation with valid values"""
         result = Validators.validate_percentage(value)
         assert result == expected
-    
+
     @pytest.mark.parametrize("value", [-1, -0.1, 100.1, 101, 1000])
     def test_validate_percentage_rejects_invalid_values(self, value):
         """Test percentage validation rejects out-of-range values"""
         with pytest.raises(ValueError, match="between 0 and 100"):
             Validators.validate_percentage(value)
-    
+
     @pytest.mark.parametrize("complexity", ["low", "medium", "high"])
     def test_validate_complexity_accepts_valid_values(self, complexity):
         """Test complexity validation with valid values"""
         result = Validators.validate_complexity(complexity)
         assert result == complexity
-    
+
     def test_validate_complexity_rejects_invalid_values(self):
         """Test complexity validation rejects invalid values"""
         with pytest.raises(ValueError, match="must be low, medium, or high"):
             Validators.validate_complexity("invalid")
-    
+
     @pytest.mark.parametrize("model_name", [
         "qwen2.5-coder:7b",
         "bge-m3",
@@ -788,7 +788,7 @@ class TestValidators:
         """Test model name validation with valid names"""
         result = Validators.validate_model_name(model_name)
         assert result == model_name
-    
+
     @pytest.mark.parametrize("model_name", [
         "invalid model",
         "model/with/slash",
@@ -931,24 +931,24 @@ from src.main import app
 @pytest.mark.integration
 class TestHealthEndpoint:
     """Integration tests for health endpoint"""
-    
+
     @pytest.mark.asyncio
     async def test_health_check_returns_200(self):
         """Test health endpoint returns 200 OK"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get("/health")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["status"] == "healthy"
             assert "version" in data
-    
+
     @pytest.mark.asyncio
     async def test_health_check_includes_ollama_status(self):
         """Test health check includes Ollama status"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get("/health")
-            
+
             data = response.json()
             assert "services" in data
             assert "ollama" in data["services"]
@@ -958,13 +958,13 @@ class TestHealthEndpoint:
 @pytest.mark.integration
 class TestIndexingAPI:
     """Integration tests for indexing endpoints"""
-    
+
     @pytest.fixture
     async def client(self):
         """Create test client"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             yield client
-    
+
     @pytest.mark.asyncio
     async def test_start_indexing_creates_job(self, client, tmp_path):
         """Test that starting indexing creates a job"""
@@ -972,7 +972,7 @@ class TestIndexingAPI:
         workspace = tmp_path / "test-project"
         workspace.mkdir()
         (workspace / "index.ts").write_text("console.log('test');")
-        
+
         # Act
         response = await client.post(
             "/api/indexing/start",
@@ -984,13 +984,13 @@ class TestIndexingAPI:
                 }
             }
         )
-        
+
         # Assert
         assert response.status_code == 200
         data = response.json()
         assert "indexing_id" in data
         assert data["status"] == "started"
-    
+
     @pytest.mark.asyncio
     async def test_get_indexing_status(self, client, tmp_path):
         """Test getting indexing status"""
@@ -998,16 +998,16 @@ class TestIndexingAPI:
         workspace = tmp_path / "test-project"
         workspace.mkdir()
         (workspace / "index.ts").write_text("test")
-        
+
         start_response = await client.post(
             "/api/indexing/start",
             json={"workspace_path": str(workspace)}
         )
         indexing_id = start_response.json()["indexing_id"]
-        
+
         # Get status
         status_response = await client.get(f"/api/indexing/status?indexing_id={indexing_id}")
-        
+
         assert status_response.status_code == 200
         data = status_response.json()
         assert data["indexing_id"] == indexing_id
@@ -1018,12 +1018,12 @@ class TestIndexingAPI:
 @pytest.mark.integration
 class TestChatAPI:
     """Integration tests for chat endpoints"""
-    
+
     @pytest.fixture
     async def client(self):
         async with AsyncClient(app=app, base_url="http://test") as client:
             yield client
-    
+
     @pytest.mark.asyncio
     async def test_send_chat_message_returns_response(self, client):
         """Test sending a chat message"""
@@ -1038,17 +1038,17 @@ class TestChatAPI:
                 }
             }
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "message_id" in data
         assert "content" in data
-    
+
     @pytest.mark.asyncio
     async def test_get_chat_sessions(self, client):
         """Test getting chat sessions"""
         response = await client.get("/api/chat/sessions")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "sessions" in data
@@ -1067,45 +1067,45 @@ import { spawn, ChildProcess } from 'child_process';
 describe('WebSocket Integration', () => {
   let backendProcess: ChildProcess;
   let ws: WebSocket;
-  
+
   beforeAll(async () => {
     // Start backend
     backendProcess = spawn('python', ['-m', 'uvicorn', 'src.main:app', '--port', '8765'], {
       cwd: '../../backend',
     });
-    
+
     // Wait for backend to be ready
     await new Promise(resolve => setTimeout(resolve, 3000));
   });
-  
+
   afterAll(() => {
     // Stop backend
     if (backendProcess) {
       backendProcess.kill();
     }
   });
-  
+
   beforeEach(() => {
     ws = new WebSocket('ws://localhost:8765/ws?client_id=test-client');
   });
-  
+
   afterEach(() => {
     if (ws) {
       ws.close();
     }
   });
-  
+
   it('should establish connection', (done) => {
     ws.on('open', () => {
       expect(ws.readyState).toBe(WebSocket.OPEN);
       done();
     });
-    
+
     ws.on('error', (error) => {
       done(error);
     });
   });
-  
+
   it('should receive handshake acknowledgment', (done) => {
     ws.on('open', () => {
       ws.send(JSON.stringify({
@@ -1113,10 +1113,10 @@ describe('WebSocket Integration', () => {
         payload: { version: '0.1.0' },
       }));
     });
-    
+
     ws.on('message', (data) => {
       const message = JSON.parse(data.toString());
-      
+
       if (message.type === 'handshake_ack') {
         expect(message.payload).toHaveProperty('server_version');
         expect(message.payload).toHaveProperty('capabilities');
@@ -1124,10 +1124,10 @@ describe('WebSocket Integration', () => {
       }
     });
   });
-  
+
   it('should handle indexing progress events', (done) => {
     const progressEvents: any[] = [];
-    
+
     ws.on('open', () => {
       ws.send(JSON.stringify({
         type: 'indexing.start',
@@ -1137,14 +1137,14 @@ describe('WebSocket Integration', () => {
         },
       }));
     });
-    
+
     ws.on('message', (data) => {
       const message = JSON.parse(data.toString());
-      
+
       if (message.type === 'indexing.progress') {
         progressEvents.push(message.payload);
       }
-      
+
       if (message.type === 'indexing.complete') {
         expect(progressEvents.length).toBeGreaterThan(0);
         expect(progressEvents[0]).toHaveProperty('phase');
@@ -1171,31 +1171,31 @@ import { promises as fs } from 'fs';
 
 export class E2ETestHelper {
   private workspaceRoot: string;
-  
+
   constructor() {
     this.workspaceRoot = path.join(__dirname, '../../../test-workspace');
   }
-  
+
   async setupTestWorkspace(): Promise<string> {
     // Create test workspace
     await fs.mkdir(this.workspaceRoot, { recursive: true });
-    
+
     // Create sample files
     await this.createSampleProject();
-    
+
     return this.workspaceRoot;
   }
-  
+
   async createSampleProject(): Promise<void> {
     const srcDir = path.join(this.workspaceRoot, 'src');
     await fs.mkdir(srcDir, { recursive: true });
-    
+
     // Create index.ts
     await fs.writeFile(
       path.join(srcDir, 'index.ts'),
       `console.log('Hello, LocalPilot!');`
     );
-    
+
     // Create utils.ts
     await fs.writeFile(
       path.join(srcDir, 'utils.ts'),
@@ -1203,13 +1203,13 @@ export class E2ETestHelper {
   return \`Hello, \${name}!\`;
 }`
     );
-    
+
     // Create README.md
     await fs.writeFile(
       path.join(this.workspaceRoot, 'README.md'),
       `# Test Project\n\nThis is a test project for LocalPilot E2E tests.`
     );
-    
+
     // Create package.json
     await fs.writeFile(
       path.join(this.workspaceRoot, 'package.json'),
@@ -1222,25 +1222,25 @@ export class E2ETestHelper {
       }, null, 2)
     );
   }
-  
+
   async cleanupTestWorkspace(): Promise<void> {
     await fs.rm(this.workspaceRoot, { recursive: true, force: true });
   }
-  
+
   async waitForCondition(
     condition: () => boolean | Promise<boolean>,
     timeout: number = 10000,
     interval: number = 100
   ): Promise<void> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       if (await condition()) {
         return;
       }
       await new Promise(resolve => setTimeout(resolve, interval));
     }
-    
+
     throw new Error('Timeout waiting for condition');
   }
 }
@@ -1258,39 +1258,39 @@ import { E2ETestHelper } from './setup';
 describe('E2E: Indexing Workflow', () => {
   let helper: E2ETestHelper;
   let workspaceUri: vscode.Uri;
-  
+
   before(async () => {
     helper = new E2ETestHelper();
     const workspacePath = await helper.setupTestWorkspace();
     workspaceUri = vscode.Uri.file(workspacePath);
-    
+
     // Open workspace
     await vscode.commands.executeCommand('vscode.openFolder', workspaceUri);
-    
+
     // Wait for workspace to open
     await helper.waitForCondition(
       () => vscode.workspace.workspaceFolders !== undefined
     );
   });
-  
+
   after(async () => {
     await helper.cleanupTestWorkspace();
   });
-  
+
   it('should complete full indexing workflow', async function() {
     this.timeout(60000); // 60 second timeout
-    
+
     // 1. Open LocalPilot panel
     await vscode.commands.executeCommand('localpilot.openPanel');
-    
+
     // Wait for panel to open
     await helper.waitForCondition(
       () => vscode.window.activeTextEditor !== undefined
     );
-    
+
     // 2. Start indexing
     await vscode.commands.executeCommand('localpilot.startIndexing');
-    
+
     // 3. Wait for indexing to complete
     let indexingComplete = false;
     const listener = vscode.window.onDidChangeWindowState((state) => {
@@ -1299,33 +1299,33 @@ describe('E2E: Indexing Workflow', () => {
         indexingComplete = true;
       }
     });
-    
+
     await helper.waitForCondition(() => indexingComplete, 30000);
-    
+
     listener.dispose();
-    
+
     // 4. Verify project summary is shown
     // (This would check the webview content, implementation depends on webview API access)
-    
+
     expect(indexingComplete).to.be.true;
   });
-  
+
   it('should handle chat interaction after indexing', async function() {
     this.timeout(30000);
-    
+
     // Assuming indexing is complete from previous test
-    
+
     // 1. Send chat message
     await vscode.commands.executeCommand(
       'localpilot.sendChatMessage',
       'What does this project do?'
     );
-    
+
     // 2. Wait for response
     let responseReceived = false;
-    
+
     await helper.waitForCondition(() => responseReceived, 10000);
-    
+
     expect(responseReceived).to.be.true;
   });
 });
@@ -1346,17 +1346,17 @@ from typing import Dict
 
 class SampleProjectFixtures:
     """Manage sample project fixtures for testing"""
-    
+
     @staticmethod
     def create_typescript_project(base_path: Path) -> Path:
         """Create a sample TypeScript project"""
         project = base_path / "typescript-project"
         project.mkdir(parents=True)
-        
+
         # Source files
         src = project / "src"
         src.mkdir()
-        
+
         (src / "index.ts").write_text("""
 import { greet } from './utils';
 
@@ -1366,7 +1366,7 @@ function main() {
 
 main();
 """)
-        
+
         (src / "utils.ts").write_text("""
 export function greet(name: string): string {
     return `Hello, ${name}!`;
@@ -1376,7 +1376,7 @@ export function add(a: number, b: number): number {
     return a + b;
 }
 """)
-        
+
         # Config files
         (project / "package.json").write_text("""{
     "name": "typescript-project",
@@ -1385,7 +1385,7 @@ export function add(a: number, b: number): number {
         "typescript": "^5.0.0"
     }
 }""")
-        
+
         (project / "tsconfig.json").write_text("""{
     "compilerOptions": {
         "target": "ES2020",
@@ -1393,7 +1393,7 @@ export function add(a: number, b: number): number {
         "strict": true
     }
 }""")
-        
+
         (project / "README.md").write_text("""
 # TypeScript Project
 
@@ -1403,21 +1403,21 @@ A sample TypeScript project for testing.
 - Greeting functionality
 - Math utilities
 """)
-        
+
         return project
-    
+
     @staticmethod
     def create_python_project(base_path: Path) -> Path:
         """Create a sample Python project"""
         project = base_path / "python-project"
         project.mkdir(parents=True)
-        
+
         # Source files
         src = project / "src"
         src.mkdir()
-        
+
         (src / "__init__.py").write_text("")
-        
+
         (src / "main.py").write_text("""
 from .utils import greet
 
@@ -1427,7 +1427,7 @@ def main():
 if __name__ == '__main__':
     main()
 """)
-        
+
         (src / "utils.py").write_text("""
 def greet(name: str) -> str:
     return f'Hello, {name}!'
@@ -1435,7 +1435,7 @@ def greet(name: str) -> str:
 def add(a: int, b: int) -> int:
     return a + b
 """)
-        
+
         # Config files
         (project / "setup.py").write_text("""
 from setuptools import setup, find_packages
@@ -1446,13 +1446,13 @@ setup(
     packages=find_packages(),
 )
 """)
-        
+
         (project / "README.md").write_text("""
 # Python Project
 
 A sample Python project for testing.
 """)
-        
+
         return project
 
 
@@ -1473,10 +1473,10 @@ def large_project(tmp_path):
     """Fixture providing a large project for performance testing"""
     project = tmp_path / "large-project"
     project.mkdir()
-    
+
     src = project / "src"
     src.mkdir()
-    
+
     # Create 100 files
     for i in range(100):
         (src / f"file{i}.ts").write_text(f"""
@@ -1484,7 +1484,7 @@ export function func{i}() {{
     return {i};
 }}
 """)
-    
+
     return project
 ```
 
@@ -1498,27 +1498,27 @@ from unittest.mock import AsyncMock
 
 class MockLLMService:
     """Mock LLM service for testing"""
-    
+
     def __init__(self, responses: List[str] = None):
         self.responses = responses or ["Mock response"]
         self.call_count = 0
-        
+
     async def generate(self, prompt: str, **kwargs) -> str:
         """Generate a mock response"""
         response = self.responses[self.call_count % len(self.responses)]
         self.call_count += 1
         return response
-    
+
     async def stream_generate(self, prompt: str, **kwargs) -> AsyncGenerator[str, None]:
         """Stream a mock response"""
         response = self.responses[self.call_count % len(self.responses)]
         self.call_count += 1
-        
+
         # Yield response in chunks
         words = response.split()
         for word in words:
             yield word + " "
-    
+
     async def embed(self, text: str) -> List[float]:
         """Generate mock embedding"""
         # Return a simple mock embedding
@@ -1527,15 +1527,15 @@ class MockLLMService:
 
 class MockVectorStore:
     """Mock vector store for testing"""
-    
+
     def __init__(self):
         self.documents: List[Dict] = []
         self.search_results: List[Dict] = []
-    
+
     async def add_documents(self, documents: List[Dict]):
         """Add mock documents"""
         self.documents.extend(documents)
-    
+
     async def search(
         self,
         query_embedding: List[float],
@@ -1544,14 +1544,14 @@ class MockVectorStore:
     ) -> List[Dict]:
         """Return mock search results"""
         return self.search_results[:top_k]
-    
+
     async def delete_by_metadata(self, filters: Dict):
         """Delete mock documents"""
         self.documents = [
             doc for doc in self.documents
             if not all(doc['metadata'].get(k) == v for k, v in filters.items())
         ]
-    
+
     def set_search_results(self, results: List[Dict]):
         """Set mock search results"""
         self.search_results = results
@@ -1573,18 +1573,18 @@ By Component:
     - FileOperations (Act Mode)
     - WebSocketService
     - SemanticChunker
-  
+
   Important Components (>=75%):
     - ChatService
     - PlanService
     - TreeSitterParser
     - EmbeddingService
     - VectorStore
-  
+
   UI Components (>=60%):
     - React components
     - Focus on logic over rendering
-  
+
   Utilities (>=80%):
     - Validators
     - Helpers
@@ -1633,51 +1633,51 @@ from src.services.indexing.indexing_service import IndexingService
 @pytest.mark.performance
 class TestIndexingPerformance:
     """Performance tests for indexing"""
-    
+
     @pytest.mark.asyncio
     async def test_index_small_project_under_30_seconds(self, small_project, indexing_service):
         """Test that small project (< 100 files) indexes in < 30s"""
         start_time = time.time()
-        
+
         await indexing_service.index_workspace(str(small_project))
-        
+
         duration = time.time() - start_time
         assert duration < 30, f"Indexing took {duration}s, expected < 30s"
-    
+
     @pytest.mark.asyncio
     async def test_index_medium_project_under_5_minutes(self, medium_project, indexing_service):
         """Test that medium project (500 files) indexes in < 5 min"""
         start_time = time.time()
-        
+
         await indexing_service.index_workspace(str(medium_project))
-        
+
         duration = time.time() - start_time
         assert duration < 300, f"Indexing took {duration}s, expected < 300s"
-    
+
     @pytest.mark.asyncio
     async def test_rag_retrieval_under_500ms(self, indexed_workspace, rag_service):
         """Test that RAG retrieval is < 500ms"""
         query = "How does authentication work?"
-        
+
         start_time = time.time()
-        
+
         await rag_service.retrieve_context(query, top_k=5)
-        
+
         duration = (time.time() - start_time) * 1000  # Convert to ms
         assert duration < 500, f"RAG retrieval took {duration}ms, expected < 500ms"
-    
+
     @pytest.mark.asyncio
     async def test_embedding_generation_throughput(self, embedding_service):
         """Test embedding generation throughput"""
         texts = ["Sample text" for _ in range(100)]
-        
+
         start_time = time.time()
-        
+
         await embedding_service.embed_batch(texts, batch_size=32)
-        
+
         duration = time.time() - start_time
         throughput = len(texts) / duration
-        
+
         assert throughput > 20, f"Throughput {throughput} docs/s, expected > 20 docs/s"
 ```
 
@@ -1705,109 +1705,109 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [18.x]
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      
+
       - name: Install dependencies
         run: |
           cd extension
           npm ci
-      
+
       - name: Run linter
         run: |
           cd extension
           npm run lint
-      
+
       - name: Run type check
         run: |
           cd extension
           npm run type-check
-      
+
       - name: Run tests
         run: |
           cd extension
           npm test
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
           files: ./extension/coverage/lcov.info
           flags: extension
-  
+
   test-backend:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['3.10', '3.11']
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      
+
       - name: Install dependencies
         run: |
           cd backend
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-      
+
       - name: Run linter
         run: |
           cd backend
           flake8 src/
-      
+
       - name: Run type check
         run: |
           cd backend
           mypy src/
-      
+
       - name: Run tests
         run: |
           cd backend
           pytest --cov=src --cov-report=xml
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
           files: ./backend/coverage.xml
           flags: backend
-  
+
   integration-tests:
     runs-on: ubuntu-latest
     needs: [test-extension, test-backend]
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-      
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
+
       - name: Setup Ollama
         run: |
           curl https://ollama.ai/install.sh | sh
           ollama pull qwen2.5-coder:7b-instruct-q4_K_M
-      
+
       - name: Install dependencies
         run: |
           cd extension && npm ci
           cd ../backend && pip install -r requirements.txt
-      
+
       - name: Run integration tests
         run: |
           ./scripts/run-integration-tests.sh

@@ -1,4 +1,8 @@
-from app.services.rag.metrics import EvaluationHarness, MetricsCalculator, RetrievalMetrics
+from app.services.rag.metrics import (
+    EvaluationHarness,
+    MetricsCalculator,
+    RetrievalMetrics,
+)
 
 
 def test_ndcg_with_graded_relevance_scores():

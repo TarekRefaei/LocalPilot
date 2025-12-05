@@ -115,7 +115,7 @@ class VectorStore:
             # Ensure all metadata values are strings or numbers (Chroma requirement)
             flattened_metadata = {}
             for key, value in metadata.items():
-                if isinstance(value, (str, int, float, bool)):
+                if isinstance(value, str | int | float | bool):
                     flattened_metadata[key] = value
                 elif isinstance(value, list):
                     # Convert lists to comma-separated strings
@@ -286,7 +286,9 @@ class VectorStore:
             chunk_types = {}
 
         avg_search_time = (
-            self._total_search_time / self._search_count if self._search_count > 0 else 0.0
+            self._total_search_time / self._search_count
+            if self._search_count > 0
+            else 0.0
         )
 
         return {

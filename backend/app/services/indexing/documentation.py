@@ -23,7 +23,9 @@ class DocumentationExtractor:
         code_exts = {".ts", ".tsx", ".js", ".jsx", ".py"}
         return [f for f in files if f.suffix.lower() in code_exts]
 
-    def process_markdown(self, filepath: Path, workspace_path: str) -> list[DocumentChunk]:
+    def process_markdown(
+        self, filepath: Path, workspace_path: str
+    ) -> list[DocumentChunk]:
         try:
             content = filepath.read_text(encoding="utf-8")
         except Exception:
@@ -39,7 +41,9 @@ class DocumentationExtractor:
                     id=f"{filepath.stem}-{i}",
                     content=sec["content"],
                     source_file=str(
-                        Path(filepath).resolve().relative_to(Path(workspace_path).resolve())
+                        Path(filepath)
+                        .resolve()
+                        .relative_to(Path(workspace_path).resolve())
                     ),
                     chunk_type="markdown",
                     title=sec.get("title"),
@@ -57,7 +61,11 @@ class DocumentationExtractor:
                 if current["content"]:
                     sections.append(current)
                 level = len(m.group(1))
-                current = {"content": line + "\n", "title": m.group(2), "section": f"h{level}"}
+                current = {
+                    "content": line + "\n",
+                    "title": m.group(2),
+                    "section": f"h{level}",
+                }
             else:
                 current["content"] += line + "\n"
         if current["content"]:
@@ -77,7 +85,9 @@ class DocumentationExtractor:
                 continue
             after = content[m.end() : m.end() + 200]
             func = re.search(r"(?:function\s+)?(\w+)\s*\(", after)
-            docs.append({"content": cleaned, "function_name": func.group(1) if func else None})
+            docs.append(
+                {"content": cleaned, "function_name": func.group(1) if func else None}
+            )
         return docs
 
     def extract_python_docstrings(self, content: str) -> list[dict]:
@@ -90,10 +100,14 @@ class DocumentationExtractor:
                 continue
             before = content[max(0, m.start() - 200) : m.start()]
             func = re.search(r"(?:def|class)\s+(\w+)", before)
-            docs.append({"content": doc, "function_name": func.group(1) if func else None})
+            docs.append(
+                {"content": doc, "function_name": func.group(1) if func else None}
+            )
         return docs
 
-    def extract_docstrings(self, filepath: Path, workspace_path: str) -> list[DocumentChunk]:
+    def extract_docstrings(
+        self, filepath: Path, workspace_path: str
+    ) -> list[DocumentChunk]:
         try:
             content = filepath.read_text(encoding="utf-8")
         except Exception:
@@ -108,7 +122,9 @@ class DocumentationExtractor:
                         id=f"{filepath.stem}-jsdoc-{i}",
                         content=d["content"],
                         source_file=str(
-                            Path(filepath).resolve().relative_to(Path(workspace_path).resolve())
+                            Path(filepath)
+                            .resolve()
+                            .relative_to(Path(workspace_path).resolve())
                         ),
                         chunk_type="jsdoc",
                         title=d.get("function_name"),
@@ -122,7 +138,9 @@ class DocumentationExtractor:
                         id=f"{filepath.stem}-docstring-{i}",
                         content=d["content"],
                         source_file=str(
-                            Path(filepath).resolve().relative_to(Path(workspace_path).resolve())
+                            Path(filepath)
+                            .resolve()
+                            .relative_to(Path(workspace_path).resolve())
                         ),
                         chunk_type="docstring",
                         title=d.get("function_name"),

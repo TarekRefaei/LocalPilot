@@ -93,7 +93,10 @@ async def test_ts_class_and_es_imports(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(SemanticChunker, "MIN_CHUNK_SIZE", 1, raising=False)
 
     content = (
-        "import { map as fmap } from 'lodash'\n\n" "export class A {\n" "  m() { return; }\n" "}\n"
+        "import { map as fmap } from 'lodash'\n\n"
+        "export class A {\n"
+        "  m() { return; }\n"
+        "}\n"
     )
     fp = tmp_path / "cls.ts"
     fp.write_text(content, encoding="utf-8")
@@ -109,7 +112,13 @@ async def test_ts_class_and_es_imports(monkeypatch, tmp_path: Path):
 async def test_python_class_and_top_level_func(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(SemanticChunker, "MIN_CHUNK_SIZE", 1, raising=False)
 
-    content = "class A:\n" "    def x(self):\n" "        return 1\n\n" "def y():\n" "    return 2\n"
+    content = (
+        "class A:\n"
+        "    def x(self):\n"
+        "        return 1\n\n"
+        "def y():\n"
+        "    return 2\n"
+    )
     fp = tmp_path / "mix.py"
     fp.write_text(content, encoding="utf-8")
 

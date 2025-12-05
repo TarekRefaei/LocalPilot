@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #8: DEVELOPMENT_GUIDE.md
 # LocalPilot - Development Guide
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation
 **Author:** LocalPilot Development Team
 
 ---
@@ -278,7 +278,7 @@ python -m src.db.init_db
 # ✓ Backend dependencies: OK
 # ✓ Tree-sitter grammars: OK
 # ✓ Database initialized: OK
-# 
+#
 # Setup complete! Ready to develop.
 ```
 
@@ -297,19 +297,19 @@ python -m src.db.init_db
     // TypeScript/JavaScript
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
-    
+
     // Python
     "ms-python.python",
     "ms-python.vscode-pylance",
     "charliermarsh.ruff",
-    
+
     // Testing
     "hbenl.vscode-test-explorer",
     "ms-vscode.test-adapter-converter",
-    
+
     // Git
     "eamodio.gitlens",
-    
+
     // Utilities
     "streetsidesoftware.code-spell-checker",
     "editorconfig.editorconfig"
@@ -325,17 +325,17 @@ python -m src.db.init_db
   // TypeScript
   "typescript.tsdk": "extension/node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  
+
   // ESLint
   "eslint.validate": ["javascript", "typescript", "typescriptreact"],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
-  
+
   // Prettier
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  
+
   // Python
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/bin/python",
   "python.linting.enabled": true,
@@ -346,7 +346,7 @@ python -m src.db.init_db
   "python.testing.pytestArgs": [
     "backend/tests"
   ],
-  
+
   // Files
   "files.exclude": {
     "**/__pycache__": true,
@@ -356,12 +356,12 @@ python -m src.db.init_db
     "**/dist": true,
     "**/.next": true
   },
-  
+
   // Editor
   "editor.rulers": [100],
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
-  
+
   // Python specific
   "[python]": {
     "editor.tabSize": 4,
@@ -744,38 +744,38 @@ import { EventEmitter } from 'events';
 
 describe('WebSocketService', () => {
   let service: WebSocketService;
-  
+
   beforeEach(() => {
     service = new WebSocketService();
   });
-  
+
   afterEach(() => {
     service.disconnect();
   });
-  
+
   describe('connect', () => {
     it('should establish connection successfully', async () => {
       // RED: Test fails (method not implemented yet)
       const result = await service.connect('ws://localhost:8765');
-      
+
       assert.strictEqual(result, true);
       assert.strictEqual(service.isConnected(), true);
     });
-    
+
     it('should emit connected event', async () => {
       // Arrange
       let eventEmitted = false;
       service.on('connected', () => {
         eventEmitted = true;
       });
-      
+
       // Act
       await service.connect('ws://localhost:8765');
-      
+
       // Assert
       assert.strictEqual(eventEmitted, true);
     });
-    
+
     it('should handle connection failure gracefully', async () => {
       // Test error handling
       await assert.rejects(
@@ -786,19 +786,19 @@ describe('WebSocketService', () => {
       );
     });
   });
-  
+
   describe('send', () => {
     it('should send message when connected', async () => {
       // Arrange
       await service.connect('ws://localhost:8765');
-      
+
       // Act
       const result = service.send('test.event', { data: 'test' });
-      
+
       // Assert
       assert.strictEqual(result, true);
     });
-    
+
     it('should throw error when not connected', () => {
       // Not connected yet
       assert.throws(
@@ -843,12 +843,12 @@ from src.services.indexing.discovery import DiscoveryExecutor
 
 class TestDiscoveryExecutor:
     """Test suite for DiscoveryExecutor"""
-    
+
     @pytest.fixture
     def executor(self):
         """Create executor instance"""
         return DiscoveryExecutor()
-    
+
     @pytest.fixture
     def sample_workspace(self, tmp_path):
         """Create a sample workspace for testing"""
@@ -859,44 +859,44 @@ class TestDiscoveryExecutor:
         (tmp_path / "README.md").write_text("# Test Project")
         (tmp_path / "node_modules").mkdir()
         (tmp_path / "node_modules" / "package").write_text("ignored")
-        
+
         return tmp_path
-    
+
     @pytest.mark.asyncio
     async def test_scan_workspace(self, executor, sample_workspace):
         """Test workspace scanning"""
         # RED: Write test first
         result = await executor.execute(str(sample_workspace))
-        
+
         # Assert
         assert result.total_files == 3  # src/index.ts, src/utils.ts, README.md
         assert result.files_by_type['typescript'] == 2
         assert result.files_by_type['markdown'] == 1
-    
+
     @pytest.mark.asyncio
     async def test_exclude_patterns(self, executor, sample_workspace):
         """Test that exclude patterns work"""
         # node_modules should be excluded
         result = await executor.execute(str(sample_workspace))
-        
+
         # No files from node_modules
         assert all('node_modules' not in str(f) for f in result.files)
-    
+
     @pytest.mark.asyncio
     async def test_detect_project_type(self, executor, tmp_path):
         """Test project type detection"""
         # Create package.json
         (tmp_path / "package.json").write_text('{"dependencies": {"react": "^18.0.0"}}')
-        
+
         result = await executor.execute(str(tmp_path))
-        
+
         assert result.project_type == 'react'
-    
+
     @pytest.mark.asyncio
     async def test_estimate_duration(self, executor, sample_workspace):
         """Test indexing duration estimation"""
         result = await executor.execute(str(sample_workspace))
-        
+
         # Should estimate some duration
         assert result.estimated_duration_seconds > 0
         # For 3 files, should be quick
@@ -905,7 +905,7 @@ class TestDiscoveryExecutor:
 
 class TestIndexingService:
     """Test suite for IndexingService"""
-    
+
     @pytest.fixture
     async def service(self, vector_store_mock, embedding_service_mock):
         """Create service with mocked dependencies"""
@@ -913,26 +913,26 @@ class TestIndexingService:
             vector_store=vector_store_mock,
             embedding_service=embedding_service_mock
         )
-    
+
     @pytest.mark.asyncio
     async def test_index_workspace_success(self, service, sample_workspace):
         """Test successful workspace indexing"""
         # RED: Write test
         result = await service.index_workspace(str(sample_workspace))
-        
+
         # Assert
         assert result.status == 'completed'
         assert result.statistics.indexed_files > 0
         assert result.project_summary is not None
-    
+
     @pytest.mark.asyncio
     async def test_index_workspace_emits_progress(self, service, sample_workspace):
         """Test that progress events are emitted"""
         progress_events = []
-        
+
         async for progress in service.index_workspace(str(sample_workspace)):
             progress_events.append(progress)
-        
+
         # Should have events for all 5 phases
         phases = [e.phase for e in progress_events]
         assert 'discovery' in phases
@@ -940,15 +940,15 @@ class TestIndexingService:
         assert 'structure' in phases
         assert 'chunking' in phases
         assert 'summarization' in phases
-    
+
     @pytest.mark.asyncio
     async def test_handles_parsing_errors_gracefully(self, service, tmp_path):
         """Test error handling for unparseable files"""
         # Create file with syntax error
         (tmp_path / "broken.ts").write_text("const x = {{{")
-        
+
         result = await service.index_workspace(str(tmp_path))
-        
+
         # Should complete with some failures
         assert result.status == 'completed'
         assert result.statistics.failed_files > 0
@@ -990,10 +990,10 @@ Coverage Targets:
     - RAG Service
     - File Operations (Act Mode)
     - WebSocket Communication
-  
+
   UI Components: >= 60%
     - Focus on logic, not rendering details
-  
+
   Utilities: >= 80%
     - Pure functions should be well-tested
 ```
@@ -1200,7 +1200,7 @@ echo "✅ All checks passed!"
 
 /**
  * Use JSDoc for all public APIs
- * 
+ *
  * @param param1 - Description of param1
  * @param param2 - Description of param2
  * @returns Description of return value
@@ -1208,18 +1208,18 @@ echo "✅ All checks passed!"
 export function exampleFunction(param1: string, param2: number): boolean {
   // Use descriptive variable names
   const isValid = validateInput(param1);
-  
+
   // Early returns for error cases
   if (!isValid) {
     return false;
   }
-  
+
   // Prefer const over let
   const result = processData(param2);
-  
+
   // Use template literals
   console.log(`Processing ${param1} with value ${param2}`);
-  
+
   return result > 0;
 }
 
@@ -1361,18 +1361,18 @@ def process_user_data(
 ) -> UserData:
     """
     Process user data with optional configuration.
-    
+
     Args:
         user_id: Unique identifier for the user
         options: Optional configuration dictionary
-    
+
     Returns:
         UserData object with processed information
-    
+
     Raises:
         ValueError: If user_id is empty
         RuntimeError: If processing fails
-    
+
     Example:
         >>> data = process_user_data("user-123")
         >>> print(data.name)
@@ -1380,30 +1380,30 @@ def process_user_data(
     # Early validation
     if not user_id:
         raise ValueError("user_id cannot be empty")
-    
+
     # Use options.get() for optional parameters
     timeout = options.get('timeout', DEFAULT_TIMEOUT_SECONDS) if options else DEFAULT_TIMEOUT_SECONDS
-    
+
     # Type hints for local variables (when helpful)
     result: UserData
-    
+
     try:
         result = _fetch_user(user_id, timeout)
     except Exception as e:
         logger.error(f"Failed to process user {user_id}: {e}")
         raise RuntimeError(f"User processing failed") from e
-    
+
     return result
 
 
 def _fetch_user(user_id: str, timeout: int) -> UserData:
     """
     Private helper function (prefixed with underscore).
-    
+
     Args:
         user_id: User identifier
         timeout: Request timeout in seconds
-    
+
     Returns:
         UserData object
     """
@@ -1414,19 +1414,19 @@ def _fetch_user(user_id: str, timeout: int) -> UserData:
 async def async_process_data(data: List[str]) -> List[str]:
     """
     Async functions clearly marked with 'async' prefix in name when helpful.
-    
+
     Args:
         data: List of data to process
-    
+
     Returns:
         Processed data list
     """
     processed = []
-    
+
     for item in data:
         result = await _async_helper(item)
         processed.append(result)
-    
+
     return processed
 
 
@@ -1440,35 +1440,35 @@ async def _async_helper(item: str) -> str:
 class DataProcessor:
     """
     Class for processing data.
-    
+
     Attributes:
         max_retries: Maximum number of retry attempts
         timeout: Timeout in seconds
     """
-    
+
     def __init__(self, max_retries: int = MAX_RETRIES):
         """
         Initialize processor.
-        
+
         Args:
             max_retries: Maximum retry attempts
         """
         self.max_retries = max_retries
         self._cache: Dict[str, str] = {}  # Private attribute
-    
+
     def process(self, data: str) -> str:
         """
         Process data.
-        
+
         Args:
             data: Input data
-        
+
         Returns:
             Processed data
         """
         # Method implementation
         return data.upper()
-    
+
     def _private_method(self) -> None:
         """Private method (prefixed with underscore)."""
         pass
@@ -1551,7 +1551,7 @@ Python:
   Classes: PascalCase (UserService, DataProcessor)
   Constants: UPPER_SNAKE_CASE (MAX_RETRIES, API_URL)
   Private: _prefixed (_private_method, _internal_cache)
-  
+
 Files:
   TypeScript: PascalCase for components (Button.tsx, ChatView.tsx)
   TypeScript: camelCase for utilities (validators.ts, helpers.ts)
@@ -1589,7 +1589,7 @@ Example Good Prompt:
 """
 I'm building a LocalPilot VS Code extension (TypeScript + Python backend).
 
-Task: Implement a WebSocket reconnection mechanism for the extension's 
+Task: Implement a WebSocket reconnection mechanism for the extension's
 backend communication layer.
 
 Requirements:
@@ -1838,26 +1838,26 @@ import * as vscode from 'vscode';
 
 export class Logger {
   private output: vscode.OutputChannel;
-  
+
   constructor(name: string) {
     this.output = vscode.window.createOutputChannel(name);
   }
-  
+
   debug(message: string, ...args: any[]) {
     this.output.appendLine(`[DEBUG] ${message} ${JSON.stringify(args)}`);
   }
-  
+
   info(message: string) {
     this.output.appendLine(`[INFO] ${message}`);
   }
-  
+
   error(message: string, error?: Error) {
     this.output.appendLine(`[ERROR] ${message}`);
     if (error) {
       this.output.appendLine(error.stack || error.message);
     }
   }
-  
+
   show() {
     this.output.show();
   }
@@ -1942,14 +1942,14 @@ def profile(func):
     def wrapper(*args, **kwargs):
         profiler = cProfile.Profile()
         profiler.enable()
-        
+
         result = func(*args, **kwargs)
-        
+
         profiler.disable()
         stats = pstats.Stats(profiler)
         stats.sort_stats('cumulative')
         stats.print_stats(20)  # Top 20
-        
+
         return result
     return wrapper
 

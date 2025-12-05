@@ -8,7 +8,15 @@ from app.services.indexing.documentation import DocumentationExtractor
 def test_markdown_sectioning(tmp_path: Path) -> None:
     md = tmp_path / "README.md"
     md_content = (
-        "# Title\n" "\n" "Intro\n" "\n" "## Section A\n" "Text A\n" "\n" "### Sub A1\n" "Text A1\n"
+        "# Title\n"
+        "\n"
+        "Intro\n"
+        "\n"
+        "## Section A\n"
+        "Text A\n"
+        "\n"
+        "### Sub A1\n"
+        "Text A1\n"
     )
     md.write_text(md_content, encoding="utf-8")
 

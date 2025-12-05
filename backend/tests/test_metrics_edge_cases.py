@@ -1,4 +1,8 @@
-from app.services.rag.metrics import EvaluationHarness, MetricsCalculator, RetrievalMetrics
+from app.services.rag.metrics import (
+    EvaluationHarness,
+    MetricsCalculator,
+    RetrievalMetrics,
+)
 
 
 def test_precision_and_recall_edge_cases():

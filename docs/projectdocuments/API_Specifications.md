@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #4: API_SPECIFICATION.md
 # LocalPilot - API Specification
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation
 **Author:** LocalPilot Backend Team
 
 ---
@@ -1609,9 +1609,9 @@ export class LocalPilotBackendClient {
 
     this.reconnectAttempts++;
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-    
+
     console.log(`Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`);
-    
+
     await new Promise(resolve => setTimeout(resolve, delay));
     await this.connect();
   }
@@ -1722,7 +1722,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 async def handle_message(client_id: str, message: dict):
     event_type = message.get("type")
     payload = message.get("payload")
-    
+
     if event_type == "handshake":
         await handle_handshake(client_id, payload)
     elif event_type == "chat.message":
@@ -1734,19 +1734,19 @@ async def handle_message(client_id: str, message: dict):
 async def handle_chat_message(client_id: str, payload: dict):
     # Get RAG context
     context = await rag_service.retrieve_context(payload["message"])
-    
+
     # Send stream start
     await manager.send_personal(client_id, "chat.stream.start", {
         "message_id": generate_id(),
         "rag_context": context
     })
-    
+
     # Stream LLM response
     async for chunk in llm_service.stream_chat(payload["message"], context):
         await manager.send_personal(client_id, "chat.stream.chunk", {
             "chunk": chunk
         })
-    
+
     # Send stream complete
     await manager.send_personal(client_id, "chat.stream.complete", {
         "message_id": generate_id(),

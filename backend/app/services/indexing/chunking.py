@@ -98,7 +98,9 @@ class SemanticChunker:
         """Initialize chunker with parser."""
         self.parser = TreeSitterParser()
 
-    def chunk_file(self, filepath: Path, language: str, workspace_path: str) -> list[CodeChunk]:
+    def chunk_file(
+        self, filepath: Path, language: str, workspace_path: str
+    ) -> list[CodeChunk]:
         """Chunk a file into semantic units with metadata.
 
         Strategy: Deterministic lexical chunking based on language-specific patterns.
@@ -108,7 +110,9 @@ class SemanticChunker:
         """
         return self._chunk_lexical(filepath, workspace_path, language)
 
-    def _chunk_typescript(self, filepath: Path, ast: Node, workspace_path: str) -> list[CodeChunk]:
+    def _chunk_typescript(
+        self, filepath: Path, ast: Node, workspace_path: str
+    ) -> list[CodeChunk]:
         """Chunk TypeScript/JavaScript using AST-first strategy."""
 
         chunks: list[CodeChunk] = []
@@ -144,7 +148,9 @@ class SemanticChunker:
 
             # Large node: split by methods/nested declarations
             elif node.type == "class_declaration":
-                sub_chunks = self._split_class_declaration(node, filepath, workspace_path, imports)
+                sub_chunks = self._split_class_declaration(
+                    node, filepath, workspace_path, imports
+                )
                 chunks.extend(sub_chunks)
 
             else:
@@ -165,7 +171,9 @@ class SemanticChunker:
 
         return chunks
 
-    def _chunk_python(self, filepath: Path, ast: Node, workspace_path: str) -> list[CodeChunk]:
+    def _chunk_python(
+        self, filepath: Path, ast: Node, workspace_path: str
+    ) -> list[CodeChunk]:
         """Chunk Python using AST-first strategy."""
 
         chunks: list[CodeChunk] = []
@@ -191,7 +199,9 @@ class SemanticChunker:
                     start_line=node.start_point[0] + 1,
                     end_line=node.end_point[0] + 1,
                     language="python",
-                    chunk_type="class" if node.type == "class_definition" else "function",
+                    chunk_type=(
+                        "class" if node.type == "class_definition" else "function"
+                    ),
                     tokens=node_tokens,
                     symbols=[symbol_name] if symbol_name else [],
                     imports=imports,
@@ -200,7 +210,9 @@ class SemanticChunker:
 
             elif node.type == "class_definition":
                 # Split class into methods
-                sub_chunks = self._split_python_class(node, filepath, workspace_path, imports)
+                sub_chunks = self._split_python_class(
+                    node, filepath, workspace_path, imports
+                )
                 chunks.extend(sub_chunks)
             else:
                 chunk = CodeChunk(
@@ -219,7 +231,9 @@ class SemanticChunker:
 
         return chunks
 
-    def _chunk_lexical(self, filepath: Path, workspace_path: str, language: str) -> list[CodeChunk]:
+    def _chunk_lexical(
+        self, filepath: Path, workspace_path: str, language: str
+    ) -> list[CodeChunk]:
         """Lexical chunking: deterministic, language-aware code splitting.
 
         Strategy:
@@ -248,7 +262,9 @@ class SemanticChunker:
             # Only create chunks for meaningful content
             if chunk_tokens >= self.MIN_CHUNK_SIZE:
                 chunk = CodeChunk(
-                    id=self._make_lexical_chunk_id(filepath, workspace_path, start_line, end_line),
+                    id=self._make_lexical_chunk_id(
+                        filepath, workspace_path, start_line, end_line
+                    ),
                     content=chunk_text,
                     file_path=str(filepath.relative_to(workspace_path)),
                     start_line=start_line + 1,  # Convert to 1-indexed
@@ -298,7 +314,9 @@ class SemanticChunker:
             # TypeScript/JavaScript patterns
             if language in ["typescript", "jsx", "tsx", "javascript"]:
                 # Function declaration
-                func_match = re.match(r"^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(", line)
+                func_match = re.match(
+                    r"^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(", line
+                )
                 if func_match:
                     start = i
                     name = func_match.group(1)
@@ -600,7 +618,9 @@ class SemanticChunker:
         """Extract text content of an AST node."""
         try:
             content = filepath.read_bytes()
-            return content[node.start_byte : node.end_byte].decode("utf-8", errors="ignore")
+            return content[node.start_byte : node.end_byte].decode(
+                "utf-8", errors="ignore"
+            )
         except Exception:
             return ""
 

@@ -66,10 +66,10 @@ class TestHealthEndpoint:
         assert "ram_total_gb" in resources
 
         # All should be numbers
-        assert isinstance(resources["vram_usage_gb"], (int, float))
-        assert isinstance(resources["vram_total_gb"], (int, float))
-        assert isinstance(resources["ram_usage_gb"], (int, float))
-        assert isinstance(resources["ram_total_gb"], (int, float))
+        assert isinstance(resources["vram_usage_gb"], int | float)
+        assert isinstance(resources["vram_total_gb"], int | float)
+        assert isinstance(resources["ram_usage_gb"], int | float)
+        assert isinstance(resources["ram_total_gb"], int | float)
 
     def test_health_uptime_increases(self):
         """Uptime should increase with time."""

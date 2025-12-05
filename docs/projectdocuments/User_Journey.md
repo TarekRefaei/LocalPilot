@@ -1,9 +1,9 @@
 # 📄 DOCUMENT #3: USER_JOURNEY.md
 # LocalPilot - User Journey & UX Specification
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Foundation  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Foundation
 **Author:** LocalPilot UX Team
 
 ---
@@ -59,8 +59,8 @@ Technical Setup:
   - Has used GitHub Copilot before (can't anymore)
 
 Usage Scenario:
-  "I need to add authentication to our payment service. 
-  I want AI to help me plan the implementation and generate 
+  "I need to add authentication to our payment service.
+  I want AI to help me plan the implementation and generate
   code, but I can't send our codebase to the cloud."
 ```
 
@@ -98,8 +98,8 @@ Technical Setup:
   - No prior AI assistant experience
 
 Usage Scenario:
-  "I need to fix a bug in the checkout flow. Where do I 
-  even start? I want to ask questions about the code 
+  "I need to fix a bug in the checkout flow. Where do I
+  even start? I want to ask questions about the code
   without bothering my team."
 ```
 
@@ -137,8 +137,8 @@ Technical Setup:
   - Already uses Ollama for experiments
 
 Usage Scenario:
-  "I want to add a feature to an OSS project I just 
-  discovered. I need to understand the codebase fast 
+  "I want to add a feature to an OSS project I just
+  discovered. I need to understand the codebase fast
   and generate a solid PR, all offline."
 ```
 
@@ -160,14 +160,14 @@ Feature: First-Time Setup Experience
     Then I should see a welcome screen
     And the extension should check my system requirements
     And guide me through initial setup
-  
+
   Scenario: User configures models
     Given I have completed the welcome screen
     When I reach model configuration
     Then I should see my available Ollama models
     And receive smart recommendations based on my hardware
     And be warned if my configuration is dangerous
-  
+
   Scenario: User starts first indexing
     Given I have configured models successfully
     When I start indexing my workspace
@@ -190,13 +190,13 @@ Feature: Conversational Code Exploration
     Then the AI should retrieve relevant code
     And provide a clear explanation with file references
     And show which files it's referencing
-  
+
   Scenario: Request feature implementation plan
     Given I'm chatting about adding a new feature
     When the AI suggests a plan
     Then I should see a "Transfer to Plan" button
     And be able to review the plan before transferring
-  
+
   Scenario: View chat history
     Given I have multiple chat sessions
     When I navigate chat mode
@@ -218,14 +218,14 @@ Feature: Structured Feature Planning
     Then I should see a structured TODO list
     And be able to edit each TODO item
     And see dependencies between items
-  
+
   Scenario: Manually create plan
     Given I'm in Plan mode
     When I create a new plan manually
     Then I should have a plan editor interface
     And be able to add/remove/reorder TODO items
     And define what files each TODO will affect
-  
+
   Scenario: Validate plan before execution
     Given I have completed a plan
     When I click "Start Implementation"
@@ -248,14 +248,14 @@ Feature: Safe Code Generation
     Then a safety branch should be created
     And I should see each file change before it happens
     And be able to approve/reject each change
-  
+
   Scenario: Review generated code
     Given Act mode has generated code for a TODO
     When I review the changes
     Then I should see syntax-highlighted diffs
     And be able to edit before approval
     And have options to Skip/Retry/Rollback
-  
+
   Scenario: Handle execution failure
     Given Act mode encounters an error
     When a TODO fails
@@ -279,13 +279,13 @@ Feature: Daily Workflow Integration
     Then LocalPilot should detect changes
     And incrementally update the index
     And keep the context fresh
-  
+
   Scenario: Quick code questions
     Given I'm viewing a file in VS Code
     When I select code and ask a question
     Then LocalPilot should prioritize that code in context
     And provide relevant answers quickly
-  
+
   Scenario: Model performance adjustment
     Given I notice slow responses
     When I check settings
@@ -474,13 +474,13 @@ TODO List Structure:
   ├── Files: src/models/User.ts (new)
   ├── Dependencies: None
   └── Status: Pending
-  
+
 □ TODO #2: Implement authentication middleware
   ├── Type: CREATE
   ├── Files: src/middleware/auth.ts (new)
   ├── Dependencies: TODO #1
   └── Status: Pending
-  
+
 □ TODO #3: Update API routes with auth
   ├── Type: MODIFY
   ├── Files: src/routes/api.ts (modify)
@@ -983,52 +983,52 @@ Global Shortcuts:
   "Ctrl+Shift+P" (Cmd+Shift+P on Mac):
     - Open command palette
     - Type "LocalPilot" to see all commands
-  
+
   "Ctrl+Shift+L" (Cmd+Shift+L on Mac):
     - Show LocalPilot views (side panel)
-  
+
   "Ctrl+L" (Cmd+L on Mac):
     - Focus Chat input (LocalPilot participant)
 
 Chat Mode:
   "Ctrl+Enter" (Cmd+Enter):
     - Send message
-  
+
   "↑" (when input is empty):
     - Edit last message
-  
+
   "Esc":
     - Clear input / Cancel streaming response
-  
+
   "Ctrl+K" (Cmd+K):
     - Clear conversation
 
 Plan Mode:
   "Ctrl+N" (Cmd+N):
     - New TODO item
-  
+
   "Ctrl+S" (Cmd+S):
     - Save plan
-  
+
   "↑/↓":
     - Navigate TODO items
-  
+
   "Ctrl+↑/↓" (Cmd+↑/↓):
     - Reorder selected TODO
-  
+
   "Delete":
     - Delete selected TODO
 
 Act Mode:
   "Ctrl+Enter" (Cmd+Enter):
     - Approve current change
-  
+
   "Ctrl+E" (Cmd+E):
     - Edit current change
-  
+
   "Ctrl+S" (Cmd+S):
     - Skip current TODO
-  
+
   "Esc":
     - Pause execution
 ```
@@ -1046,7 +1046,7 @@ Behavior:
 
 Example:
   User clicks: "📄 src/api/payment.ts (lines 23-41)"
-  
+
   Result:
   ├── Opens src/api/payment.ts
   ├── Scrolls to line 23
@@ -1066,7 +1066,7 @@ Plan Mode TODO Reordering:
   Constraints:
     - Cannot place child before its dependency
     - Warning shown if dependency would be violated
-  
+
 Act Mode File Preview:
   Gesture: Drag file from "Changes" list
   Destinations:
@@ -1113,7 +1113,7 @@ Plan Mode TODO Inline Edit:
     - Enter: Save changes
     - Esc: Cancel edit
     - Click outside: Save changes
-  
+
 Chat Mode Message Edit:
   Trigger: Click "Edit" on sent message
   Behavior:
@@ -1138,26 +1138,26 @@ Chat Mode Message Edit:
   --lp-primary: #00A8E8;           /* Bright blue */
   --lp-primary-hover: #0094D1;
   --lp-primary-active: #007FB8;
-  
+
   /* Success */
   --lp-success: #4CAF50;
   --lp-success-bg: rgba(76, 175, 80, 0.1);
-  
+
   /* Warning */
   --lp-warning: #FF9800;
   --lp-warning-bg: rgba(255, 152, 0, 0.1);
-  
+
   /* Error */
   --lp-error: #F44336;
   --lp-error-bg: rgba(244, 67, 54, 0.1);
-  
+
   /* Neutral (VS Code integrated) */
   --lp-bg: var(--vscode-sideBar-background);
   --lp-fg: var(--vscode-foreground);
   --lp-border: var(--vscode-panel-border);
   --lp-input-bg: var(--vscode-input-background);
   --lp-input-border: var(--vscode-input-border);
-  
+
   /* Semantic Colors */
   --lp-code-bg: var(--vscode-textCodeBlock-background);
   --lp-link: var(--vscode-textLink-foreground);
@@ -1172,7 +1172,7 @@ Chat Mode Message Edit:
   /* Font Families (inherit from VS Code) */
   --lp-font-family: var(--vscode-font-family);
   --lp-font-mono: var(--vscode-editor-font-family);
-  
+
   /* Font Sizes */
   --lp-text-xs: 11px;
   --lp-text-sm: 12px;
@@ -1180,13 +1180,13 @@ Chat Mode Message Edit:
   --lp-text-lg: 14px;
   --lp-text-xl: 16px;
   --lp-text-2xl: 20px;
-  
+
   /* Font Weights */
   --lp-font-normal: 400;
   --lp-font-medium: 500;
   --lp-font-semibold: 600;
   --lp-font-bold: 700;
-  
+
   /* Line Heights */
   --lp-leading-tight: 1.25;
   --lp-leading-normal: 1.5;
@@ -1291,7 +1291,7 @@ Chat Mode Message Edit:
   --lp-transition-fast: 150ms ease;
   --lp-transition-base: 200ms ease;
   --lp-transition-slow: 300ms ease;
-  
+
   --lp-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --lp-ease-out: cubic-bezier(0, 0, 0.2, 1);
   --lp-ease-in: cubic-bezier(0.4, 0, 1, 1);

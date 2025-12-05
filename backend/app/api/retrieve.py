@@ -8,7 +8,12 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from app.core.config import settings
-from app.models.retrieve import RetrieveRequest, RetrieveResponse, RetrieveResult, ScoreBreakdown
+from app.models.retrieve import (
+    RetrieveRequest,
+    RetrieveResponse,
+    RetrieveResult,
+    ScoreBreakdown,
+)
 from app.services.rag.cache import QueryCache
 from app.services.rag.embedding_service import EmbeddingService
 from app.services.rag.retriever import MultiLevelRetriever
@@ -80,7 +85,9 @@ async def retrieve(request: RetrieveRequest) -> RetrieveResponse:
         raw_results = await retriever.retrieve(
             query=query,
             top_k=request.top_k,
-            user_context=request.user_context.model_dump() if request.user_context else None,
+            user_context=(
+                request.user_context.model_dump() if request.user_context else None
+            ),
         )
 
         # Convert raw results to RetrieveResult objects
@@ -134,4 +141,6 @@ async def retrieve(request: RetrieveRequest) -> RetrieveResponse:
         raise
     except Exception as e:
         logger.error(f"Retrieval failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Retrieval failed: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Retrieval failed: {str(e)}"
+        ) from e

@@ -9,8 +9,12 @@ class UserContext(BaseModel):
     """User context for retrieval (current file, recent files, etc.)."""
 
     current_file: str | None = Field(None, description="Currently open file path")
-    recent_files: list[str] = Field(default_factory=list, description="Recently accessed files")
-    selected_text: str | None = Field(None, description="Currently selected text in editor")
+    recent_files: list[str] = Field(
+        default_factory=list, description="Recently accessed files"
+    )
+    selected_text: str | None = Field(
+        None, description="Currently selected text in editor"
+    )
 
 
 class ScoreBreakdown(BaseModel):
@@ -20,7 +24,9 @@ class ScoreBreakdown(BaseModel):
     symbol_score: float = Field(..., description="Symbol/metadata search score (0-1)")
     keyword_score: float = Field(..., description="Keyword/BM25 search score (0-1)")
     summary_score: float = Field(..., description="Project summary score (0-1)")
-    fused_score: float = Field(..., description="Fused score before diversity re-ranking")
+    fused_score: float = Field(
+        ..., description="Fused score before diversity re-ranking"
+    )
 
 
 class RetrieveResult(BaseModel):
@@ -52,7 +58,9 @@ class RetrieveRequest(BaseModel):
     query: str = Field(..., description="Search query", min_length=1)
     top_k: int = Field(5, description="Number of results to return", ge=1, le=50)
     debug: bool = Field(False, description="Include debug info (scores, breakdown)")
-    user_context: UserContext | None = Field(None, description="Optional user context for boosting")
+    user_context: UserContext | None = Field(
+        None, description="Optional user context for boosting"
+    )
 
 
 class RetrieveResponse(BaseModel):

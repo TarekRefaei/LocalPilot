@@ -95,7 +95,9 @@ class QueryCache:
         self._misses += 1
         return None
 
-    def set_search_results(self, query_vector_id: str, results: list[dict[str, Any]]) -> None:
+    def set_search_results(
+        self, query_vector_id: str, results: list[dict[str, Any]]
+    ) -> None:
         """
         Cache search results for query vector.
 

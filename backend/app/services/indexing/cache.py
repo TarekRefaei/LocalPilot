@@ -110,7 +110,9 @@ class FileHashCache:
             )
         return out
 
-    def detect_changes(self, candidates: Iterable[Path]) -> tuple[list[str], list[str], list[str]]:
+    def detect_changes(
+        self, candidates: Iterable[Path]
+    ) -> tuple[list[str], list[str], list[str]]:
         """Return (added, modified, deleted) relative paths for candidate files."""
         existing = self.get_all()
         current: dict[str, tuple[str, int, float]] = {}
@@ -126,7 +128,11 @@ class FileHashCache:
                 added.append(rel)
             else:
                 prev = existing[rel]
-                if prev.hash != h or prev.size != size or abs(prev.mtime - mtime) > 1e-6:
+                if (
+                    prev.hash != h
+                    or prev.size != size
+                    or abs(prev.mtime - mtime) > 1e-6
+                ):
                     modified.append(rel)
 
         # deleted
@@ -177,7 +183,9 @@ class FileHashCache:
             )
             con.commit()
 
-    def record_run_end(self, run_id: str, ended_iso: str, status: str, stats_json: str) -> None:
+    def record_run_end(
+        self, run_id: str, ended_iso: str, status: str, stats_json: str
+    ) -> None:
         with sqlite3.connect(self.db_path) as con:
             cur = con.cursor()
             cur.execute(
