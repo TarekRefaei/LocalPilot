@@ -49,8 +49,8 @@ export class LocalPilotPanel {
                 this._abort = new AbortController();
                 await backendSvc.streamChatFromBackend(message.text, this._abort.signal, {
                   onChunk: (chunk: string) => panelWeb.postMessage({ command: 'append', text: chunk }),
-                  onEnd: () => { this._abort = null; },
-                  onError: () => { panelWeb.postMessage({ command: 'append', text: '[Error contacting backend]' }); this._abort = null; },
+                  onEnd: () => { this._abort = null; panelWeb.postMessage({ command: 'progress', pct: 100 }); },
+                  onError: () => { panelWeb.postMessage({ command: 'progress', pct: 0 }); panelWeb.postMessage({ command: 'append', text: '[Error contacting backend]' }); this._abort = null; },
                 }, this._sessionId);
               } catch (err) {
                 panelWeb.postMessage({ command: 'append', text: '[Backend error]' });
@@ -59,6 +59,7 @@ export class LocalPilotPanel {
             break;
           case 'stop':
             try { if (this._abort) this._abort.abort(); } catch {}
+            try { this._panel.webview.postMessage({ command: 'progress', pct: 0 }); } catch {}
             try { import('../services/backend').then((svc) => { void svc.abortLastRequest(); }); } catch {}
             break;
           case 'webviewReady':
@@ -172,6 +173,15 @@ export class LocalPilotPanel {
 
         renderState();
 
+        function updateProgress(pct) {
+          const el = document.querySelector('.progress > div');
+          if (el) {
+            const n = Number(pct);
+            const clamped = isNaN(n) ? 0 : Math.min(100, Math.max(0, n));
+            el.style.width = clamped + '%';
+          }
+        }
+
         window.addEventListener('message', (ev) => {
           const msg = ev.data;
           if (msg.command === 'append') {
@@ -201,6 +211,8 @@ export class LocalPilotPanel {
             state.messages = msg.messages || [];
             vscode.setState(state);
             renderState();
+          } else if (msg.command === 'progress') {
+            updateProgress(msg.pct ?? 0);
           }
         });
 
@@ -212,6 +224,7 @@ export class LocalPilotPanel {
           renderState();
           vscode.postMessage({ command: 'chat', text: txt });
           document.getElementById('input').innerText = '';
+          updateProgress(0);
         });
         document.getElementById('stop').addEventListener('click', () => {
           vscode.postMessage({ command: 'stop' });
