@@ -1,0 +1,49 @@
+name: Nightly - RAG Full Evaluation
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # 02:00 UTC nightly
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-rag
+  cancel-in-progress: false
+
+jobs:
+  rag-full:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dev deps
+        run: |
+          cd backend
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements-dev.txt || pip install pytest pytest-asyncio numpy
+
+      - name: Run RAG fusion tests
+        run: |
+          cd backend
+          . .venv/bin/activate
+          mkdir -p ../artifacts/rag
+          pytest -q tests/test_fusion.py --junitxml ../artifacts/rag/fusion.xml
+
+      - name: Run RAG retrieval integration tests
+        run: |
+          cd backend
+          . .venv/bin/activate
+          mkdir -p ../artifacts/rag
+          pytest -q tests/test_retrieval_integration.py --junitxml ../artifacts/rag/retrieval_integration.xml
+
+      - name: Upload RAG artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-results
+          path: artifacts/rag/*.xml
