@@ -36,7 +36,9 @@ def test_register_validator_startup_invokes_validator(monkeypatch, caplog):
         # Do not raise
 
     # Monkeypatch the symbol used inside the module
-    monkeypatch.setattr(prom_metrics, "validate_config_on_startup", fake_validate, raising=False)
+    monkeypatch.setattr(
+        prom_metrics, "validate_config_on_startup", fake_validate, raising=False
+    )
 
     # Create app and register
     app = FastAPI()
@@ -48,4 +50,6 @@ def test_register_validator_startup_invokes_validator(monkeypatch, caplog):
         r = client.get("/openapi.json")
         assert r.status_code in (200, 404, 422, 500) or isinstance(r.status_code, int)
 
-    assert called["count"] >= 1, "validate_config_on_startup was not invoked during startup"
+    assert (
+        called["count"] >= 1
+    ), "validate_config_on_startup was not invoked during startup"

@@ -69,7 +69,9 @@ class ChatRequest(BaseModel):
 
 @app.post("/chat/echo")
 async def chat_echo(req: ChatRequest):
-    logger.info(f"Chat request: prompt={req.prompt[:50]}..., model={req.model or 'local'}")
+    logger.info(
+        f"Chat request: prompt={req.prompt[:50]}..., model={req.model or 'local'}"
+    )
 
     async def gen():
         try:
