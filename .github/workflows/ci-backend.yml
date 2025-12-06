@@ -36,9 +36,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           python -m pip install -r requirements-dev.txt
+          python -c "import black,sys; print('Black version:', black.__version__); print(sys.version)"
       - name: Lint (Black)
         working-directory: backend
-        run: black --check .
+        run: |
+          python -m black --version
+          python -m black --check --diff --verbose .
       - name: Lint (Ruff)
         working-directory: backend
         run: ruff check .
