@@ -9,7 +9,7 @@
   "main": "./dist/extension.js",
   "scripts": {
     "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --platform=node --external:vscode --format=cjs",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
