@@ -1,8 +1,12 @@
 from pathlib import Path
 from fastapi import APIRouter, WebSocket, Depends
 
-from ...chat.chat_service import ChatService
-from ..dependencies import get_embedder, get_index_root
+try:
+    from ...chat.chat_service import ChatService
+    from ..dependencies import get_embedder, get_index_root
+except ImportError:
+    from chat.chat_service import ChatService
+    from api.dependencies import get_embedder, get_index_root
 
 router = APIRouter()
 

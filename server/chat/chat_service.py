@@ -3,7 +3,10 @@ from typing import Iterable
 
 from .prompt_builder import PromptBuilder
 from .ollama_chat_client import OllamaChatClient
-from ..indexing.query_service import QueryService
+try:
+    from ..indexing.query_service import QueryService
+except ImportError:
+    from indexing.query_service import QueryService
 
 
 class ChatService:

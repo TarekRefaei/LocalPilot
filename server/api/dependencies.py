@@ -1,7 +1,10 @@
 from pathlib import Path
 from functools import lru_cache
 
-from ..indexing.embeddings.ollama import OllamaEmbeddingProvider
+try:
+    from ..indexing.embeddings.ollama import OllamaEmbeddingProvider
+except ImportError:
+    from indexing.embeddings.ollama import OllamaEmbeddingProvider
 
 
 @lru_cache()

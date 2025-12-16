@@ -1,9 +1,14 @@
 from pathlib import Path
 from fastapi import APIRouter, Depends
 
-from ..schemas.query import QueryRequest, QueryResponse
-from ...indexing.query_service import QueryService
-from ..dependencies import get_embedder, get_index_root
+try:
+    from ..schemas.query import QueryRequest, QueryResponse
+    from ...indexing.query_service import QueryService
+    from ..dependencies import get_embedder, get_index_root
+except ImportError:
+    from api.schemas.query import QueryRequest, QueryResponse
+    from indexing.query_service import QueryService
+    from api.dependencies import get_embedder, get_index_root
 
 router = APIRouter()
 

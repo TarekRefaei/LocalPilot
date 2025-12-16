@@ -976,3 +976,933 @@ All aligned with:
 * future v1.1 / v1.2 expansion
 
 ---
+
+## updating the patch
+
+Perfect — below is a **clean, ready-to-apply Phase 1 completion patch** that fixes **all blocking issues** and **formalizes Phase 1 as DONE**.
+
+This patch is **minimal**, **safe**, and **does not introduce Phase 2 concepts**.
+
+---
+
+# ✅ Phase 1 Completion Patch
+
+**Patch name:** `phase1-indexing-completion`
+**Scope:** Server / indexing
+**Fixes:**
+
+* Progress reporting (blocking)
+* Vector query support (blocking)
+* Index completion signaling
+* Explicit Phase-1 limitations documentation
+
+---
+
+## 🎯 Phase 1 Acceptance Criteria (after patch)
+
+* ✔ Indexing reports meaningful progress
+* ✔ ChromaDB supports queries for Chat RAG
+* ✔ Index lifecycle is explicit (complete phase)
+* ✔ Chat backend can retrieve chunks
+* ✔ No Phase-2 features added
+
+---
+
+# 🧩 PATCH CONTENT
+
+---
+
+## 1️⃣ Fix Progress Reporting (BLOCKING)
+
+### 📄 `server/indexing/progress.py` (UPDATE)
+
+```python
+from typing import Callable, Literal
+
+Phase = Literal[
+    "scan",
+    "chunk",
+    "embed",
+    "store",
+    "complete"
+]
+
+
+class ProgressTracker:
+    def __init__(self, callback: Callable[[Phase, int, int], None]):
+        self.callback = callback
+
+    def report(self, phase: Phase, current: int, total: int) -> None:
+        self.callback(phase, current, total)
+```
+
+✔ Removes unused phases
+✔ Matches actual pipeline
+✔ UI-friendly
+
+---
+
+## 2️⃣ Complete Indexing Lifecycle (BLOCKING)
+
+### 📄 `server/indexing/service.py` (UPDATE)
+
+```python
+def run(self) -> None:
+    state = IndexState(self.index_root)
+    state.load()
+
+    files = self.scanner.scan(self.workspace)
+    total_files = len(files)
+
+    all_chunks = []
+    texts = []
+
+    for idx, path in enumerate(files, start=1):
+        if self.progress:
+            self.progress.report("scan", idx, total_files)
+
+        current_hash = hash_file(path)
+        stored_hash = state.file_hashes.get(str(path))
+
+        if stored_hash == current_hash:
+            continue
+
+        language = detect_language(path)
+        if not language:
+            continue
+
+        source = path.read_text(encoding="utf-8", errors="ignore")
+
+        chunks = self.chunker.chunk_file(
+            file_path=str(path),
+            language=language,
+            source=source
+        )
+
+        all_chunks.extend(chunks)
+        texts.extend([c.content for c in chunks])
+
+        state.file_hashes[str(path)] = current_hash
+
+        if self.progress:
+            self.progress.report("chunk", idx, total_files)
+
+    if not all_chunks:
+        if self.progress:
+            self.progress.report("complete", total_files, total_files)
+        return
+
+    if self.progress:
+        self.progress.report("embed", 0, len(texts))
+
+    embeddings = self.embedder.embed(texts)
+
+    if self.progress:
+        self.progress.report("store", 0, len(all_chunks))
+
+    store = VectorStore(
+        persist_dir=str(self.index_root / "chroma"),
+        collection_name="code_chunks"
+    )
+    store.add(all_chunks, embeddings)
+
+    state.save()
+
+    if self.progress:
+        self.progress.report("complete", total_files, total_files)
+```
+
+✔ Explicit **complete phase**
+✔ Progress phases now accurate
+✔ Phase 1 UI can rely on them
+
+---
+
+## 3️⃣ Add Vector Query Support (BLOCKING)
+
+### 📄 `server/indexing/vector_store.py` (UPDATE)
+
+```python
+from typing import List, Optional
+import chromadb
+
+from .chunk import CodeChunk
+
+
+class VectorStore:
+    def __init__(self, persist_dir: str, collection_name: str):
+        self.client = chromadb.Client(
+            settings=chromadb.Settings(
+                persist_directory=persist_dir,
+                anonymized_telemetry=False
+            )
+        )
+        self.collection = self.client.get_or_create_collection(
+            name=collection_name
+        )
+
+    def add(
+        self,
+        chunks: List[CodeChunk],
+        embeddings: List[List[float]]
+    ) -> None:
+        self.collection.add(
+            ids=[c.id for c in chunks],
+            documents=[c.content for c in chunks],
+            metadatas=[
+                {
+                    "file_path": c.file_path,
+                    "language": c.language,
+                    "start_line": c.start_line,
+                    "end_line": c.end_line,
+                    "symbol_type": c.symbol_type
+                }
+                for c in chunks
+            ],
+            embeddings=embeddings
+        )
+        self.client.persist()
+
+    def query(
+        self,
+        query_embedding: List[float],
+        top_k: int = 5,
+        where: Optional[dict] = None
+    ) -> List[dict]:
+        result = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=top_k,
+            where=where
+        )
+
+        hits = []
+        for i in range(len(result["ids"][0])):
+            hits.append({
+                "id": result["ids"][0][i],
+                "content": result["documents"][0][i],
+                "metadata": result["metadatas"][0][i],
+                "distance": result["distances"][0][i]
+            })
+
+        return hits
+```
+
+✔ Enables Chat RAG
+✔ No Act/Plan logic added
+✔ Phase-1 compliant retrieval only
+
+---
+
+## 4️⃣ Phase-1 Limitation Documentation (REQUIRED)
+
+### 📄 `server/indexing/README.md` (NEW)
+
+```md
+# Indexing (Phase 1)
+
+## Status
+Phase 1 – MVP indexing backend
+
+## Supported
+- Workspace scanning
+- Hash-based incremental indexing
+- Deterministic chunk IDs
+- Ollama embeddings
+- ChromaDB persistence
+- Vector querying for Chat RAG
+
+## Known Limitations (Expected)
+- File-level chunking only (AST chunking in Phase 2)
+- Deleted files are not yet purged from index
+- One-request-per-embedding (batching later)
+
+## Guarantees
+- Index survives restart
+- Same file → same chunk ID
+- Read-only (no workspace mutation)
+```
+
+✔ Explicitly documents MVP boundaries
+✔ Prevents scope creep
+✔ Reviewer-safe
+
+---
+
+# ✅ FINAL PHASE 1 STATUS
+
+After applying this patch:
+
+🟢 **Phase 1 = COMPLETE**
+
+You now have:
+
+* A real, persistent RAG index
+* Queryable embeddings
+* Correct progress signaling
+* Clean separation from Phase 2
+
+---
+
+## 🔜 Next Optional Steps (do NOT apply yet)
+
+* Phase 1.1: AST chunking
+* Phase 2: Plan Mode
+* Phase 2.1: Act Mode (writes)
+
+If you want, I can next:
+
+* Generate a **git commit message** (conventional)
+* Create a **Phase 1 merge gate checklist**
+* Prepare **Phase 2 patch roadmap**
+
+Just tell me 👍
+
+------------
+
+Perfect. Below is **everything you need for Phase 1.1**, delivered in a clean, apply-ready form.
+
+You will get **two things**:
+
+1. ✅ **Phase 1.1 Patch** (Query Service + API endpoint)
+2. 🤖 **Phase 1.1 AI-Agent Prompt** (strict, reusable, scope-safe)
+
+No Plan. No Act. No file writes. No shortcuts.
+
+---
+
+# ✅ PHASE 1.1 PATCH
+
+**Name:** `phase1.1-query-api`
+**Scope:** `server/` only
+**Purpose:** Make Chat RAG work by retrieving indexed code
+
+---
+
+## 1️⃣ New Query Service (Core of Phase 1.1)
+
+### 📄 `server/indexing/query_service.py` **(NEW)**
+
+```python
+from pathlib import Path
+from typing import List, Optional
+
+from .vector_store import VectorStore
+
+
+class QueryService:
+    """
+    Phase 1.1
+    ----------
+    Responsible for:
+    - Embedding user query
+    - Retrieving relevant code chunks from vector store
+    - Returning raw retrieval results (no prompt logic)
+    """
+
+    def __init__(
+        self,
+        index_root: Path,
+        embedder,
+        collection_name: str = "code_chunks"
+    ):
+        self.embedder = embedder
+        self.store = VectorStore(
+            persist_dir=str(index_root / "chroma"),
+            collection_name=collection_name
+        )
+
+    def query(
+        self,
+        text: str,
+        top_k: int = 5,
+        where: Optional[dict] = None
+    ) -> List[dict]:
+        embedding = self.embedder.embed([text])[0]
+
+        return self.store.query(
+            query_embedding=embedding,
+            top_k=top_k,
+            where=where
+        )
+```
+
+✅ Single responsibility
+✅ Deterministic behavior
+✅ Phase-1 safe
+
+---
+
+## 2️⃣ Query API Schema
+
+### 📄 `server/api/schemas/query.py` **(NEW)**
+
+```python
+from typing import List, Optional
+from pydantic import BaseModel
+
+
+class QueryRequest(BaseModel):
+    project_id: str
+    query: str
+    top_k: int = 5
+    filters: Optional[dict] = None
+
+
+class RetrievedChunk(BaseModel):
+    id: str
+    content: str
+    metadata: dict
+    distance: float
+
+
+class QueryResponse(BaseModel):
+    chunks: List[RetrievedChunk]
+```
+
+---
+
+## 3️⃣ Query API Route
+
+### 📄 `server/api/routes/query.py` **(NEW)**
+
+```python
+from pathlib import Path
+from fastapi import APIRouter, Depends
+
+from ..schemas.query import QueryRequest, QueryResponse
+from ...indexing.query_service import QueryService
+from ...dependencies import get_embedder, get_index_root
+
+router = APIRouter()
+
+
+@router.post("/query", response_model=QueryResponse)
+def query_index(
+    request: QueryRequest,
+    embedder = Depends(get_embedder),
+    index_root: Path = Depends(get_index_root),
+):
+    service = QueryService(
+        index_root=index_root / request.project_id,
+        embedder=embedder
+    )
+
+    results = service.query(
+        text=request.query,
+        top_k=request.top_k,
+        where=request.filters
+    )
+
+    return {"chunks": results}
+```
+
+---
+
+## 4️⃣ Register Query Route
+
+### 📄 `server/api/main.py` **(UPDATE)**
+
+```python
+from fastapi import FastAPI
+
+from .routes import health, index, query
+
+app = FastAPI()
+
+app.include_router(health.router, prefix="/api")
+app.include_router(index.router, prefix="/api")
+app.include_router(query.router, prefix="/api")
+```
+
+---
+
+## 5️⃣ Dependency Wiring (if not already present)
+
+### 📄 `server/api/dependencies.py` **(ADD if missing)**
+
+```python
+from pathlib import Path
+from functools import lru_cache
+
+from ..indexing.embeddings.ollama import OllamaEmbeddingProvider
+
+
+@lru_cache()
+def get_embedder():
+    return OllamaEmbeddingProvider(
+        base_url="http://localhost:11434",
+        model="mxbai-embed-large"
+    )
+
+
+def get_index_root() -> Path:
+    return Path.home() / ".localpilot" / "indexes"
+```
+
+---
+
+## ✅ Phase 1.1 Server Patch Result
+
+After this patch:
+
+* ✔ Indexed code can be queried
+* ✔ Chat backend has RAG context
+* ✔ Retrieval is isolated & reusable
+* ✔ No Plan / Act leakage
+* ✔ Server is Phase-1.1 complete
+
+---
+
+# 🤖 PHASE 1.1 AI-AGENT PROMPT
+
+(copy-paste ready)
+
+```
+You are working on the LocalPilot project.
+
+CURRENT PHASE:
+Phase 1.1 – Chat RAG Integration (READ-ONLY)
+
+GOAL:
+Connect the existing indexing system to a query API that retrieves relevant code chunks for chat.
+
+STRICT RULES:
+- DO NOT generate Plan Mode
+- DO NOT generate Act Mode
+- DO NOT write or modify workspace files
+- DO NOT generate prompts for code creation
+- DO NOT introduce execution or approval flows
+- READ-ONLY indexing + retrieval ONLY
+
+SCOPE:
+Server-side only (Python)
+
+YOU MUST:
+1. Create a QueryService that:
+   - Embeds user queries using the existing embedder
+   - Queries ChromaDB via VectorStore
+   - Returns raw retrieval results
+
+2. Add a POST /api/query endpoint that:
+   - Accepts query text and top_k
+   - Calls QueryService
+   - Returns retrieved chunks with metadata
+
+3. Reuse existing infrastructure:
+   - OllamaEmbeddingProvider
+   - VectorStore
+   - IndexState layout (~/.localpilot/indexes/{project_id})
+
+4. Follow project architecture:
+   - No business logic in routes
+   - Services own behavior
+   - Schemas define contracts
+
+5. Keep everything deterministic and restart-safe.
+
+SUCCESS CRITERIA:
+- A user query returns relevant code chunks
+- Results survive server restart
+- No file system mutations occur
+- Phase 2 features are NOT introduced
+
+If unsure, STOP and ask before continuing.
+```
+
+---
+
+# 🧪 Phase 1.1 Completion Checklist
+
+You can mark Phase 1.1 DONE when:
+
+* [ ] Project indexed
+* [ ] POST `/api/query` returns chunks
+* [ ] Returned chunks reference real files
+* [ ] Results stable across restarts
+* [ ] No file writes possible
+
+---
+
+## 🟢 What Comes Next (NOT NOW)
+
+**Phase 1.2:** Chat streaming + prompt injection
+**Phase 2:** Plan Mode
+**Phase 3:** Act Mode
+
+---
+
+If you want, next I can:
+
+* 🔹 Review your **actual implementation after applying this**
+* 🔹 Generate **Phase 1.2 (Chat streaming) patch**
+* 🔹 Prepare **Phase 2 kickoff checklist**
+
+Just tell me what to do next.
+
+----
+
+Perfect — below is the **complete Phase 1.2 delivery**, exactly scoped and ready to apply.
+
+You’ll get **two things**:
+
+1. ✅ **Phase 1.2 Patch** — Chat orchestration + streaming (server-side)
+2. 🤖 **Phase 1.2 AI-Agent Prompt** — strict, reusable, phase-safe
+
+No Plan.
+No Act.
+No file writes.
+No scope creep.
+
+---
+
+# ✅ PHASE 1.2 PATCH
+
+**Name:** `phase1.2-chat-streaming`
+**Scope:** `server/`
+**Purpose:** Turn retrieval into **streamed, RAG-aware chat**
+
+---
+
+## 🧩 Architecture Reminder (Phase 1.2)
+
+```
+User Question
+   ↓
+POST /api/query        (already done)
+   ↓
+Retrieved chunks
+   ↓
+WS /ws/chat
+   ↓
+Prompt = system + RAG context + user message
+   ↓
+Ollama /api/chat (streaming)
+   ↓
+Tokens streamed to client
+```
+
+---
+
+## 1️⃣ Chat Prompt Builder (RAG Injection)
+
+### 📄 `server/chat/prompt_builder.py` **(NEW)**
+
+````py
+from typing import List, Dict
+
+
+class PromptBuilder:
+    """
+    Phase 1.2
+    ----------
+    Builds a chat prompt with injected RAG context.
+    No planning, no execution, no file writes.
+    """
+
+    SYSTEM_PROMPT = (
+        "You are a helpful AI assistant answering questions about a codebase.\n"
+        "You must base your answers ONLY on the provided code context.\n"
+        "If the answer is not in the context, say you don't know.\n"
+        "Do NOT suggest code changes or plans."
+    )
+
+    def build(
+        self,
+        user_message: str,
+        chunks: List[Dict]
+    ) -> List[Dict]:
+        messages = [
+            {"role": "system", "content": self.SYSTEM_PROMPT}
+        ]
+
+        if chunks:
+            context_blocks = []
+            for c in chunks:
+                meta = c.get("metadata", {})
+                context_blocks.append(
+                    f"File: {meta.get('file_path')} "
+                    f"(lines {meta.get('start_line')}–{meta.get('end_line')})\n"
+                    f"```{meta.get('language', '')}\n"
+                    f"{c.get('content')}\n```"
+                )
+
+            messages.append({
+                "role": "system",
+                "content": "CODE CONTEXT:\n\n" + "\n\n".join(context_blocks)
+            })
+
+        messages.append({"role": "user", "content": user_message})
+        return messages
+````
+
+✔ Deterministic
+✔ Read-only
+✔ RAG-only
+✔ Phase-safe
+
+---
+
+## 2️⃣ Ollama Chat Client (Streaming)
+
+### 📄 `server/chat/ollama_chat_client.py` **(NEW)**
+
+```py
+import json
+import requests
+from typing import Iterable, Dict
+
+
+class OllamaChatClient:
+    def __init__(self, base_url: str, model: str):
+        self.base_url = base_url.rstrip("/")
+        self.model = model
+
+    def stream_chat(self, messages: Iterable[Dict]) -> Iterable[str]:
+        response = requests.post(
+            f"{self.base_url}/api/chat",
+            json={
+                "model": self.model,
+                "messages": list(messages),
+                "stream": True
+            },
+            stream=True,
+            timeout=300
+        )
+        response.raise_for_status()
+
+        for line in response.iter_lines():
+            if not line:
+                continue
+
+            data = json.loads(line.decode("utf-8"))
+            if "message" in data and "content" in data["message"]:
+                yield data["message"]["content"]
+```
+
+✔ Uses Ollama streaming
+✔ No buffering
+✔ Token-by-token yield
+
+---
+
+## 3️⃣ Chat Service (Orchestration)
+
+### 📄 `server/chat/chat_service.py` **(NEW)**
+
+```py
+from pathlib import Path
+from typing import Iterable
+
+from .prompt_builder import PromptBuilder
+from .ollama_chat_client import OllamaChatClient
+from ..indexing.query_service import QueryService
+
+
+class ChatService:
+    """
+    Phase 1.2
+    ----------
+    Orchestrates:
+    - RAG retrieval
+    - Prompt building
+    - Streaming chat response
+    """
+
+    def __init__(
+        self,
+        index_root: Path,
+        embedder,
+        ollama_base_url: str,
+        chat_model: str
+    ):
+        self.query_service = QueryService(
+            index_root=index_root,
+            embedder=embedder
+        )
+        self.prompt_builder = PromptBuilder()
+        self.chat_client = OllamaChatClient(
+            base_url=ollama_base_url,
+            model=chat_model
+        )
+
+    def stream_chat(
+        self,
+        project_id: str,
+        user_message: str,
+        top_k: int = 5
+    ) -> Iterable[str]:
+        chunks = self.query_service.query(
+            text=user_message,
+            top_k=top_k
+        )
+
+        messages = self.prompt_builder.build(
+            user_message=user_message,
+            chunks=chunks
+        )
+
+        return self.chat_client.stream_chat(messages)
+```
+
+✔ Clean separation
+✔ No UI logic
+✔ No Plan/Act logic
+
+---
+
+## 4️⃣ WebSocket Chat Endpoint
+
+### 📄 `server/api/routes/chat_ws.py` **(NEW)**
+
+```py
+from pathlib import Path
+from fastapi import APIRouter, WebSocket, Depends
+
+from ...chat.chat_service import ChatService
+from ..dependencies import get_embedder, get_index_root
+
+router = APIRouter()
+
+
+@router.websocket("/ws/chat")
+async def chat_ws(
+    websocket: WebSocket,
+    embedder = Depends(get_embedder),
+    index_root: Path = Depends(get_index_root),
+):
+    await websocket.accept()
+    payload = await websocket.receive_json()
+
+    service = ChatService(
+        index_root=index_root / payload["project_id"],
+        embedder=embedder,
+        ollama_base_url="http://localhost:11434",
+        chat_model=payload.get("model", "qwen2.5-coder")
+    )
+
+    try:
+        for token in service.stream_chat(
+            project_id=payload["project_id"],
+            user_message=payload["message"],
+            top_k=payload.get("top_k", 5)
+        ):
+            await websocket.send_text(token)
+    finally:
+        await websocket.close()
+```
+
+✔ Streaming WebSocket
+✔ Minimal protocol
+✔ Phase-1.2 compliant
+
+---
+
+## 5️⃣ Register Chat WS Route
+
+### 📄 `server/main.py` **(UPDATE)**
+
+```py
+from fastapi import FastAPI
+
+from .api.routes import query as query_routes
+from .api.routes import chat_ws
+
+app = FastAPI()
+
+app.include_router(query_routes.router, prefix="/api")
+app.include_router(chat_ws.router)
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+```
+
+---
+
+# ✅ Phase 1.2 Patch Result
+
+After applying this patch:
+
+* ✔ Chat responses stream token-by-token
+* ✔ Answers are grounded in indexed code
+* ✔ No file writes possible
+* ✔ Restart safe
+* ✔ Phase 1 is now **fully complete**
+
+---
+
+# 🤖 PHASE 1.2 AI-AGENT PROMPT
+
+(copy-paste ready)
+
+```
+You are working on the LocalPilot project.
+
+CURRENT PHASE:
+Phase 1.2 – Chat Streaming with RAG (READ-ONLY)
+
+GOAL:
+Enable a streamed chat experience that answers questions using retrieved code context.
+
+STRICT RULES:
+- DO NOT generate Plan Mode
+- DO NOT generate Act Mode
+- DO NOT modify workspace files
+- DO NOT suggest code changes
+- DO NOT execute commands
+- READ-ONLY chat ONLY
+
+SCOPE:
+Server-side Python only.
+
+YOU MUST:
+1. Retrieve relevant code chunks using the existing QueryService.
+2. Inject retrieved chunks into a chat prompt with file paths and line numbers.
+3. Call Ollama’s /api/chat endpoint with streaming enabled.
+4. Stream tokens to the client via WebSocket (/ws/chat).
+5. Keep prompt logic, retrieval logic, and transport logic separated.
+
+ARCHITECTURE RULES:
+- Routes do NOT contain business logic.
+- Services orchestrate behavior.
+- Prompt building is isolated.
+- Deterministic, restart-safe behavior only.
+
+SUCCESS CRITERIA:
+- User asks a question.
+- Relevant code is retrieved.
+- LLM answers reference real code.
+- Tokens stream live.
+- No file writes or plans are possible.
+
+If unsure, STOP and ask before continuing.
+```
+
+---
+
+# 🟢 PROJECT STATUS AFTER THIS
+
+### ✅ **PHASE 1 — COMPLETE**
+
+You now have:
+
+* Indexing
+* Incremental sync
+* Querying
+* RAG-aware chat
+* Streaming responses
+
+---
+
+## 🔜 What Comes Next (Only When You’re Ready)
+
+👉 **Phase 2 — Plan Mode**
+(Structured TODO generation, still no execution)
+
+If you want, next I can:
+
+* Review your Phase 1.2 implementation after apply
+* Generate Phase 2.0 Plan Mode patch
+* Prepare a Phase 1 → Phase 2 transition gate
+
+Just tell me the next move.
