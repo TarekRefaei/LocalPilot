@@ -1,0 +1,12 @@
+from abc import ABC, abstractmethod
+from typing import List
+
+
+class EmbeddingProvider(ABC):
+    @abstractmethod
+    def embed(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generate embeddings for a list of texts.
+        Must be deterministic for identical inputs.
+        """
+        raise NotImplementedError

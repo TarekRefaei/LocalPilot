@@ -1,13 +1,13 @@
 # Code Snapshot
 
-**Generated:** 2025-12-14T21:05:52.985Z
+**Generated:** 2025-12-14T23:32:57.249Z
 **Roots:** .
 **Max file size:** 524,288 bytes
 
 ## Project Structure
 
 ```
-. (49 files)
+. (67 files)
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   └── issue_template.md
@@ -20,24 +20,28 @@
 │   │   ├── ADR-002-llamaindex-over-langchain.md
 │   │   └── ADR-003-chromadb-for-vectors.md
 │   ├── plan/
+│   │   ├── phase0/
+│   │   │   ├── phase0.md
+│   │   │   └── phase0patch.md
+│   │   ├── phase1/
+│   │   │   └── phase1patch.md
 │   │   ├── master-execution-roadmap.md
-│   │   ├── Phase-by-Phase-TODO-List.md
-│   │   ├── phase0.md
-│   │   └── phase0patch.md
-│   ├── ProjectDocuments/
-│   │   ├── architecture.md
-│   │   ├── development-setup.md
-│   │   ├── indexing-spec.md
-│   │   ├── overview.md
-│   │   ├── prompt-engineer.md
-│   │   ├── security-model.md
-│   │   ├── state-model.md
-│   │   ├── structure.md
-│   │   ├── task0-phase.md
-│   │   ├── testing-strategy.md
-│   │   ├── troubleshooting.md
-│   │   └── webview-protocol.md
-│   └── code-snapshot.md
+│   │   └── Phase-by-Phase-TODO-List.md
+│   └── ProjectDocuments/
+│       ├── architecture.md
+│       ├── commit-convention.md
+│       ├── development-setup.md
+│       ├── indexing-spec.md
+│       ├── overview.md
+│       ├── prompt-engineer.md
+│       ├── release-policy.md
+│       ├── security-model.md
+│       ├── state-model.md
+│       ├── structure.md
+│       ├── task0-phase.md
+│       ├── testing-strategy.md
+│       ├── troubleshooting.md
+│       └── webview-protocol.md
 ├── extension/
 │   ├── src/
 │   │   ├── core/
@@ -73,12 +77,31 @@
 ├── server/
 │   ├── .pytest_cache/
 │   │   └── README.md
+│   ├── indexing/
+│   │   ├── embeddings/
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py
+│   │   │   └── ollama.py
+│   │   ├── parsers/
+│   │   │   ├── __init__.py
+│   │   │   └── base.py
+│   │   ├── __init__.py
+│   │   ├── chunk.py
+│   │   ├── chunker.py
+│   │   ├── hash_tracker.py
+│   │   ├── language.py
+│   │   ├── progress.py
+│   │   ├── scanner.py
+│   │   ├── service.py
+│   │   ├── state.py
+│   │   └── vector_store.py
 │   ├── tests/
 │   │   └── test_health.py
 │   ├── main.py
 │   └── requirements.txt
 ├── tools/
 │   └── export-to-md.mjs
+├── CONTRIBUTING.md
 └── README.md
 
 ```
@@ -89,18 +112,22 @@
 - [.github/ISSUE_TEMPLATE/issue_template.md](#-github-issue-template-issue-template-md)
 - [.github/pull_request_template.md](#-github-pull-request-template-md)
 - [.github/workflows/windows-ci.yml](#-github-workflows-windows-ci-yml)
+- [CONTRIBUTING.md](#contributing-md)
 - [docs/decisions/ADR-001-monorepo-structure.md](#docs-decisions-adr-001-monorepo-structure-md)
 - [docs/decisions/ADR-002-llamaindex-over-langchain.md](#docs-decisions-adr-002-llamaindex-over-langchain-md)
 - [docs/decisions/ADR-003-chromadb-for-vectors.md](#docs-decisions-adr-003-chromadb-for-vectors-md)
 - [docs/plan/master-execution-roadmap.md](#docs-plan-master-execution-roadmap-md)
 - [docs/plan/Phase-by-Phase-TODO-List.md](#docs-plan-phase-by-phase-todo-list-md)
-- [docs/plan/phase0.md](#docs-plan-phase0-md)
-- [docs/plan/phase0patch.md](#docs-plan-phase0patch-md)
+- [docs/plan/phase0/phase0.md](#docs-plan-phase0-phase0-md)
+- [docs/plan/phase0/phase0patch.md](#docs-plan-phase0-phase0patch-md)
+- [docs/plan/phase1/phase1patch.md](#docs-plan-phase1-phase1patch-md)
 - [docs/ProjectDocuments/architecture.md](#docs-projectdocuments-architecture-md)
+- [docs/ProjectDocuments/commit-convention.md](#docs-projectdocuments-commit-convention-md)
 - [docs/ProjectDocuments/development-setup.md](#docs-projectdocuments-development-setup-md)
 - [docs/ProjectDocuments/indexing-spec.md](#docs-projectdocuments-indexing-spec-md)
 - [docs/ProjectDocuments/overview.md](#docs-projectdocuments-overview-md)
 - [docs/ProjectDocuments/prompt-engineer.md](#docs-projectdocuments-prompt-engineer-md)
+- [docs/ProjectDocuments/release-policy.md](#docs-projectdocuments-release-policy-md)
 - [docs/ProjectDocuments/security-model.md](#docs-projectdocuments-security-model-md)
 - [docs/ProjectDocuments/state-model.md](#docs-projectdocuments-state-model-md)
 - [docs/ProjectDocuments/structure.md](#docs-projectdocuments-structure-md)
@@ -129,6 +156,21 @@
 - [extension/tsconfig.json](#extension-tsconfig-json)
 - [README.md](#readme-md)
 - [server/.pytest_cache/README.md](#server--pytest-cache-readme-md)
+- [server/indexing/__init__.py](#server-indexing---init---py)
+- [server/indexing/chunk.py](#server-indexing-chunk-py)
+- [server/indexing/chunker.py](#server-indexing-chunker-py)
+- [server/indexing/embeddings/__init__.py](#server-indexing-embeddings---init---py)
+- [server/indexing/embeddings/base.py](#server-indexing-embeddings-base-py)
+- [server/indexing/embeddings/ollama.py](#server-indexing-embeddings-ollama-py)
+- [server/indexing/hash_tracker.py](#server-indexing-hash-tracker-py)
+- [server/indexing/language.py](#server-indexing-language-py)
+- [server/indexing/parsers/__init__.py](#server-indexing-parsers---init---py)
+- [server/indexing/parsers/base.py](#server-indexing-parsers-base-py)
+- [server/indexing/progress.py](#server-indexing-progress-py)
+- [server/indexing/scanner.py](#server-indexing-scanner-py)
+- [server/indexing/service.py](#server-indexing-service-py)
+- [server/indexing/state.py](#server-indexing-state-py)
+- [server/indexing/vector_store.py](#server-indexing-vector-store-py)
 - [server/main.py](#server-main-py)
 - [server/requirements.txt](#server-requirements-txt)
 - [server/tests/test_health.py](#server-tests-test-health-py)
@@ -167,12 +209,19 @@ assignees: ''
 
 ## .github/pull_request_template.md
 
-*Size: 339 bytes | Modified: 2025-12-07T20:49:06.020Z*
+*Size: 535 bytes | Modified: 2025-12-14T21:47:59.807Z*
 
 <details>
 <summary>View code</summary>
 
 ```markdown
+### Checklist
+- [ ] Commit messages follow convention
+- [ ] Changes match current phase scope
+- [ ] Core contracts untouched (or justified)
+- [ ] Tests pass
+- [ ] Documentation updated if needed
+
 ## Summary
 Provide a short description of the change.
 
@@ -198,13 +247,13 @@ Any special notes for the reviewer.
 
 ## .github/workflows/windows-ci.yml
 
-*Size: 1,013 bytes | Modified: 2025-12-07T20:49:13.606Z*
+*Size: 1,163 bytes | Modified: 2025-12-14T22:13:17.080Z*
 
 <details>
 <summary>View code</summary>
 
 ```yaml
-name: Windows CI with Mock Ollama
+name: Windows CI
 
 on:
   push:
@@ -220,36 +269,193 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install server deps and run tests
         shell: pwsh
         run: |
-          py -3 -m venv .venv
-          .venv\Scripts\Activate.ps1
-          python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          python -m venv .venv
+          .\.venv\Scripts\python -m pip install --upgrade pip
+          .\.venv\Scripts\python -m pip install -r server/requirements.txt
+          .\.venv\Scripts\python -m pip install pytest
+          .\.venv\Scripts\pytest -q server/tests
 
-      - name: Start mock ollama
-        shell: pwsh
-        run: |
-          Start-Process -NoNewWindow -FilePath "python" -ArgumentList "ci\mock_ollama.py"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      - name: Run backend tests
+      - name: Install extension deps
         shell: pwsh
+        working-directory: extension
         run: |
-          .venv\Scripts\Activate.ps1
-          pytest -q backend/tests
+          npm ci
 
-      - name: Run retrieval harness
+      - name: Build extension
         shell: pwsh
+        working-directory: extension
         run: |
-          .venv\Scripts\Activate.ps1
-          python ci\verify_retrieval.py
+          npm run build
+
+      - name: Run extension tests
+        shell: pwsh
+        working-directory: extension
+        run: |
+          npm test -s
 
 ```
+
+</details>
+
+
+## CONTRIBUTING.md
+
+*Size: 2,661 bytes | Modified: 2025-12-14T21:21:30.671Z*
+
+<details>
+<summary>View code</summary>
+
+````markdown
+# Contributing to LocalPilot
+
+Thank you for your interest in contributing to LocalPilot 🙌
+
+LocalPilot is a privacy-first, local-only AI coding assistant built with a
+phase-driven architecture. Please read this document carefully before contributing.
+
+---
+
+## 1. Project Philosophy
+
+- 🔒 Privacy first (no cloud dependencies)
+- 🧱 Strong architecture over quick hacks
+- 📋 Structured workflow (Chat → Plan → Act)
+- 🧠 Clarity over cleverness
+
+---
+
+## 2. Repository Structure
+
+LocalPilot uses a monorepo:
+
+```
+extension/   # VS Code extension (TypeScript)
+server/      # Python RAG server (FastAPI)
+docs/        # Architecture, specs, decisions
+```
+
+Each layer has strict responsibility boundaries. Violations will be rejected.
+
+---
+
+## 3. Branching Model
+
+Do not commit directly to `main`.
+
+### Branch Types
+
+| Branch | Purpose |
+|----|----|
+| main | Stable, reviewed code only |
+| phase/* | Phase-level development |
+| feat/* | Experimental or risky work |
+| fix/* | Targeted bug fixes |
+
+Example:
+```bash
+git checkout -b phase/1-chat-foundation
+git checkout -b feat/ollama-service
+```
+
+---
+
+## 4. Commit Message Convention
+
+All commits must follow the official convention:
+
+See docs/ProjectDocuments/commit-convention.md
+
+Commits that do not follow this format may be rejected.
+
+---
+
+## 5. Phase Discipline (Very Important)
+
+Each development phase has a locked scope.
+
+- ❌ Do not implement features from future phases
+- ❌ Do not change Core contracts without approval
+- ✅ Propose changes via documentation first
+
+If unsure, ask before coding.
+
+---
+
+## 6. Code Style & Quality
+
+### TypeScript
+- strict: true is mandatory
+- No any unless explicitly justified
+- Prefer interfaces over concrete classes
+
+### Python
+- Follow PEP8
+- Use type hints where possible
+- No blocking I/O in async routes
+
+---
+
+## 7. Testing Requirements
+
+- New features should include tests when feasible
+- At minimum, existing tests must pass
+- Do not reduce coverage intentionally
+
+---
+
+## 8. Documentation First Rule
+
+For non-trivial changes:
+
+1. Update or add documentation
+2. Explain why before how
+3. Reference relevant ADRs or phases
+
+---
+
+## 9. Security & Privacy Rules
+
+- Never introduce cloud APIs
+- Never send user code externally
+- Never log source code content
+
+Violations will result in immediate rejection.
+
+---
+
+## 10. Review Process
+
+- Small PRs preferred
+- One concern per PR
+- Architecture > speed
+
+---
+
+## 11. Questions & Discussions
+
+Open an issue if:
+
+- You are unsure about scope
+- You want to propose an architectural change
+- You want to add a new language or model
+
+---
+
+Thank you for helping keep LocalPilot clean, safe, and intentional 🚀
+
+````
 
 </details>
 
@@ -1183,395 +1389,373 @@ You now have:
 </details>
 
 
-## docs/plan/phase0.md
+## docs/plan/phase0/phase0.md
 
-*Size: 6,265 bytes | Modified: 2025-12-13T18:58:13.828Z*
+*Size: 6,887 bytes | Modified: 2025-12-14T23:05:32.701Z*
 
 <details>
 <summary>View code</summary>
 
+````markdown
+Perfect timing 👍
+Below is a **clean, Phase-aware patch proposal** that adds **GitHub contribution rules + commit conventions** without touching runtime code.
+
+This patch is **pure governance** → safe, reversible, and future-proof.
+
+---
+
+# 📦 PATCH PROPOSAL — Repository Governance & Collaboration
+
+## 🎯 Scope (Intentionally Limited)
+
+This patch adds:
+
+1. **Commit message convention** (phase-aware, solo & team friendly)
+2. **CONTRIBUTING.md** (clear rules for future collaborators)
+3. **GitHub-aligned workflow guidance**
+
+🚫 No code changes
+🚫 No CI changes
+🚫 No branching policy enforcement via tooling (yet)
+
+---
+
+## 1️⃣ Commit Message Convention
+
+### 📄 New File
+
+**`docs/ProjectDocuments/commit-convention.md`**
+
 ```markdown
-# 🧱 LocalPilot
+# LocalPilot – Commit Message Convention
 
-## Phase 0: Foundation & Skeleton (Detailed, AI-Agent Ready)
+This document defines the official commit message format for the LocalPilot repository.
 
-> **Phase 0 Principle:**
-> No intelligence. No autonomy. No shortcuts.
-> Only *structure, contracts, and verified plumbing*.
-
-**Hard Rules for the AI Agent:**
-
-* Execute tasks **in order**
-* Do not merge tasks
-* Do not “optimize” ahead
-* Stop immediately if verification fails
-* Do not invent APIs or behavior not specified
-
-📌 Architecture reference 
-📌 Phase definition 
+The goal is:
+- Clear history
+- Easy reverts
+- Phase-aware development
+- Solo-friendly and team-ready
 
 ---
 
-## 🔹 TASK 0.1 — Initialize Monorepo & Tooling
+## 1. Commit Message Format
 
-### 🎯 Objective
+```
 
-Create a clean monorepo with **zero logic**, but correct tooling.
+<type>(<scope>): <short description>
 
-### 📂 Actions
+```
 
-1. Initialize git repository
-2. Create root folders:
+### Examples
 
-   * `extension/`
-   * `server/`
-   * `docs/`
-   * `scripts/`
-3. Add root config files:
+```
 
-   * `.gitignore`
-   * `.editorconfig`
-   * `README.md`
-4. Add package managers:
+feat(chat): add RAG-enhanced chat service
+fix(ollama): handle connection failure gracefully
+docs(phase0): finalize foundation documentation
+refactor(core): simplify error hierarchy
+test(server): add health endpoint test
+chore(repo): update contributing guidelines
 
-   * `pnpm` for extension
-   * `uv` / `pip` for server
-
-### ✅ Verification
-
-* [ ] `git status` clean
-* [ ] No missing root folders
-* [ ] No code yet
+```
 
 ---
 
-## 🔹 TASK 0.2 — Create Extension Project Skeleton
+## 2. Allowed Types
 
-### 🎯 Objective
-
-VS Code extension builds and activates.
-
-### 📂 Actions
-
-1. Inside `extension/`:
-
-   * Initialize `package.json`
-   * Add `engines.vscode`
-   * Define activation events
-2. Add TypeScript config:
-
-   * `tsconfig.json`
-3. Add build tooling:
-
-   * esbuild
-   * Vitest
-4. Create `src/extension.ts` with:
-
-   * empty `activate`
-   * empty `deactivate`
-
-### ❗ Rules
-
-* No WebView yet
-* No services yet
-
-### ✅ Verification
-
-* [ ] `pnpm run build` succeeds
-* [ ] Extension activates in VS Code dev host
-* [ ] No runtime errors
+| Type | Purpose |
+|----|----|
+| feat | New feature |
+| fix | Bug fix |
+| refactor | Code restructuring (no behavior change) |
+| test | Adding or updating tests |
+| docs | Documentation only |
+| chore | Tooling, config, repo maintenance |
+| perf | Performance improvements |
+| revert | Reverting previous commit |
 
 ---
 
-## 🔹 TASK 0.3 — Create Server Project Skeleton
+## 3. Scope Guidelines
 
-### 🎯 Objective
+Scopes should be **small and meaningful**.
 
-Python FastAPI server starts cleanly.
-
-### 📂 Actions
-
-1. Inside `server/`:
-
-   * Initialize Python package
-   * Create virtual environment
-2. Add dependencies:
-
-   * `fastapi`
-   * `uvicorn`
-3. Create `main.py`:
-
-   * Initialize FastAPI app
-   * Add `/health` endpoint
-
-### ❗ Rules
-
-* No indexing logic
-* No Ollama calls
-
-### ✅ Verification
-
-* [ ] `uvicorn main:app` runs
-* [ ] `/health` returns `{ status: "ok" }`
-* [ ] No warnings or stack traces
+### Recommended scopes
+- `core`
+- `ollama`
+- `rag`
+- `chat`
+- `plan`
+- `act`
+- `ui`
+- `server`
+- `extension`
+- `repo`
+- `phase0`, `phase1`, etc.
 
 ---
 
-## 🔹 TASK 0.4 — Define Core Domain Entities (Extension)
+## 4. Phase Awareness
 
-### 🎯 Objective
+During development phases:
 
-Create **pure domain models**.
+- Phase branches should reference the phase:
+```
 
-### 📂 Files to Create
+docs(phase1): add chat workflow overview
+feat(phase1-chat): implement context builder
 
-* `Message`
-* `Project`
-* `Plan`
-* `Task`
+```
 
-📌 Entity definitions per architecture spec 
+- Phase completion commits should be explicit:
+```
 
-### ❗ Rules
+chore(phase1): lock phase 1 implementation
 
-* Interfaces only
-* No logic
-* No imports from Features/UI
-* JSDoc on every field
-
-### ✅ Verification
-
-* [ ] TypeScript compiles
-* [ ] Entities exportable via barrel
-* [ ] No circular imports
+```
 
 ---
 
-## 🔹 TASK 0.5 — Define Core Interfaces (Ports)
+## 5. Commit Size Rules
 
-### 🎯 Objective
-
-Define **contracts**, not implementations.
-
-### 📂 Interfaces
-
-* `ILLMProvider`
-* `IRAGProvider`
-* `IFileSystem`
-* `ISettings`
-
-📌 Interface rules 
-
-### ❗ Rules
-
-* No Node.js APIs
-* No VS Code APIs
-* Async signatures only
-
-### ✅ Verification
-
-* [ ] Interfaces compile
-* [ ] Can be imported by Features
-* [ ] No default implementations
+- One logical change per commit
+- Avoid mixing refactors and features
+- Tests should accompany features when applicable
 
 ---
 
-## 🔹 TASK 0.6 — Define Core Error Model
+## 6. Reverts
 
-### 🎯 Objective
+Use `git revert`, not `git reset`, on shared branches.
 
-Unify error handling across extension.
+Example:
+```
 
-### 📂 Files
+revert(chat): remove incomplete streaming logic
 
-* `LocalPilotError` (base)
-* Error categories:
-
-  * connection
-  * indexing
-  * llm
-  * file
-  * validation
-
-📌 Error handling strategy 
-
-### ❗ Rules
-
-* All errors serializable
-* Include `recoverable` flag
-* No throwing raw `Error`
-
-### ✅ Verification
-
-* [ ] Errors can be logged as JSON
-* [ ] Errors preserve stack trace
+```
 
 ---
 
-## 🔹 TASK 0.7 — Create API Client (Extension → Server)
+## 7. Enforcement
 
-### 🎯 Objective
+This convention is currently **human-enforced**.
 
-Allow extension to talk to server.
-
-### 📂 Actions
-
-1. Create HTTP client wrapper
-2. Implement:
-
-   * `checkHealth()`
-3. Log responses to Output Channel
-
-### ❗ Rules
-
-* No retries yet
-* No WebSocket yet
-
-### ✅ Verification
-
-* [ ] Extension calls `/health`
-* [ ] Server response logged
-* [ ] Failure handled gracefully
-
----
-
-## 🔹 TASK 0.8 — Implement Ollama Availability Check
-
-### 🎯 Objective
-
-Detect Ollama runtime **without using it**.
-
-### 📂 Actions
-
-1. Call:
-
-   * `GET http://localhost:11434/api/version`
-2. Parse response
-3. Expose boolean status
-
-📌 Ollama dependency rules 
-
-### ❗ Rules
-
-* No generation
-* No embeddings
-* No model listing yet
-
-### ✅ Verification
-
-* [ ] Correct detection when Ollama running
-* [ ] Clear error when not running
-
----
-
-## 🔹 TASK 0.9 — Create Minimal WebView Panel
-
-### 🎯 Objective
-
-Show a sidebar panel without logic.
-
-### 📂 Actions
-
-1. Register WebViewViewProvider
-2. Render static HTML:
-
-   * “LocalPilot”
-   * Server status
-   * Ollama status
-
-### ❗ Rules
-
-* No React yet
-* No state management
-
-### ✅ Verification
-
-* [ ] Panel loads
-* [ ] Status updates visible
-* [ ] No console errors
-
----
-
-## 🔹 TASK 0.10 — Wire Extension Composition Root
-
-### 🎯 Objective
-
-Respect Clean Architecture dependency flow.
-
-### 📂 Actions
-
-1. In `activate()`:
-
-   * Instantiate infrastructure
-   * Inject into features (even if empty)
-2. Do NOT create global singletons
-
-📌 Dependency rules 
-
-### ✅ Verification
-
-* [ ] No feature imports infrastructure directly
-* [ ] Clear composition root
-
----
-
-## 🔹 TASK 0.11 — Add Baseline Tests
-
-### 🎯 Objective
-
-Ensure foundation is testable.
-
-### 📂 Tests
-
-* Extension activation test
-* Server `/health` test
-
-📌 Testing strategy 
-
-### ❗ Rules
-
-* No mocks for core entities
-* Tests must pass in CI
-
-### ✅ Verification
-
-* [ ] `pnpm test` passes
-* [ ] `pytest` passes
-
----
-
-## 🔹 TASK 0.12 — Phase 0 Exit Validation
-
-### 🎯 Objective
-
-Lock Phase 0 as stable.
-
-### Validation Checklist
-
-* [ ] Extension activates
-* [ ] WebView loads
-* [ ] Server responds
-* [ ] Ollama detected
-* [ ] No indexing code exists
-* [ ] All tests pass
-
----
-
-## ✅ Phase 0 — COMPLETE
-
-At this point:
-
-* You have a **living skeleton**
-* Architecture boundaries are enforced
-* You are safe to build intelligence on top
+Automated checks may be added later if the project gains contributors.
 
 ---
 ```
 
+---
+
+## 2️⃣ CONTRIBUTING.md
+
+### 📄 New File
+
+**`CONTRIBUTING.md`** (repo root)
+
+```markdown
+# Contributing to LocalPilot
+
+Thank you for your interest in contributing to LocalPilot 🙌
+
+LocalPilot is a **privacy-first, local-only AI coding assistant** built with a
+phase-driven architecture. Please read this document carefully before contributing.
+
+---
+
+## 1. Project Philosophy
+
+- 🔒 Privacy first (no cloud dependencies)
+- 🧱 Strong architecture over quick hacks
+- 📋 Structured workflow (Chat → Plan → Act)
+- 🧠 Clarity over cleverness
+
+---
+
+## 2. Repository Structure
+
+LocalPilot uses a **monorepo**:
+
+```
+
+extension/   # VS Code extension (TypeScript)
+server/      # Python RAG server (FastAPI)
+docs/        # Architecture, specs, decisions
+
+````
+
+Each layer has strict responsibility boundaries.
+Violations will be rejected.
+
+---
+
+## 3. Branching Model
+
+**Do not commit directly to `main`.**
+
+### Branch Types
+
+| Branch | Purpose |
+|----|----|
+| `main` | Stable, reviewed code only |
+| `phase/*` | Phase-level development |
+| `feat/*` | Experimental or risky work |
+| `fix/*` | Targeted bug fixes |
+
+Example:
+```bash
+git checkout -b phase/1-chat-foundation
+git checkout -b feat/ollama-service
+````
+
+---
+
+## 4. Commit Message Convention
+
+All commits must follow the official convention:
+
+📄 `docs/ProjectDocuments/commit-convention.md`
+
+Commits that do not follow this format may be rejected.
+
+---
+
+## 5. Phase Discipline (Very Important)
+
+Each development phase has a **locked scope**.
+
+* ❌ Do not implement features from future phases
+* ❌ Do not change Core contracts without approval
+* ✅ Propose changes via documentation first
+
+If unsure, ask before coding.
+
+---
+
+## 6. Code Style & Quality
+
+### TypeScript
+
+* `strict: true` is mandatory
+* No `any` unless explicitly justified
+* Prefer interfaces over concrete classes
+
+### Python
+
+* Follow PEP8
+* Use type hints where possible
+* No blocking I/O in async routes
+
+---
+
+## 7. Testing Requirements
+
+* New features should include tests when feasible
+* At minimum, existing tests must pass
+* Do not reduce coverage intentionally
+
+---
+
+## 8. Documentation First Rule
+
+For non-trivial changes:
+
+1. Update or add documentation
+2. Explain *why* before *how*
+3. Reference relevant ADRs or phases
+
+---
+
+## 9. Security & Privacy Rules
+
+* Never introduce cloud APIs
+* Never send user code externally
+* Never log source code content
+
+Violations will result in immediate rejection.
+
+---
+
+## 10. Review Process
+
+* Small PRs preferred
+* One concern per PR
+* Architecture > speed
+
+---
+
+## 11. Questions & Discussions
+
+Open an issue if:
+
+* You are unsure about scope
+* You want to propose an architectural change
+* You want to add a new language or model
+
+---
+
+Thank you for helping keep LocalPilot clean, safe, and intentional 🚀
+
+````
+
+---
+
+## 3️⃣ GitHub Enhancement
+
+📄 **Update `.github/pull_request_template.md`**
+
+Add this checklist at the top:
+
+```markdown
+### Checklist
+- [ ] Commit messages follow convention
+- [ ] Changes match current phase scope
+- [ ] Core contracts untouched (or justified)
+- [ ] Tests pass
+- [ ] Documentation updated if needed
+````
+
+---
+
+# ✅ Patch Summary
+
+| Item                       | Status     |
+| -------------------------- | ---------- |
+| Commit convention          | ✅ Added    |
+| CONTRIBUTING.md            | ✅ Added    |
+| Phase awareness            | ✅ Explicit |
+| Revert safety              | ✅ Improved |
+| Future collaboration ready | ✅          |
+
+---
+
+# 🟢 Recommendation
+
+Apply this patch **before** starting Phase 1 work on your new branch.
+
+After that, your repo will be:
+
+* Safe to experiment
+* Easy to onboard contributors
+* Easy to revert
+* Architecturally protected
+
+If you want next, I can:
+
+* Generate a **Phase 1 PR template**
+* Add **ADR contribution rules**
+* Design **release tagging strategy**
+
+Just tell me.
+
+````
+
 </details>
 
 
-## docs/plan/phase0patch.md
+## docs/plan/phase0/phase0patch.md
 
 *Size: 8,499 bytes | Modified: 2025-12-13T18:58:11.395Z*
 
@@ -2000,6 +2184,998 @@ You now have:
 * ✔ AI-agent-executable instructions
 
 ---
+````
+
+</details>
+
+
+## docs/plan/phase1/phase1patch.md
+
+*Size: 20,703 bytes | Modified: 2025-12-14T23:14:58.948Z*
+
+<details>
+<summary>View code</summary>
+
+````markdown
+Excellent.
+We now move into **Phase 1: Indexing Engine patch proposals** — the **backbone of LocalPilot**.
+
+Below is **Phase 1, Tasks 1.1 → 1.4** as **patch proposals**, following **exactly** the agent constitution you approved:
+
+* patch-driven
+* deterministic
+* no shortcuts
+* no AI generation logic yet (only plumbing + deterministic algorithms)
+* future-proof for v1.1 / v1.2
+
+> ⚠️ **Important scope note**
+> I am intentionally splitting Phase 1 into **controlled batches**.
+> This message covers **Index Discovery → Parsing → Chunking (no embeddings yet)**.
+> This keeps risk low and patches reviewable.
+
+---
+
+# 🧩 PHASE 1 — PATCH PROPOSALS (PART 1)
+
+## Indexing Engine: Scan → Parse → Chunk
+
+---
+
+## 🧱 TASK 1.1 — Workspace Scanner
+
+### 🎯 Objective
+
+Deterministically discover indexable files while respecting user intent.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.1",
+  "title": "Implement workspace file scanner",
+  "files": [
+    { "path": "server/indexing/scanner.py", "action": "create" },
+    { "path": "server/indexing/__init__.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "medium",
+  "rollback": "safe-delete"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/scanner.py
++from pathlib import Path
++from typing import List
++
++EXCLUDED_DIRS = {
++    ".git",
++    "node_modules",
++    "dist",
++    "build",
++    ".venv",
++    "__pycache__",
++    ".localpilot"
++}
++
++SUPPORTED_EXTENSIONS = {
++    ".ts", ".js", ".py", ".json", ".md", ".dart"
++}
++
++
++class WorkspaceScanner:
++    def scan(self, root: Path) -> List[Path]:
++        files: List[Path] = []
++
++        for path in root.rglob("*"):
++            if not path.is_file():
++                continue
++
++            if any(part in EXCLUDED_DIRS for part in path.parts):
++                continue
++
++            if path.suffix not in SUPPORTED_EXTENSIONS:
++                continue
++
++            files.append(path)
++
++        return sorted(files)
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] Skips excluded directories
+* [ ] Deterministic ordering
+* [ ] No file reads yet
+* [ ] No gitignore parsing yet (v1.1)
+
+---
+
+## 🧱 TASK 1.2 — Language Detection
+
+### 🎯 Objective
+
+Determine programming language **deterministically** from file extension.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.2",
+  "title": "Add language detection utility",
+  "files": [
+    { "path": "server/indexing/language.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "low"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/language.py
++from pathlib import Path
++
++
++EXTENSION_LANGUAGE_MAP = {
++    ".ts": "typescript",
++    ".js": "javascript",
++    ".py": "python",
++    ".dart": "dart",
++    ".json": "json",
++    ".md": "markdown"
++}
++
++
++def detect_language(path: Path) -> str | None:
++    return EXTENSION_LANGUAGE_MAP.get(path.suffix)
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] Deterministic mapping
+* [ ] Returns None for unsupported files
+* [ ] No heuristics
+
+---
+
+## 🧱 TASK 1.3 — AST Parsing Abstraction (Tree-sitter Ready)
+
+### 🎯 Objective
+
+Create a **parser abstraction**, without binding to Tree-sitter yet.
+
+This keeps Phase 1 safe and testable.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.3",
+  "title": "Introduce parser abstraction and base parser",
+  "files": [
+    { "path": "server/indexing/parsers/base.py", "action": "create" },
+    { "path": "server/indexing/parsers/__init__.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "medium"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/parsers/base.py
++from pathlib import Path
++from typing import Any
++
++
++class ParseResult:
++    def __init__(self, ast: Any, source: str):
++        self.ast = ast
++        self.source = source
++
++
++class BaseParser:
++    language: str
++
++    def parse(self, path: Path) -> ParseResult:
++        raise NotImplementedError("Parser must implement parse()")
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] No Tree-sitter dependency yet
+* [ ] Abstract contract only
+* [ ] Safe to extend later
+
+---
+
+## 🧱 TASK 1.4 — Semantic Chunk Model
+
+### 🎯 Objective
+
+Define **what a chunk is** — before generating embeddings.
+
+This is critical for RAG quality.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.4",
+  "title": "Define semantic chunk data model",
+  "files": [
+    { "path": "server/indexing/chunk.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "medium"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+````diff
++++ server/indexing/chunk.py
++from dataclasses import dataclass
++
++
++@dataclass(frozen=True)
++class CodeChunk:
++    id: str
++    file_path: str
++    language: str
++    start_line: int
++    end_line: int
++    content: str
++    symbol_type: str  # function, class, module, block
++```
+
+---
+
+### ✅ Verification Checklist
+- [ ] Immutable chunk
+- [ ] Line-accurate metadata
+- [ ] No embeddings yet
+- [ ] No vector DB coupling
+
+---
+
+## 🔒 Phase 1 (Part 1) Status
+
+At this point, you have:
+
+✅ Deterministic workspace scanning  
+✅ Explicit language detection  
+✅ Parser abstraction (no premature complexity)  
+✅ Canonical chunk model  
+
+🚫 Still intentionally missing:
+- embeddings
+- ChromaDB
+- Ollama calls
+- RAG queries
+
+This is **exactly correct**.
+
+---
+
+## 🔜 Next Step (Phase 1 – Part 2)
+
+Next batch will cover:
+
+- **Task 1.5** — Semantic chunking logic (AST → chunks)
+- **Task 1.6** — Hash tracking (sync foundation)
+- **Task 1.7** — Index state persistence
+- **Task 1.8** — Progress reporting
+
+Say when ready:
+
+👉 **“Continue Phase 1 patch proposals (Part 2)”**
+
+You’re building this the *right* way.
+````
+
+Perfect.
+This is **Phase 1 – Part 2**, completing the **Indexing Engine core (still no embeddings yet)**.
+
+Scope of this message:
+
+* Semantic chunking logic (AST → chunks)
+* Hash tracking (for smart sync)
+* Index state persistence
+* Progress reporting (server-side)
+
+Still **NO Ollama**, **NO ChromaDB**, **NO RAG queries**.
+We are finishing the *deterministic backbone* first.
+
+---
+
+# 🧩 PHASE 1 — PATCH PROPOSALS (PART 2)
+
+## Chunking → Sync → Persistence → Progress
+
+---
+
+## 🧱 TASK 1.5 — Semantic Chunker (AST → CodeChunks)
+
+### 🎯 Objective
+
+Convert parsed source into **stable, semantically meaningful chunks**.
+
+> ⚠️ Important:
+> This implementation is **language-agnostic fallback chunking**.
+> Tree-sitter–aware chunking will *extend* this in v1.1, not replace it.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.5",
+  "title": "Implement semantic chunker",
+  "files": [
+    { "path": "server/indexing/chunker.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "medium",
+  "rollback": "safe-delete"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/chunker.py
++import hashlib
++from typing import List
++
++from .chunk import CodeChunk
++
++
++class SemanticChunker:
++    def chunk_file(
++        self,
++        file_path: str,
++        language: str,
++        source: str
++    ) -> List[CodeChunk]:
++        """
++        Fallback semantic chunking:
++        - Entire file = single chunk
++        - Used until AST-aware chunkers are plugged in
++        """
++
++        lines = source.splitlines()
++        content = source.strip()
++
++        chunk_id = self._stable_id(file_path, content)
++
++        return [
++            CodeChunk(
++                id=chunk_id,
++                file_path=file_path,
++                language=language,
++                start_line=1,
++                end_line=len(lines),
++                content=content,
++                symbol_type="file"
++            )
++        ]
++
++    def _stable_id(self, file_path: str, content: str) -> str:
++        h = hashlib.sha256()
++        h.update(file_path.encode("utf-8"))
++        h.update(content.encode("utf-8"))
++        return h.hexdigest()
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] One chunk per file (for now)
+* [ ] Stable chunk IDs
+* [ ] Line numbers correct
+* [ ] No AST dependency yet
+
+---
+
+## 🧱 TASK 1.6 — File Hash Tracker (Smart Sync Foundation)
+
+### 🎯 Objective
+
+Track file changes deterministically for **smart re-indexing**.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.6",
+  "title": "Add file hash tracker",
+  "files": [
+    { "path": "server/indexing/hash_tracker.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "medium"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/hash_tracker.py
++import hashlib
++from pathlib import Path
++
++
++def hash_file(path: Path) -> str:
++    h = hashlib.sha256()
++    with open(path, "rb") as f:
++        for chunk in iter(lambda: f.read(8192), b""):
++            h.update(chunk)
++    return h.hexdigest()
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] Deterministic hash
+* [ ] Handles large files
+* [ ] No global state
+
+---
+
+## 🧱 TASK 1.7 — Index State Persistence
+
+### 🎯 Objective
+
+Persist index metadata to disk so indexing survives restarts.
+
+📍 Location (locked earlier):
+
+```
+~/.localpilot/indexes/{projectId}/state.json
+```
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.7",
+  "title": "Persist index state to disk",
+  "files": [
+    { "path": "server/indexing/state.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "medium"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/state.py
++import json
++from pathlib import Path
++from typing import Dict
++
++
++class IndexState:
++    def __init__(self, root: Path):
++        self.path = root / "state.json"
++        self.file_hashes: Dict[str, str] = {}
++
++    def load(self) -> None:
++        if not self.path.exists():
++            return
++        with open(self.path, "r", encoding="utf-8") as f:
++            data = json.load(f)
++            self.file_hashes = data.get("file_hashes", {})
++
++    def save(self) -> None:
++        self.path.parent.mkdir(parents=True, exist_ok=True)
++        with open(self.path, "w", encoding="utf-8") as f:
++            json.dump(
++                {"file_hashes": self.file_hashes},
++                f,
++                indent=2
++            )
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] Creates directory if missing
+* [ ] JSON readable
+* [ ] Safe when state absent
+
+---
+
+## 🧱 TASK 1.8 — Indexing Progress Reporter
+
+### 🎯 Objective
+
+Expose **structured progress events** to the extension UI.
+
+> No WebSockets yet — this is an internal abstraction.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.8",
+  "title": "Add indexing progress tracker",
+  "files": [
+    { "path": "server/indexing/progress.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "low"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/progress.py
++from typing import Callable, Literal
++
++Phase = Literal["scan", "parse", "chunk", "hash", "complete"]
++
++
++class ProgressTracker:
++    def __init__(self, callback: Callable[[Phase, int, int], None]):
++        self.callback = callback
++
++    def report(self, phase: Phase, current: int, total: int) -> None:
++        self.callback(phase, current, total)
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] No side effects
+* [ ] Phase-limited enum
+* [ ] UI-agnostic
+
+---
+
+## 🔒 Phase 1 (Parts 1 + 2) — CURRENT STATE
+
+You now have:
+
+✅ Workspace scanning
+✅ Language detection
+✅ Parser abstraction
+✅ Canonical chunk model
+✅ Deterministic chunking
+✅ Hash-based sync foundation
+✅ Persistent index state
+✅ Progress reporting abstraction
+
+🚫 Still NOT present (by design):
+
+* embeddings
+* Ollama calls
+* vector database
+* RAG querying
+* summary generation
+
+This is **exactly where you want to be** before introducing ML.
+
+---
+
+Excellent.
+This is **Phase 1 – Part 3**, where we **carefully introduce embeddings and vector storage**, while still keeping everything **deterministic, auditable, and MVP-safe**.
+
+Scope of this message:
+
+* Embedding abstraction (port)
+* Ollama embedding implementation
+* ChromaDB vector storage
+* Index orchestration service (the glue)
+
+This **completes Phase 1**.
+
+---
+
+# 🧩 PHASE 1 — PATCH PROPOSALS (PART 3)
+
+## Embeddings → Vector Store → Index Orchestration
+
+---
+
+## 🧱 TASK 1.9 — Embedding Provider Abstraction
+
+### 🎯 Objective
+
+Define a **clean embedding contract** so the rest of the system does not depend on Ollama directly.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.9",
+  "title": "Define embedding provider interface",
+  "files": [
+    { "path": "server/indexing/embeddings/base.py", "action": "create" },
+    { "path": "server/indexing/embeddings/__init__.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "medium"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/embeddings/base.py
++from abc import ABC, abstractmethod
++from typing import List
++
++
++class EmbeddingProvider(ABC):
++    @abstractmethod
++    def embed(self, texts: List[str]) -> List[List[float]]:
++        """
++        Generate embeddings for a list of texts.
++        Must be deterministic for identical inputs.
++        """
++        raise NotImplementedError
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] No Ollama import
+* [ ] Batch-based API
+* [ ] Deterministic contract
+
+---
+
+## 🧱 TASK 1.10 — Ollama Embedding Implementation
+
+### 🎯 Objective
+
+Implement embeddings using **Ollama**, without leaking Ollama details upward.
+
+📌 Model choice stays configurable later (v1.1).
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.10",
+  "title": "Implement Ollama embedding provider",
+  "files": [
+    { "path": "server/indexing/embeddings/ollama.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "high"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/embeddings/ollama.py
++import requests
++from typing import List
++
++from .base import EmbeddingProvider
++
++
++class OllamaEmbeddingProvider(EmbeddingProvider):
++    def __init__(self, base_url: str, model: str):
++        self.base_url = base_url.rstrip("/")
++        self.model = model
++
++    def embed(self, texts: List[str]) -> List[List[float]]:
++        embeddings: List[List[float]] = []
++
++        for text in texts:
++            res = requests.post(
++                f"{self.base_url}/api/embeddings",
++                json={
++                    "model": self.model,
++                    "prompt": text
++                },
++                timeout=60
++            )
++            res.raise_for_status()
++            data = res.json()
++            embeddings.append(data["embedding"])
++
++        return embeddings
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] Uses `/api/embeddings`
+* [ ] No streaming
+* [ ] One embedding per chunk
+* [ ] Raises on failure (no silent errors)
+
+---
+
+## 🧱 TASK 1.11 — Vector Store (ChromaDB)
+
+### 🎯 Objective
+
+Persist embeddings + metadata in a **queryable vector database**.
+
+📌 Storage location:
+
+```
+~/.localpilot/indexes/{projectId}/chroma/
+```
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.11",
+  "title": "Add ChromaDB vector store",
+  "files": [
+    { "path": "server/indexing/vector_store.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "high"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/vector_store.py
++from typing import List
++
++import chromadb
++
++from .chunk import CodeChunk
++
++
++class VectorStore:
++    def __init__(self, persist_dir: str, collection_name: str):
++        self.client = chromadb.Client(
++            settings=chromadb.Settings(
++                persist_directory=persist_dir,
++                anonymized_telemetry=False
++            )
++        )
++        self.collection = self.client.get_or_create_collection(
++            name=collection_name
++        )
++
++    def add(
++        self,
++        chunks: List[CodeChunk],
++        embeddings: List[List[float]]
++    ) -> None:
++        self.collection.add(
++            ids=[c.id for c in chunks],
++            documents=[c.content for c in chunks],
++            metadatas=[
++                {
++                    "file_path": c.file_path,
++                    "language": c.language,
++                    "start_line": c.start_line,
++                    "end_line": c.end_line,
++                    "symbol_type": c.symbol_type
++                }
++                for c in chunks
++            ],
++            embeddings=embeddings
++        )
++        self.client.persist()
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] One collection per project
+* [ ] Metadata stored correctly
+* [ ] Persist called
+* [ ] No querying yet
+
+---
+
+## 🧱 TASK 1.12 — Index Orchestration Service
+
+### 🎯 Objective
+
+Create the **single entry point** that runs the full indexing pipeline.
+
+This is the heart of Phase 1.
+
+---
+
+### 🧩 Structured Patch Proposal
+
+```json
+{
+  "taskId": "1.12",
+  "title": "Implement indexing orchestration service",
+  "files": [
+    { "path": "server/indexing/service.py", "action": "create" }
+  ],
+  "requiresApproval": true,
+  "riskLevel": "high"
+}
+```
+
+---
+
+### 🧾 Unified Diff
+
+```diff
++++ server/indexing/service.py
++from pathlib import Path
++
++from .scanner import WorkspaceScanner
++from .language import detect_language
++from .chunker import SemanticChunker
++from .hash_tracker import hash_file
++from .state import IndexState
++from .vector_store import VectorStore
++
++
++class IndexingService:
++    def __init__(
++        self,
++        workspace: Path,
++        index_root: Path,
++        embedder,
++        progress=None
++    ):
++        self.workspace = workspace
++        self.index_root = index_root
++        self.embedder = embedder
++        self.progress = progress
++
++        self.scanner = WorkspaceScanner()
++        self.chunker = SemanticChunker()
++
++    def run(self) -> None:
++        state = IndexState(self.index_root)
++        state.load()
++
++        files = self.scanner.scan(self.workspace)
++
++        all_chunks = []
++        texts = []
++
++        for idx, path in enumerate(files, start=1):
++            if self.progress:
++                self.progress.report("scan", idx, len(files))
++
++            current_hash = hash_file(path)
++            stored_hash = state.file_hashes.get(str(path))
++
++            if stored_hash == current_hash:
++                continue
++
++            language = detect_language(path)
++            if not language:
++                continue
++
++            source = path.read_text(encoding="utf-8", errors="ignore")
++
++            chunks = self.chunker.chunk_file(
++                file_path=str(path),
++                language=language,
++                source=source
++            )
++
++            all_chunks.extend(chunks)
++            texts.extend([c.content for c in chunks])
++
++            state.file_hashes[str(path)] = current_hash
++
++        if not all_chunks:
++            return
++
++        embeddings = self.embedder.embed(texts)
++
++        store = VectorStore(
++            persist_dir=str(self.index_root / "chroma"),
++            collection_name="code_chunks"
++        )
++        store.add(all_chunks, embeddings)
++
++        state.save()
+```
+
+---
+
+### ✅ Verification Checklist
+
+* [ ] End-to-end pipeline runs
+* [ ] Hash-based skipping works
+* [ ] Index persists across restarts
+* [ ] No querying
+* [ ] No UI logic
+
+---
+
+## 🎉 PHASE 1 — COMPLETE
+
+You now have:
+
+✅ Deterministic indexing pipeline
+✅ Semantic chunking (safe fallback)
+✅ Hash-based smart sync
+✅ Persistent index state
+✅ Ollama embeddings
+✅ ChromaDB vector storage
+
+All aligned with:
+
+* privacy-first design
+* MVP security constraints
+* future v1.1 / v1.2 expansion
+
+---
+
 ````
 
 </details>
@@ -6497,6 +7673,128 @@ Reference WEBVIEW_PROTOCOL.md
 </details>
 
 
+## docs/ProjectDocuments/commit-convention.md
+
+*Size: 1,868 bytes | Modified: 2025-12-14T22:02:31.951Z*
+
+<details>
+<summary>View code</summary>
+
+````markdown
+# LocalPilot – Commit Message Convention
+
+This document defines the official commit message format for the LocalPilot repository.
+
+The goal is:
+- Clear history
+- Easy reverts
+- Phase-aware development
+- Solo-friendly and team-ready
+
+---
+
+## 1. Commit Message Format
+
+```
+<type>(<scope>): <short description>
+```
+
+### Examples
+
+```
+feat(chat): add RAG-enhanced chat service
+fix(ollama): handle connection failure gracefully
+docs(phase0): finalize foundation documentation
+refactor(core): simplify error hierarchy
+test(server): add health endpoint test
+chore(repo): update contributing guidelines
+```
+
+---
+
+## 2. Allowed Types
+
+| Type | Purpose |
+|----|----|
+| feat | New feature |
+| fix | Bug fix |
+| refactor | Code restructuring (no behavior change) |
+| test | Adding or updating tests |
+| docs | Documentation only |
+| chore | Tooling, config, repo maintenance |
+| perf | Performance improvements |
+| revert | Reverting previous commit |
+
+---
+
+## 3. Scope Guidelines
+
+Scopes should be small and meaningful.
+
+### Recommended scopes
+- core
+- ollama
+- rag
+- chat
+- plan
+- act
+- ui
+- server
+- extension
+- repo
+- phase0, phase1, etc.
+
+---
+
+## 4. Phase Awareness
+
+During development phases:
+
+- Phase branches should reference the phase:
+```
+docs(phase1): add chat workflow overview
+feat(phase1-chat): implement context builder
+```
+
+- Phase completion commits should be explicit:
+```
+chore(phase1): lock phase 1 implementation
+```
+
+---
+
+## 5. Commit Size Rules
+
+- One logical change per commit
+- Avoid mixing refactors and features
+- Tests should accompany features when applicable
+
+---
+
+## 6. Reverts
+
+Use `git revert`, not `git reset`, on shared branches.
+
+Example:
+```
+revert(chat): remove incomplete streaming logic
+```
+
+---
+
+## 7. Enforcement
+
+This convention is currently human-enforced.
+
+Automated checks may be added later if the project gains contributors.
+
+---
+
+````
+
+</details>
+
+
 ## docs/ProjectDocuments/development-setup.md
 
 *Size: 33,296 bytes | Modified: 2025-12-13T07:44:14.580Z*
@@ -10072,6 +11370,60 @@ async function executePromptWithRecovery(
 *Document Version: 1.0.0*
 
 ---
+````
+
+</details>
+
+
+## docs/ProjectDocuments/release-policy.md
+
+*Size: 970 bytes | Modified: 2025-12-14T22:05:51.856Z*
+
+<details>
+<summary>View code</summary>
+
+````markdown
+# LocalPilot – Release and Tagging Policy
+
+## Goals
+- Clear restore points per phase
+- Verifiable milestones
+- Safe reverts
+
+## Tagging
+- Use annotated tags for milestones and phases.
+- Format: `v<major>.<minor>.<patch>-<label>`
+  - Examples:
+    - `v0.1.0-phase0` (Phase 0 complete)
+    - `v0.2.0-phase1` (Phase 1 complete)
+- Use signed tags if you maintain a GPG key: `git tag -s ...`
+
+## Creating a tag
+```
+# Annotated tag
+git tag -a v0.1.1 -m "Short description"
+
+# Signed tag (optional)
+git tag -s v0.1.1 -m "Short description"
+
+# Push
+git push origin --tags
+```
+
+## Phase boundaries
+- At the end of each Phase:
+  - Commit: `chore(phase<N>): lock Phase <N> implementation`
+  - Tag: `v0.<N>.0-phase<N>`
+
+## Reverting
+- Use `git revert <sha>` on shared branches.
+- To restore a prior state locally:
+  - `git reset --hard v0.1.0-phase0`
+
+## Releases (optional)
+- GitHub releases can be created for phase tags.
+- Include changelog summary and verification checklist.
+
 ````
 
 </details>
@@ -14334,7 +15686,7 @@ uv pip install -e ".[dev]"
 
 ## extension/package.json
 
-*Size: 839 bytes | Modified: 2025-12-13T20:15:31.338Z*
+*Size: 843 bytes | Modified: 2025-12-14T22:10:31.906Z*
 
 <details>
 <summary>View code</summary>
@@ -14351,7 +15703,7 @@ uv pip install -e ".[dev]"
   "main": "./dist/extension.js",
   "scripts": {
     "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --platform=node --external:vscode --format=cjs",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -15137,13 +16489,15 @@ describe('Extension activation', () => {
 
 ## README.md
 
-*Size: 74 bytes | Modified: 2025-12-13T19:48:44.045Z*
+*Size: 253 bytes | Modified: 2025-12-14T23:00:06.468Z*
 
 <details>
 <summary>View code</summary>
 
 ```markdown
 # LocalPilot
+
+[![Windows CI](https://github.com/TarekRefaei/LocalPilot/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/TarekRefaei/LocalPilot/actions/workflows/windows-ci.yml)
 
 Privacy-first AI coding agent for VS Code using local LLMs.
 
@@ -15174,6 +16528,534 @@ See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more inf
 </details>
 
 
+## server/indexing/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-14T23:22:00.906Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/indexing/chunk.py
+
+*Size: 236 bytes | Modified: 2025-12-14T23:22:03.164Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class CodeChunk:
+    id: str
+    file_path: str
+    language: str
+    start_line: int
+    end_line: int
+    content: str
+    symbol_type: str  # function, class, module, block
+
+```
+
+</details>
+
+
+## server/indexing/chunker.py
+
+*Size: 1,008 bytes | Modified: 2025-12-14T23:22:04.526Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import hashlib
+from typing import List
+
+from .chunk import CodeChunk
+
+
+class SemanticChunker:
+    def chunk_file(
+        self,
+        file_path: str,
+        language: str,
+        source: str
+    ) -> List[CodeChunk]:
+        """
+        Fallback semantic chunking:
+        - Entire file = single chunk
+        - Used until AST-aware chunkers are plugged in
+        """
+
+        lines = source.splitlines()
+        content = source.strip()
+
+        chunk_id = self._stable_id(file_path, content)
+
+        return [
+            CodeChunk(
+                id=chunk_id,
+                file_path=file_path,
+                language=language,
+                start_line=1,
+                end_line=len(lines),
+                content=content,
+                symbol_type="file"
+            )
+        ]
+
+    def _stable_id(self, file_path: str, content: str) -> str:
+        h = hashlib.sha256()
+        h.update(file_path.encode("utf-8"))
+        h.update(content.encode("utf-8"))
+        return h.hexdigest()
+
+```
+
+</details>
+
+
+## server/indexing/embeddings/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-14T23:22:07.070Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/indexing/embeddings/base.py
+
+*Size: 331 bytes | Modified: 2025-12-14T23:22:07.971Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from abc import ABC, abstractmethod
+from typing import List
+
+
+class EmbeddingProvider(ABC):
+    @abstractmethod
+    def embed(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generate embeddings for a list of texts.
+        Must be deterministic for identical inputs.
+        """
+        raise NotImplementedError
+
+```
+
+</details>
+
+
+## server/indexing/embeddings/ollama.py
+
+*Size: 768 bytes | Modified: 2025-12-14T23:22:09.267Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import requests
+from typing import List
+
+from .base import EmbeddingProvider
+
+
+class OllamaEmbeddingProvider(EmbeddingProvider):
+    def __init__(self, base_url: str, model: str):
+        self.base_url = base_url.rstrip("/")
+        self.model = model
+
+    def embed(self, texts: List[str]) -> List[List[float]]:
+        embeddings: List[List[float]] = []
+
+        for text in texts:
+            res = requests.post(
+                f"{self.base_url}/api/embeddings",
+                json={
+                    "model": self.model,
+                    "prompt": text
+                },
+                timeout=60
+            )
+            res.raise_for_status()
+            data = res.json()
+            embeddings.append(data["embedding"])
+
+        return embeddings
+
+```
+
+</details>
+
+
+## server/indexing/hash_tracker.py
+
+*Size: 240 bytes | Modified: 2025-12-14T23:22:05.031Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import hashlib
+from pathlib import Path
+
+
+def hash_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+```
+
+</details>
+
+
+## server/indexing/language.py
+
+*Size: 291 bytes | Modified: 2025-12-14T23:22:01.807Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pathlib import Path
+
+
+EXTENSION_LANGUAGE_MAP = {
+    ".ts": "typescript",
+    ".js": "javascript",
+    ".py": "python",
+    ".dart": "dart",
+    ".json": "json",
+    ".md": "markdown"
+}
+
+
+def detect_language(path: Path) -> str | None:
+    return EXTENSION_LANGUAGE_MAP.get(path.suffix)
+
+```
+
+</details>
+
+
+## server/indexing/parsers/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-14T23:22:02.063Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/indexing/parsers/base.py
+
+*Size: 322 bytes | Modified: 2025-12-14T23:22:02.635Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pathlib import Path
+from typing import Any
+
+
+class ParseResult:
+    def __init__(self, ast: Any, source: str):
+        self.ast = ast
+        self.source = source
+
+
+class BaseParser:
+    language: str
+
+    def parse(self, path: Path) -> ParseResult:
+        raise NotImplementedError("Parser must implement parse()")
+
+```
+
+</details>
+
+
+## server/indexing/progress.py
+
+*Size: 343 bytes | Modified: 2025-12-14T23:22:06.765Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from typing import Callable, Literal
+
+Phase = Literal["scan", "parse", "chunk", "hash", "complete"]
+
+
+class ProgressTracker:
+    def __init__(self, callback: Callable[[Phase, int, int], None]):
+        self.callback = callback
+
+    def report(self, phase: Phase, current: int, total: int) -> None:
+        self.callback(phase, current, total)
+
+```
+
+</details>
+
+
+## server/indexing/scanner.py
+
+*Size: 691 bytes | Modified: 2025-12-14T23:22:01.398Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pathlib import Path
+from typing import List
+
+EXCLUDED_DIRS = {
+    ".git",
+    "node_modules",
+    "dist",
+    "build",
+    ".venv",
+    "__pycache__",
+    ".localpilot"
+}
+
+SUPPORTED_EXTENSIONS = {
+    ".ts", ".js", ".py", ".json", ".md", ".dart"
+}
+
+
+class WorkspaceScanner:
+    def scan(self, root: Path) -> List[Path]:
+        files: List[Path] = []
+
+        for path in root.rglob("*"):
+            if not path.is_file():
+                continue
+
+            if any(part in EXCLUDED_DIRS for part in path.parts):
+                continue
+
+            if path.suffix not in SUPPORTED_EXTENSIONS:
+                continue
+
+            files.append(path)
+
+        return sorted(files)
+
+```
+
+</details>
+
+
+## server/indexing/service.py
+
+*Size: 1,910 bytes | Modified: 2025-12-14T23:22:13.978Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pathlib import Path
+
+from .scanner import WorkspaceScanner
+from .language import detect_language
+from .chunker import SemanticChunker
+from .hash_tracker import hash_file
+from .state import IndexState
+from .vector_store import VectorStore
+
+
+class IndexingService:
+    def __init__(
+        self,
+        workspace: Path,
+        index_root: Path,
+        embedder,
+        progress=None
+    ):
+        self.workspace = workspace
+        self.index_root = index_root
+        self.embedder = embedder
+        self.progress = progress
+
+        self.scanner = WorkspaceScanner()
+        self.chunker = SemanticChunker()
+
+    def run(self) -> None:
+        state = IndexState(self.index_root)
+        state.load()
+
+        files = self.scanner.scan(self.workspace)
+
+        all_chunks = []
+        texts = []
+
+        for idx, path in enumerate(files, start=1):
+            if self.progress:
+                self.progress.report("scan", idx, len(files))
+
+            current_hash = hash_file(path)
+            stored_hash = state.file_hashes.get(str(path))
+
+            if stored_hash == current_hash:
+                continue
+
+            language = detect_language(path)
+            if not language:
+                continue
+
+            source = path.read_text(encoding="utf-8", errors="ignore")
+
+            chunks = self.chunker.chunk_file(
+                file_path=str(path),
+                language=language,
+                source=source
+            )
+
+            all_chunks.extend(chunks)
+            texts.extend([c.content for c in chunks])
+
+            state.file_hashes[str(path)] = current_hash
+
+        if not all_chunks:
+            return
+
+        embeddings = self.embedder.embed(texts)
+
+        store = VectorStore(
+            persist_dir=str(self.index_root / "chroma"),
+            collection_name="code_chunks"
+        )
+        store.add(all_chunks, embeddings)
+
+        state.save()
+
+```
+
+</details>
+
+
+## server/indexing/state.py
+
+*Size: 714 bytes | Modified: 2025-12-14T23:22:06.101Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import json
+from pathlib import Path
+from typing import Dict
+
+
+class IndexState:
+    def __init__(self, root: Path):
+        self.path = root / "state.json"
+        self.file_hashes: Dict[str, str] = {}
+
+    def load(self) -> None:
+        if not self.path.exists():
+            return
+        with open(self.path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            self.file_hashes = data.get("file_hashes", {})
+
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.path, "w", encoding="utf-8") as f:
+            json.dump(
+                {"file_hashes": self.file_hashes},
+                f,
+                indent=2
+            )
+
+```
+
+</details>
+
+
+## server/indexing/vector_store.py
+
+*Size: 1,102 bytes | Modified: 2025-12-14T23:22:10.961Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from typing import List
+
+import chromadb
+
+from .chunk import CodeChunk
+
+
+class VectorStore:
+    def __init__(self, persist_dir: str, collection_name: str):
+        self.client = chromadb.Client(
+            settings=chromadb.Settings(
+                persist_directory=persist_dir,
+                anonymized_telemetry=False
+            )
+        )
+        self.collection = self.client.get_or_create_collection(
+            name=collection_name
+        )
+
+    def add(
+        self,
+        chunks: List[CodeChunk],
+        embeddings: List[List[float]]
+    ) -> None:
+        self.collection.add(
+            ids=[c.id for c in chunks],
+            documents=[c.content for c in chunks],
+            metadatas=[
+                {
+                    "file_path": c.file_path,
+                    "language": c.language,
+                    "start_line": c.start_line,
+                    "end_line": c.end_line,
+                    "symbol_type": c.symbol_type
+                }
+                for c in chunks
+            ],
+            embeddings=embeddings
+        )
+        self.client.persist()
+
+```
+
+</details>
+
+
 ## server/main.py
 
 *Size: 108 bytes | Modified: 2025-12-13T19:51:08.149Z*
@@ -15197,7 +17079,7 @@ def health():
 
 ## server/requirements.txt
 
-*Size: 16 bytes | Modified: 2025-12-13T19:50:39.837Z*
+*Size: 42 bytes | Modified: 2025-12-14T23:29:11.052Z*
 
 <details>
 <summary>View code</summary>
@@ -15205,6 +17087,9 @@ def health():
 ```text
 fastapi
 uvicorn
+httpx
+requests
+chromadb
 
 ```
 

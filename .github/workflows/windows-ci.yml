@@ -21,12 +21,11 @@ jobs:
       - name: Install server deps and run tests
         shell: pwsh
         run: |
-          py -3 -m venv .venv
-          .venv\Scripts\Activate.ps1
-          python -m pip install --upgrade pip
-          pip install -r server/requirements.txt
-          pip install pytest
-          pytest -q server/tests
+          python -m venv .venv
+          .\.venv\Scripts\python -m pip install --upgrade pip
+          .\.venv\Scripts\python -m pip install -r server/requirements.txt
+          .\.venv\Scripts\python -m pip install pytest
+          .\.venv\Scripts\pytest -q server/tests
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
