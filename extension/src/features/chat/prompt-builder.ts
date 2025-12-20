@@ -6,10 +6,20 @@ export class PromptBuilder {
     "Do NOT suggest code changes or plans."
   );
 
-  build(userMessage: string, chunks: any[]): Array<{ role: string; content: string }> {
+  build(userMessage: string, chunks: any[], projectSummary?: any): Array<{ role: string; content: string }> {
     const messages: Array<{ role: string; content: string }> = [
       { role: "system", content: PromptBuilder.SYSTEM_PROMPT }
     ];
+
+    if (projectSummary) {
+      const summaryText = typeof projectSummary === "string" 
+        ? projectSummary 
+        : JSON.stringify(projectSummary, null, 2);
+      messages.push({
+        role: "system",
+        content: "PROJECT SUMMARY (facts only):\n\n" + summaryText
+      });
+    }
 
     if (chunks && chunks.length > 0) {
       const blocks = chunks.map((c: any) => {

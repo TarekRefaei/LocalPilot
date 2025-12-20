@@ -126,6 +126,65 @@ This keeps Chat safe, exploratory, and educational.
 
 ---
 
+## 🔹 Phase 2.5 — “Backbone Hardening” (Recommended Name)
+
+### Goal:
+
+> Make *any* indexed workspace **explainable** to the LLM.
+
+### Scope (non-negotiable):
+
+### 1️⃣ Introduce Semantic Chunk Types
+
+* Replace `symbol_type="file"` monopoly
+* Even regex-based chunking is acceptable initially
+* Must produce **multiple chunks per file**
+
+---
+
+### 2️⃣ Generate & Persist Project Summary
+
+* After indexing completes:
+
+  * Ask LLM to summarize the project
+  * Save it to:
+
+    ```
+    ~/.localpilot/<projectId>/summary.json
+    ```
+* Inject this summary into **every chat session**
+
+This alone will dramatically change behavior.
+
+---
+
+### 3️⃣ Enforce Index Coverage Checks
+
+Before chat:
+
+* If index empty → block chat
+* If summary missing → regenerate
+* If sync required → warn user
+
+This keeps the backbone honest.
+
+---
+
+### 4️⃣ Add Backbone Validation Queries (Internal)
+
+Examples:
+
+* “What is the main purpose of this project?”
+* “List key files”
+* “Where is indexing implemented?”
+
+If these fail → indexing is broken.
+
+---
+
+
+
+
 ## 🔹 Phase 3 — Plan Mode (Intent → Structure)
 
 **Goal:**

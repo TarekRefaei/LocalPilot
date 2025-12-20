@@ -16,7 +16,7 @@ async def chat_ws(websocket: WebSocket):
 
     try:
         client = OllamaChatClient(
-            base_url="http://localhost:11434",
+            base_url="http://127.0.0.1:11434",
             model=model,
         )
 

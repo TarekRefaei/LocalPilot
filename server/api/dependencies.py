@@ -10,7 +10,7 @@ except ImportError:
 @lru_cache()
 def get_embedder():
     return OllamaEmbeddingProvider(
-        base_url="http://localhost:11434",
+        base_url="http://127.0.0.1:11434",
         model="mxbai-embed-large"
     )
 

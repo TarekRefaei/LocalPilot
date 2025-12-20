@@ -1,33 +1,34 @@
-from pathlib import Path
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from pathlib import Path
 
-try:
-    from ..schemas.query import QueryRequest, QueryResponse
-    from ...indexing.query_service import QueryService
-    from ..dependencies import get_embedder, get_index_root
-except ImportError:
-    from api.schemas.query import QueryRequest, QueryResponse
-    from indexing.query_service import QueryService
-    from api.dependencies import get_embedder, get_index_root
+from server.api.dependencies import get_index_root, get_embedder
+from server.indexing.query_service import QueryService
 
 router = APIRouter()
 
 
-@router.post("/query", response_model=QueryResponse)
+class QueryRequest(BaseModel):
+    project_id: str
+    query: str
+    top_k: int = 5
+
+
+@router.post("/query")
 def query_index(
     request: QueryRequest,
-    embedder = Depends(get_embedder),
     index_root: Path = Depends(get_index_root),
+    embedder = Depends(get_embedder),
 ):
     service = QueryService(
-        index_root=index_root / request.project_id,
-        embedder=embedder
+        index_root=index_root,
+        project_id=request.project_id,
+        embedder=embedder,
     )
 
     results = service.query(
         text=request.query,
         top_k=request.top_k,
-        where=request.filters
     )
 
     return {"chunks": results}

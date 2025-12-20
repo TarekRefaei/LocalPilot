@@ -1,5 +1,6 @@
 import { queryRAG } from "./rag-client";
 import { PromptBuilder } from "./prompt-builder";
+import { getProjectSummary } from "../../infrastructure/http/api-client";
 
 export class ChatService {
   async sendMessage(
@@ -9,7 +10,8 @@ export class ChatService {
   ): Promise<void> {
 
     const chunks = await queryRAG(projectId, userMessage);
-    const messages = new PromptBuilder().build(userMessage, chunks);
+    const summary = await getProjectSummary(projectId);
+    const messages = new PromptBuilder().build(userMessage, chunks, summary);
 
     const WS = require("ws");
     const ws = new WS("ws://localhost:8000/ws/chat");

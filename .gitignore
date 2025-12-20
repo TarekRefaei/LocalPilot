@@ -1,7 +1,23 @@
+# LocalPilot runtime data
+.localpilot/
+**/chroma/
+**/chroma.sqlite3
+**/*.bin
+.notes/
+.env
+
+
+# Python
+__pycache__/
+.venv/
+
+# Node
 node_modules/
 dist/
-.notes/
-.venv/
-.env
-.localpilot/
-__pycache__/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
