@@ -641,7 +641,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="127.0.0.1",
-        port=52741,
+        port=8000,
         reload=True
     )
 ```
@@ -657,11 +657,11 @@ cd src
 python main.py
 
 # Should show:
-# INFO:     Uvicorn running on http://127.0.0.1:52741
+# INFO:     Uvicorn running on http://127.0.0.1:8000
 # INFO:     Started reloader process
 
 # Test in another terminal:
-curl http://localhost:52741/health
+curl http://localhost:8000/health
 
 # Should return: {"status":"healthy","version":"0.1.0"}
 
@@ -946,7 +946,7 @@ Use the provided script to start the server:
 
 The script will:
 1. Check virtual environment exists
-2. Verify port 52741 is available
+2. Verify port 8000 is available
 3. Check Ollama connection (warning if not running)
 4. Start the FastAPI server
 
@@ -955,7 +955,7 @@ The script will:
 cd server
 .venv\Scripts\activate
 cd src
-python -m uvicorn api.main:app --host 127.0.0.1 --port 52741 --reload
+python -m uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 ---

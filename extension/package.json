@@ -3,17 +3,25 @@
   "displayName": "LocalPilot",
   "description": "Privacy-first AI coding agent using local LLMs",
   "version": "0.1.0",
+  "publisher": "localpilot",
   "engines": {
     "vscode": "^1.85.0"
   },
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onView:localpilot.sidebar"
+  ],
   "scripts": {
     "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --platform=node --external:vscode --format=cjs",
     "test": "vitest run"
   },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
+    "@types/ws": "^8.5.12",
     "esbuild": "^0.27.1",
     "vitest": "^4.0.15"
   },
@@ -22,7 +30,8 @@
       "activitybar": [
         {
           "id": "localpilot",
-          "title": "LocalPilot"
+          "title": "LocalPilot",
+          "icon": "./media/icon-localpilot.svg"
         }
       ]
     },
@@ -30,7 +39,8 @@
       "localpilot": [
         {
           "id": "localpilot.sidebar",
-          "name": "LocalPilot"
+          "name": "LocalPilot",
+          "type": "webview"
         }
       ]
     }

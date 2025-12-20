@@ -590,10 +590,10 @@ server/
 scripts/
 │
 ├── 📄 start-server.ps1              # Start Python server (Windows)
-│   └── Usage: .\scripts\start-server.ps1 [-Dev] [-Port 52741]
+│   └── Usage: .\scripts\start-server.ps1 [-Dev] [-Port 8000]
 │
 ├── 📄 start-server.sh               # Start Python server (Unix, future)
-│   └── Usage: ./scripts/start-server.sh [--dev] [--port 52741]
+│   └── Usage: ./scripts/start-server.sh [--dev] [--port 8000]
 │
 ├── 📄 setup.ps1                     # Full environment setup (Windows)
 │   └── Installs: Node.js, pnpm, Python, uv, Ollama

@@ -743,7 +743,7 @@ solutions present significant challenges:
 │  VS Code Extension ◄──────► Python RAG Server                    │
 │                                                                  │
 │  Protocol: HTTP REST + WebSocket                                │
-│  Port: 52741 (configurable)                                      │
+│  Port: 8000 (configurable)                                      │
 │                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │  REST Endpoints:                                             ││

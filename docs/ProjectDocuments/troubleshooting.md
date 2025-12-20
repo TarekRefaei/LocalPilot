@@ -21,9 +21,9 @@
 ### "Python server not responding"
 **Symptoms:** Extension shows server as disconnected
 **Solutions:**
-1. Ensure server is running: `curl http://localhost:52741/health`
+1. Ensure server is running: `curl http://localhost:8000/health`
 2. Check virtual environment is activated
-3. Check port 52741 isn't used: `netstat -an | findstr 52741`
+3. Check port 8000 isn't used: `netstat -an | findstr 8000`
 4. Review logs: `~/.localpilot/logs/server.log`
 
 ## Indexing Issues

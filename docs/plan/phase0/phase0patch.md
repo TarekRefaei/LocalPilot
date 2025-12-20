@@ -311,7 +311,7 @@
 ```diff
 +++ extension/src/infrastructure/http/api-client.ts
 +export async function checkServerHealth(): Promise<boolean> {
-+  const res = await fetch('http://localhost:52741/health');
++  const res = await fetch('http://localhost:8000/health');
 +  return res.ok;
 +}
 ```

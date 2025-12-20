@@ -4,6 +4,7 @@ import { MainPanel } from './panels/main-panel';
 export function activate(context: vscode.ExtensionContext) {
   console.log('LocalPilot activated');
   MainPanel.register(context);
+  context.globalState.update('indexed', true);
 }
 
 export function deactivate() {}

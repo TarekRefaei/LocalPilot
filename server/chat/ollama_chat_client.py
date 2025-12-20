@@ -2,7 +2,6 @@ import json
 import requests
 from typing import Iterable, Dict
 
-
 class OllamaChatClient:
     def __init__(self, base_url: str, model: str):
         self.base_url = base_url.rstrip("/")
@@ -19,6 +18,7 @@ class OllamaChatClient:
             stream=True,
             timeout=300
         )
+
         response.raise_for_status()
 
         for line in response.iter_lines():
@@ -26,5 +26,9 @@ class OllamaChatClient:
                 continue
 
             data = json.loads(line.decode("utf-8"))
-            if "message" in data and "content" in data["message"]:
-                yield data["message"]["content"]
+            if data.get("done"):
+                return
+
+            content = data.get("message", {}).get("content")
+            if content:
+                yield content

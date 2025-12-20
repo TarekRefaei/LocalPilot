@@ -1,38 +1,40 @@
-from pathlib import Path
-from fastapi import APIRouter, WebSocket, Depends
+from fastapi import APIRouter, WebSocket
+import json
 
-try:
-    from ...chat.chat_service import ChatService
-    from ..dependencies import get_embedder, get_index_root
-except ImportError:
-    from chat.chat_service import ChatService
-    from api.dependencies import get_embedder, get_index_root
+from server.chat.ollama_chat_client import OllamaChatClient
 
 router = APIRouter()
 
 
 @router.websocket("/ws/chat")
-async def chat_ws(
-    websocket: WebSocket,
-    embedder = Depends(get_embedder),
-    index_root: Path = Depends(get_index_root),
-):
+async def chat_ws(websocket: WebSocket):
     await websocket.accept()
     payload = await websocket.receive_json()
 
-    service = ChatService(
-        index_root=index_root / payload["project_id"],
-        embedder=embedder,
-        ollama_base_url="http://localhost:11434",
-        chat_model=payload.get("model", "qwen2.5-coder")
-    )
+    model = payload.get("model")
+    messages = payload.get("messages")
 
     try:
-        for token in service.stream_chat(
-            project_id=payload["project_id"],
-            user_message=payload["message"],
-            top_k=payload.get("top_k", 5)
-        ):
-            await websocket.send_text(token)
+        client = OllamaChatClient(
+            base_url="http://localhost:11434",
+            model=model,
+        )
+
+        for token in client.stream_chat(messages):
+            await websocket.send_text(json.dumps({
+                "type": "token",
+                "value": token
+            }))
+
+        await websocket.send_text(json.dumps({ "type": "done" }))
+
+    except Exception as e:
+        await websocket.send_text(json.dumps({
+            "type": "error",
+            "source": "backend",
+            "message": str(e)
+        }))
+        await websocket.send_text(json.dumps({ "type": "done" }))
+
     finally:
         await websocket.close()

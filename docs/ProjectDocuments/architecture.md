@@ -132,7 +132,7 @@ LocalPilot follows a **Practical Clean Architecture** pattern with clear separat
 │  └──────────────────────────────┼──────────────────────────────┘ │
 │                                 │                                │
 │                                 │ HTTP/WebSocket                 │
-│                                 │ (localhost:52741)              │
+│                                 │ (localhost:8000)              │
 │                                 ▼                                │
 │  ┌────────────────────────────────────────────────────────────┐ │
 │  │                                                             │ │
@@ -249,7 +249,7 @@ LocalPilot follows a **Practical Clean Architecture** pattern with clear separat
 │  └─────────────┼──────────────────────────────────────────────┘   │
 │                │                                                  │
 │                │ HTTP REST + WebSocket                            │
-│                │ (localhost:52741)                                │
+│                │ (localhost:8000)                                │
 │                │                                                  │
 │  ┌─────────────┼──────────────────────────────────────────────┐   │
 │  │             ▼                                               │   │
@@ -637,7 +637,7 @@ LocalPilot follows a **Practical Clean Architecture** pattern with clear separat
 │                                                                  │
 │    // 1. Create Infrastructure (implementations)                │
 │    const fileSystem = new VSCodeFileSystemAdapter();            │
-│    const httpClient = new ApiClient('http://localhost:52741');  │
+│    const httpClient = new ApiClient('http://localhost:8000');  │
 │    const wsClient = new WebSocketClient();                      │
 │                                                                  │
 │    // 2. Create Features (inject dependencies)                  │
@@ -1782,7 +1782,7 @@ def generate_chunk_id(file_path: str, content: str, chunk_type: str, line_start:
 │  STEP 3: STREAM CHAT RESPONSE                                    │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  Extension opens WebSocket:                              │   │
-│  │  WS ws://localhost:52741/ws/chat                         │   │
+│  │  WS ws://localhost:8000/ws/chat                         │   │
 │  │                                                          │   │
 │  │  Extension sends:                                        │   │
 │  │  {                                                       │   │
@@ -3342,7 +3342,7 @@ class Chunk:
 │                      API CONTRACT DEFINITIONS                    │
 ├─────────────────────────────────────────────────────────────────┤
 
-BASE URL: http://localhost:52741/api
+BASE URL: http://localhost:8000/api
 
 ═══════════════════════════════════════════════════════════════════
 HEALTH & STATUS ENDPOINTS
@@ -3557,7 +3557,7 @@ WEBSOCKET ENDPOINTS
 
 WS /ws/chat
 ─────────────────────────────────────────
-Connect: ws://localhost:52741/ws/chat
+Connect: ws://localhost:8000/ws/chat
 
 Client sends:
 {
@@ -3585,7 +3585,7 @@ Error:
 
 WS /ws/progress
 ─────────────────────────────────────────
-Connect: ws://localhost:52741/ws/progress?project_id=abc123
+Connect: ws://localhost:8000/ws/progress?project_id=abc123
 
 Server sends (during indexing):
 {"type": "started", "project_id": "abc123"}
@@ -4264,7 +4264,7 @@ export class FileOperationError extends LocalPilotError {
 │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   │
 │                                                                  │
 │  All network communication stays on localhost:                  │
-│  • Python server: 127.0.0.1:52741                               │
+│  • Python server: 127.0.0.1:8000                               │
 │  • Ollama: 127.0.0.1:11434                                      │
 │  • No external network calls                                     │
 │  • No telemetry or analytics                                     │
@@ -4365,7 +4365,7 @@ export class FileOperationError extends LocalPilotError {
 │     │                                                            │
 │     ▼                                                            │
 │  3. PYTHON SERVER STARTS                                         │
-│     • Binds to localhost:52741                                   │
+│     • Binds to localhost:8000                                   │
 │     • Initializes ChromaDB                                       │
 │     • Connects to Ollama                                         │
 │     │                                                            │

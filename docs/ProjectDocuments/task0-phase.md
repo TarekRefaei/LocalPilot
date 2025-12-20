@@ -912,7 +912,7 @@ app.include_router(models.router, prefix="/api", tags=["Models"])
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=52741)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
 ```
 
 ### Task 0.6.3: Health Route
@@ -977,8 +977,8 @@ from . import health, models
 
 ### Verification
 - [ ] Server starts: `cd server/src/api && python main.py`
-- [ ] Health check works: `curl http://localhost:52741/health`
-- [ ] Models endpoint works: `curl http://localhost:52741/api/models`
+- [ ] Health check works: `curl http://localhost:8000/health`
+- [ ] Models endpoint works: `curl http://localhost:8000/api/models`
 
 ---
 
@@ -1003,7 +1003,7 @@ export interface ApiResponse<T> {
 export class ApiClient {
   private baseUrl: string;
   
-  constructor(baseUrl: string = 'http://localhost:52741') {
+  constructor(baseUrl: string = 'http://localhost:8000') {
     this.baseUrl = baseUrl;
   }
   
