@@ -1,0 +1,73 @@
+{
+  "name": "localpilot",
+  "displayName": "LocalPilot",
+  "description": "Privacy-first AI coding agent using local LLMs",
+  "version": "0.1.0",
+  "publisher": "localpilot",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onView:localpilot.sidebar",
+    "onCommand:localpilot.plan.createFromChat"
+  ],
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --platform=node --external:vscode --format=cjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@types/ws": "^8.5.12",
+    "esbuild": "^0.27.1",
+    "vitest": "^4.0.15"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "localpilot",
+          "title": "LocalPilot",
+          "icon": "./media/icon-localpilot.svg"
+        }
+      ]
+    },
+    "views": {
+      "localpilot": [
+        {
+          "id": "localpilot.sidebar",
+          "name": "LocalPilot",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "localpilot.plan.createFromChat",
+        "title": "LocalPilot: Create Plan from Chat"
+      },
+      {
+        "command": "localpilot.chat.clear",
+        "title": "LocalPilot: Clear Chat Session"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "localpilot.plan.createFromChat",
+          "when": "view == localpilot.sidebar",
+          "group": "navigation"
+        },
+        {
+          "command": "localpilot.chat.clear",
+          "when": "view == localpilot.sidebar",
+          "group": "navigation@2"
+        }
+      ]
+    }
+  }
+}

@@ -11,20 +11,10 @@ export interface Plan {
   overview: string;
   /** List of tasks to execute */
   tasks: Task[];
-  /** When the plan was created */
-  createdAt: Date;
-  /** When the plan was last modified */
-  updatedAt: Date;
   /** Current plan status */
   status: PlanStatus;
-  /** Original conversation that led to this plan */
-  sourceConversationId?: string;
 }
 
 export type PlanStatus =
   | 'draft'
-  | 'approved'
-  | 'executing'
-  | 'paused'
-  | 'completed'
-  | 'cancelled';
+  | 'approved';

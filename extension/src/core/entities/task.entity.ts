@@ -18,25 +18,6 @@ export interface Task {
   details: string[];
   /** IDs of tasks this depends on */
   dependencies: string[];
-  /** Current task status */
-  status: TaskStatus;
-  /** Generated code (after code generation) */
-  generatedCode?: string;
-  /** Diff for modify actions */
-  diff?: string;
-  /** Error message if failed */
-  error?: string;
-  /** Execution timestamps */
-  startedAt?: Date;
-  completedAt?: Date;
 }
 
 export type TaskActionType = 'create' | 'modify' | 'delete';
-
-export type TaskStatus =
-  | 'pending'
-  | 'running'
-  | 'awaiting-approval'
-  | 'done'
-  | 'skipped'
-  | 'error';

@@ -4,6 +4,13 @@ vi.mock('vscode', () => {
   return {
     window: {
       registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
+      showInformationMessage: vi.fn(),
+    },
+    commands: {
+      registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+    },
+    workspace: {
+      onDidChangeWorkspaceFolders: vi.fn(() => ({ dispose: vi.fn() })),
     },
   };
 });

@@ -32,3 +32,20 @@ class OllamaChatClient:
             content = data.get("message", {}).get("content")
             if content:
                 yield content
+
+    def chat(self, messages: Iterable[Dict]) -> str:
+        """
+        Perform a non-streaming chat request and return the full message content.
+        """
+        response = requests.post(
+            f"{self.base_url}/api/chat",
+            json={
+                "model": self.model,
+                "messages": list(messages),
+                "stream": False,
+            },
+            timeout=300,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return (data.get("message") or {}).get("content", "")

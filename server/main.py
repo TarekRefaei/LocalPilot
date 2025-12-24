@@ -7,6 +7,7 @@ from server.api.routes import query as query_routes
 from server.api.routes import chat_ws
 from server.api.routes import project as project_routes
 from server.api.routes import index as index_routes
+from server.api import plan as plan_api
 
 
 @asynccontextmanager
@@ -40,6 +41,7 @@ app.include_router(query_routes.router, prefix="/api")
 app.include_router(project_routes.router, prefix="/api")
 app.include_router(chat_ws.router)
 app.include_router(index_routes.router, prefix="/api")
+app.include_router(plan_api.router, prefix="/api")
 
 # --------------------
 # Health endpoints
