@@ -1,23 +1,14 @@
-import * as vscode from "vscode";
-import { initChat } from "../webview/chat-controller";
+﻿import * as vscode from 'vscode';
+import { initChat } from '../../webview/chat-controller';
+import { getActiveProjectId } from '../../core/project-context';
 
-export class MainPanel {
-  static register(context: vscode.ExtensionContext) {
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "localpilot.sidebar",
-        {
-          resolveWebviewView(view) {
-            view.webview.options = {
-              enableScripts: true
-            };
+export class ChatViewProvider implements vscode.WebviewViewProvider {
+  static readonly viewId = 'localpilot.chat';
 
-            view.webview.html = getHtml();
-            initChat(view, "default");
-          }
-        }
-      )
-    );
+  resolveWebviewView(view: vscode.WebviewView) {
+    view.webview.options = { enableScripts: true };
+    view.webview.html = getHtml();
+    initChat(view, getActiveProjectId());
   }
 }
 
@@ -150,7 +141,28 @@ window.addEventListener("message", (e) => {
     input.disabled = false;
   }
 
-  if (msg.type === "status:update") {
+      if (msg.type === "hint") {
+      const bar = document.createElement("div");
+      bar.style.marginTop = "8px";
+      bar.style.padding = "8px";
+      bar.style.border = "1px solid #555";
+      bar.style.background = "#252525";
+      bar.style.display = "flex";
+      bar.style.justifyContent = "space-between";
+      bar.style.alignItems = "center";
+      const span = document.createElement("span");
+      span.textContent = msg.message || "";
+      const btn = document.createElement("button");
+      btn.textContent = (msg.action && msg.action.label) || "Open Plan Tab";
+      btn.onclick = () => {
+        vscode.postMessage({ type: "open:planTab" });
+        bar.remove();
+      };
+      bar.appendChild(span);
+      bar.appendChild(btn);
+      document.body.appendChild(bar);
+    }
+    if (msg.type === "status:update") {
     const el = document.getElementById("status");
     if (!msg.backendOk) {
       el.textContent = "Backend not running";
@@ -170,3 +182,4 @@ window.addEventListener("message", (e) => {
 </html>
 `;
 }
+

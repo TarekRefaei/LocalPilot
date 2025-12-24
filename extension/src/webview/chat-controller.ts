@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { ChatService } from "../features/chat/chat-service";
+import { ChatSessionStore } from "../features/chat/chat-session.store";
 import {
   checkServerHealth,
   checkOllamaHealth,
@@ -26,9 +27,45 @@ export function initChat(panel: vscode.WebviewView, projectId: string) {
     if (!msg) return;
 
     // ------------------------
+    // CHAT → PLAN: open Plan tab
+    // ------------------------
+    if (msg.type === "open:planTab") {
+      await vscode.commands.executeCommand("workbench.view.extension.localpilot");
+      return;
+    }
+
+    if (msg.type === "index:done") {
+      ChatSessionStore.clear();
+      return;
+    }
+
+    // ------------------------
     // CHAT ONLY
     // ------------------------
     if (msg.type === "chat:send") {
+      // Planning intent hint (non-blocking)
+      const text: string = msg.payload?.message || "";
+      const planningIntent = /(\bplan\b|planning|implementation plan|create plan|propose plan|migration plan|write a plan)/i;
+      if (planningIntent.test(text)) {
+        panel.webview.postMessage({
+          type: "hint",
+          message: "Planning is available in the Plan tab.",
+          action: { label: "Open Plan Tab" }
+        });
+        vscode.window
+          .showInformationMessage(
+            "Planning is available in the Plan tab.",
+            "Open Plan Tab"
+          )
+          .then(async (choice) => {
+            if (choice === "Open Plan Tab") {
+              await vscode.commands.executeCommand(
+                "workbench.view.extension.localpilot"
+              );
+            }
+          });
+      }
+
       const indexed = await isIndexed(projectId);
       if (!indexed) {
         panel.webview.postMessage({
