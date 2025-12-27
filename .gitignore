@@ -4,6 +4,7 @@
 **/chroma.sqlite3
 **/*.bin
 .notes/
+.plan/
 .env
 
 

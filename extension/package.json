@@ -8,19 +8,14 @@
         "vscode": "^1.85.0"
     },
     "main": "./dist/extension.js",
-    "activationEvents": [
-        "onView:localpilot.chat",
-        "onView:localpilot.plan",
-        "onView:localpilot.act",
-        "onCommand:localpilot.plan.createFromChat"
-    ],
     "scripts": {
         "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --platform=node --external:vscode --format=cjs",
         "test": "vitest run"
     },
     "dependencies": {
         "uuid": "^13.0.0",
-        "ws": "^8.16.0"
+        "ws": "^8.16.0",
+        "diff": "^5.2.0"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",
@@ -28,7 +23,8 @@
         "@types/vscode": "^1.85.0",
         "@types/ws": "^8.5.12",
         "esbuild": "^0.27.1",
-        "vitest": "^4.0.15"
+        "vitest": "^4.0.15",
+        "@types/diff": "^5.2.1"
     },
     "contributes": {
         "viewsContainers": {
@@ -45,17 +41,20 @@
                 {
                     "name": "Chat",
                     "id": "localpilot.chat",
-                    "type": "webview"
+                    "type": "webview",
+                    "icon": "./media/icon-localpilot.svg"
                 },
                 {
                     "name": "Plan",
                     "id": "localpilot.plan",
-                    "type": "webview"
+                    "type": "webview",
+                    "icon": "./media/icon-localpilot.svg"
                 },
                 {
                     "name": "Act",
                     "id": "localpilot.act",
-                    "type": "webview"
+                    "type": "webview",
+                    "icon": "./media/icon-localpilot.svg"
                 }
             ]
         },
@@ -67,6 +66,18 @@
             {
                 "command": "localpilot.chat.clear",
                 "title": "LocalPilot: Clear Chat Session"
+            },
+            {
+                "command": "localpilot.act.start",
+                "title": "LocalPilot: Start Act Mode"
+            },
+            {
+                "command": "localpilot.act.focus",
+                "title": "LocalPilot: Focus Act View"
+            },
+            {
+                "command": "localpilot.plan.fixJsonById",
+                "title": "LocalPilot: Fix Plan JSON"
             }
         ],
         "menus": {
@@ -75,6 +86,11 @@
                     "command": "localpilot.plan.createFromChat",
                     "when": "view == localpilot.plan",
                     "group": "navigation"
+                },
+                {
+                    "command": "localpilot.act.start",
+                    "when": "view == localpilot.plan",
+                    "group": "navigation@3"
                 },
                 {
                     "command": "localpilot.chat.clear",
