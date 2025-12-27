@@ -50,6 +50,18 @@ export class PlanViewProvider implements vscode.WebviewViewProvider {
             msg.planId
           );
           break;
+        case 'plan:act':
+          vscode.commands.executeCommand(
+            'localpilot.act.start',
+            msg.planId
+          );
+          break;
+        case 'plan:fixJsonById':
+          vscode.commands.executeCommand(
+            'localpilot.plan.fixJsonById',
+            msg.planId
+          );
+          break;
       }
     });
 
@@ -65,22 +77,50 @@ export class PlanViewProvider implements vscode.WebviewViewProvider {
 }
 
 function render(plans: any[]): string {
+  function readiness(p: any): string {
+    if (p.status === 'acting') return '⚙ ACTING';
+    if (p.status === 'approved' && p.plan) return '✅ READY';
+    if (p.status === 'approved') return '⚠ NEEDS VALIDATION';
+    return '✏ DRAFT';
+  }
+  function renderJsonError(p: any): string {
+    if (!p.warnings || !p.warnings.length) return '';
+    return `
+    <div class="json-error">
+      ⚠ Plan issues detected:
+      <ul>
+        ${p.warnings
+          .map(
+            (w: any) => `
+          <li>
+            <b>${w.path ?? (w.taskId ? `task ${w.taskId}` : 'task')}</b>: ${w.message}
+            ${w.suggestion ? `<em>→ ${w.suggestion}</em>` : ''}
+          </li>`
+          )
+          .join('')}
+      </ul>
+    </div>`;
+  }
   const rows = plans
     .map(
       (p) => `
     <div class="plan-row">
       <input type="checkbox" data-id="${p.id}" />
       <span class="title">${p.title}</span>
-      <span class="status ${p.status}">${p.status.toUpperCase()} </span>
+      <span class="status ${p.status}">${readiness(p)} </span>
       <div class="actions">
         <button data-open="${p.id}" title="Open">🔍</button>
         <button data-validate="${p.id}" title="Validate">✔</button>
         <button data-approve="${p.id}" title="Approve">🔐</button>
         <button data-regenerate="${p.id}" title="Regenerate">🔄</button>
         <button data-discard="${p.id}" title="Discard">🗑</button>
-        <button disabled title="Act (coming soon)">⚙</button>
+        ${p.status === 'approved' && p.plan && (!p.warnings || !p.warnings.length)
+          ? `<button data-act="${p.id}" title="Act">⚙</button>`
+          : `<button disabled title="Fix plan before acting">⚙</button>`}
+        ${p.warnings && p.warnings.length ? `<button data-fix="${p.id}" title="Fix JSON">🛠</button>` : ''}
       </div>
     </div>
+    ${renderJsonError(p)}
   `
     )
     .join('');
@@ -97,6 +137,8 @@ function render(plans: any[]): string {
     .status { font-size: 11px; }
     .status.draft { color: #facc15; }
     .status.approved { color: #4ade80; }
+    .status.acting { color: #60a5fa; }
+    .json-error { color: #f87171; font-size: 11px; margin-left: 22px; }
     .actions { display: flex; gap: 6px; }
     button { background: none; border: none; cursor: pointer; color: #d4d4d4; }
     button:hover { color: white; }
@@ -145,6 +187,18 @@ function render(plans: any[]): string {
   document.querySelectorAll('[data-discard]').forEach(btn => {
     btn.addEventListener('click', () => {
       vscode.postMessage({ type: 'plan:discardById', planId: btn.dataset.discard });
+    });
+  });
+
+  document.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      vscode.postMessage({ type: 'plan:act', planId: btn.dataset.act });
+    });
+  });
+
+  document.querySelectorAll('[data-fix]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      vscode.postMessage({ type: 'plan:fixJsonById', planId: btn.dataset.fix });
     });
   });
 </script>

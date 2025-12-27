@@ -134,7 +134,10 @@ export async function validatePlanById(planId: string) {
 
   const warnings = validatePlan(parsed.plan);
   planRegistry.update(planId, {
-    plan: parsed.plan,
+    plan: {
+      ...parsed.plan,
+      id: planId,
+    },
     warnings,
     status: 'draft',
   });
@@ -147,22 +150,96 @@ export async function validatePlanById(planId: string) {
   await vscode.commands.executeCommand('localpilot.plan.refresh');
 }
 
-export async function approvePlanById(planId: string) {
+export async function fixPlanJsonById(planId: string) {
   const stored = planRegistry.getPlan(planId);
-  if (!stored || !stored.plan) {
-    vscode.window.showWarningMessage('Validate plan before approval.');
+  if (!stored) return;
+
+  const parsed = parsePlanMarkdown(stored.markdown);
+  if (!parsed.plan) {
+    vscode.window.showErrorMessage('Plan structure is invalid. Please regenerate the plan.');
     return;
   }
 
-  const approved = approvePlan(stored.plan);
+  const plan = parsed.plan;
+  const warnings = validatePlan(plan);
+
+  if (!warnings.length) {
+    vscode.window.showInformationMessage('Plan JSON is already valid.');
+    return;
+  }
+
+  // Auto-fix semantic issues in place
+  for (const w of warnings) {
+    if (w.code === 'missing_file_path') {
+      const task = plan.tasks.find((t) => t.id === w.taskId);
+      if (task) {
+        const prev = plan.tasks.find((t) => t.orderIndex === task.orderIndex - 1);
+        task.filePath = prev?.filePath || 'TODO_FILE_PATH';
+      }
+    }
+    if (w.code === 'invalid_action_type' || w.code === 'missing_action_type') {
+      const task = plan.tasks.find((t) => t.id === w.taskId);
+      if (task) {
+        task.actionType = 'modify';
+      }
+    }
+  }
+
+  // Re-run validation
+  const afterFixWarnings = validatePlan(plan);
+
   planRegistry.update(planId, {
-    plan: approved,
-    status: 'approved',
+    plan: {
+      ...plan,
+      id: planId,
+    },
+    markdown: stored.markdown,
+    warnings: afterFixWarnings,
+    status: 'draft',
   });
 
   await vscode.commands.executeCommand('localpilot.plan.refresh');
+  vscode.window.showInformationMessage(
+    afterFixWarnings.length
+      ? 'Plan partially fixed. Review remaining issues.'
+      : 'Plan fixed successfully. You may now approve.'
+  );
+}
 
-  vscode.window.showInformationMessage('Plan approved.');
+export async function approvePlanById(planId: string) {
+  const stored = planRegistry.getPlan(planId);
+  if (!stored) return;
+
+  // Auto-parse & validate
+  const parsed = parsePlanMarkdown(stored.markdown);
+  if (!parsed.plan) {
+    vscode.window.showErrorMessage(
+      'Cannot approve: plan JSON is invalid. Please fix and validate.'
+    );
+    return;
+  }
+
+  const warnings = validatePlan(parsed.plan);
+  if (warnings.length) {
+    vscode.window.showWarningMessage(
+      'Cannot approve: plan has validation warnings.'
+    );
+    return;
+  }
+
+  const approved = {
+    ...approvePlan(parsed.plan),
+    id: planId,
+  };
+
+  planRegistry.update(planId, {
+    plan: approved,
+    status: 'approved',
+    warnings: [],
+  });
+
+  await vscode.commands.executeCommand('localpilot.plan.refresh');
+  vscode.window.showInformationMessage('Plan validated and approved.');
 }
 
 export async function discardPlanById(planId: string) {

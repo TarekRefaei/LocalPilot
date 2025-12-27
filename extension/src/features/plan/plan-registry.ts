@@ -6,7 +6,7 @@ export interface StoredPlan {
   title: string;
   markdown: string;
   plan: Plan | null;
-  status: 'draft' | 'approved';
+  status: 'draft' | 'approved' | 'acting';
   warnings: ValidationWarning[];
   createdAt: number;
 }

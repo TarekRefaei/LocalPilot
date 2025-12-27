@@ -6,74 +6,54 @@ import json
 from server.chat.ollama_chat_client import OllamaChatClient
 
 PLAN_MODE_SYSTEM = (
-     "You are operating in PLAN MODE.\n\n"
-     "Your task is to generate a structured implementation plan for a software project.\n\n"
-     "────────────────────────────────────────\n"
-     "CORE RULES\n"
-     "────────────────────────────────────────\n"
-     "1. You MUST generate a PLAN, not code.\n"
-     "2. You MUST NOT write or suggest code implementations.\n"
-     "3. You MUST NOT include shell commands or execution steps.\n"
-     "4. You MUST NOT assume files or frameworks not present in the indexed project.\n"
-     "5. You MUST base the plan ONLY on: Project Summary, Indexed Project Structure / Symbols, User Request.\n"
-     "6. If information is missing, you MUST explicitly state it.\n\n"
-     "────────────────────────────────────────\n"
-     "PLAN REQUIREMENTS\n"
-     "────────────────────────────────────────\n"
-     "1. File-level tasks only (NOT function-level).\n"
-     "2. Each task MUST specify:\n"
-     "   - filePath\n"
-     "   - actionType (create | modify | delete)\n"
-     "3. Tasks MUST be ordered logically using orderIndex.\n"
-     "4. Tasks MUST be descriptive but MUST NOT include implementation details.\n\n"
-    "────────────────────────────────────────\n"
-    "STRICT JSON SCHEMA (MANDATORY)\n"
-    "────────────────────────────────────────\n"
-    "You MUST embed ONE JSON block in the output.\n"
-    "The JSON MUST be VALID and MUST MATCH THIS SCHEMA EXACTLY:\n\n"
+    "You are operating in PLAN MODE.\n\n"
+
+    "Your task is to output ONE VALID IMPLEMENTATION PLAN.\n"
+    "You MUST output EXACTLY ONE JSON object inside a fenced ```json block.\n\n"
+
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    "ABSOLUTE RULES (NO EXCEPTIONS)\n"
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    "1. Output ONE and ONLY ONE JSON object.\n"
+    "2. JSON MUST be syntactically valid.\n"
+    "3. JSON MUST match the schema EXACTLY.\n"
+    "4. ALL fields are REQUIRED.\n"
+    "5. NO extra fields are allowed.\n"
+    "6. status MUST be \"draft\".\n"
+    "7. orderIndex MUST start at 0 and increment by 1.\n"
+    "8. tasks MUST NOT be empty.\n"
+    "9. filePath MUST NEVER be empty.\n"
+    "10. actionType MUST be create | modify | delete.\n\n"
+
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    "STRICT JSON SCHEMA\n"
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     "{\n"
-    '  "id": "string",\n'
-    '  "title": "string",\n'
-    '  "overview": "string",\n'
-    '  "status": "draft",\n'
-    '  "tasks": [\n'
+    "  \"id\": \"string\",\n"
+    "  \"title\": \"string\",\n"
+    "  \"overview\": \"string\",\n"
+    "  \"status\": \"draft\",\n"
+    "  \"tasks\": [\n"
     "    {\n"
-    '      "id": "string",\n'
-    '      "orderIndex": number,\n'
-    '      "title": "string",\n'
-    '      "description": "string",\n'
-    '      "filePath": "string",\n'
-    '      "actionType": "create | modify | delete",\n'
-    '      "details": ["string"],\n'
-    '      "dependencies": ["string"]\n'
+    "      \"id\": \"string\",\n"
+    "      \"orderIndex\": number,\n"
+    "      \"title\": \"string\",\n"
+    "      \"description\": \"string\",\n"
+    "      \"filePath\": \"string\",\n"
+    "      \"actionType\": \"create | modify | delete\",\n"
+    "      \"details\": [\"string\"],\n"
+    "      \"dependencies\": [\"string\"]\n"
     "    }\n"
     "  ]\n"
     "}\n\n"
-    "RULES:\n"
-    "- ALL fields are REQUIRED.\n"
-    "- NO extra fields are allowed.\n"
-    "- status MUST be \"draft\".\n"
-    "- tasks array MUST NOT be empty.\n"
-    "- orderIndex MUST start at 0 and be sequential.\n\n"
-     "────────────────────────────────────────\n"
-     "OUTPUT FORMAT (MANDATORY)\n"
-     "────────────────────────────────────────\n"
-     "1. Human-readable Markdown plan.\n"
-     "2. ONE embedded JSON block that matches the schema exactly.\n\n"
-     "────────────────────────────────────────\n"
-     "FORBIDDEN\n"
-     "────────────────────────────────────────\n"
-     "- No code blocks except the embedded JSON.\n"
-     "- No shell commands.\n"
-     "- No file content.\n"
-     "- No execution instructions.\n\n"
-     "────────────────────────────────────────\n"
-     "FAILURE HANDLING\n"
-     "────────────────────────────────────────\n"
-     "If you cannot produce a valid plan:\n"
-     "- Explain what information is missing in Markdown.\n"
-     "- STILL include a JSON block with empty tasks array.\n"
-     "- NEVER hallucinate details.\n"
+
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    "SELF-CHECK LOOP (MANDATORY)\n"
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    "- Validate JSON against the schema.\n"
+    "- Fix ALL errors BEFORE responding.\n"
+    "- Do NOT explain.\n"
+    "- Do NOT apologize.\n"
 )
 
 
@@ -130,4 +110,27 @@ class PlanService:
     def generate(self, chat_messages: List[Dict[str, str]]) -> str:
         client = OllamaChatClient(base_url=self.base_url, model=self.model)
         messages = self._build_messages(chat_messages)
-        return client.chat(messages)
+
+        output = ""
+        for attempt in range(3):  # increase to 3 attempts
+            output = client.chat(messages)
+
+            # Validate JSON via parser
+            from server.plan.plan_parser import PlanParser
+            parser = PlanParser()
+            parsed = parser.parse(output)
+
+            if parsed.get("plan"):
+                return output
+
+            # Self-repair instruction for the model
+            messages.append({
+                "role": "system",
+                "content": (
+                    "The previous output was INVALID.\n"
+                    "You MUST fix ALL schema violations.\n"
+                    "Output ONLY a valid JSON plan."
+                )
+            })
+
+        return output  # last attempt (will fail validation visibly)
