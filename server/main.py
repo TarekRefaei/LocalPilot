@@ -2,12 +2,22 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 import requests
+import sys
+import asyncio
 
 from server.api.routes import query as query_routes
 from server.api.routes import chat_ws
 from server.api.routes import project as project_routes
 from server.api.routes import index as index_routes
 from server.api import plan as plan_api
+from server.act_v2.api import router as act_v2_router
+
+# Windows: prefer selector event loop to reduce WinError 10054 during client disconnects
+if sys.platform.startswith("win"):
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    except Exception:
+        pass
 
 
 @asynccontextmanager
@@ -42,6 +52,7 @@ app.include_router(project_routes.router, prefix="/api")
 app.include_router(chat_ws.router)
 app.include_router(index_routes.router, prefix="/api")
 app.include_router(plan_api.router, prefix="/api")
+app.include_router(act_v2_router)
 
 # --------------------
 # Health endpoints
@@ -59,3 +70,4 @@ def ollama_health():
         return {"status": "ok", "ollama": r.json()}
     except Exception as e:
         return {"status": "error", "error": str(e)}
+

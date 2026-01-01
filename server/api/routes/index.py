@@ -1,5 +1,5 @@
 from pathlib import Path
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 import json
 import queue
@@ -15,16 +15,19 @@ router = APIRouter()
 @router.get("/index/{project_id}")
 def index_project(
     project_id: str,
+    workspace_root: str,
     index_root: Path = Depends(get_index_root),
     embedder = Depends(get_embedder),
 ):
+    # Early validation of workspace path
+    workspace = Path(workspace_root)
+    if not workspace.exists() or not workspace.is_dir():
+        raise HTTPException(status_code=400, detail="Invalid workspace root")
+
     q: queue.Queue = queue.Queue()
 
     def run_indexing():
         try:
-            workspace = Path(
-                r"C:\Users\super\OneDrive\Desktop\My Projects\LocalPilot\test_project"
-            )
 
             def on_progress(phase: str, current: int, total: int):
                 q.put({

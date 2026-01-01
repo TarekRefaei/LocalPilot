@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import { describe, it, expect } from 'vitest';
 import { validatePlan } from '../../plan/plan-validator';
 
@@ -50,3 +54,4 @@ describe('Plan → Act Contract', () => {
     expect(warnings.length).toBe(0);
   });
 });
+

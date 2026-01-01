@@ -2,12 +2,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List, Dict, Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from server.api.dependencies import get_index_root
 from server.plan.plan_service import PlanService
 from server.plan.plan_parser import PlanParser
+from server.plan.auto_fix import PlanAutoFixer
 
 
 router = APIRouter()
@@ -26,3 +27,29 @@ def generate_plan(request: PlanRequest, index_root: Path = Depends(get_index_roo
     parser = PlanParser()
     result = parser.parse(markdown)
     return result
+
+
+class AutoFixRequest(BaseModel):
+    markdown: str
+    workspace_root: str
+
+
+@router.post("/plan/auto-fix")
+def auto_fix_plan(request: AutoFixRequest) -> Dict[str, Any]:
+    parser = PlanParser()
+    parsed = parser.parse(request.markdown)
+    if not parsed.get("plan"):
+        # keep consistent 400 style used above
+        raise HTTPException(status_code=400, detail="Invalid plan JSON")
+
+    workspace = Path(request.workspace_root)
+    if not workspace.exists() or not workspace.is_dir():
+        raise HTTPException(status_code=400, detail="Invalid workspace root")
+    fixer = PlanAutoFixer(workspace)
+    result = fixer.auto_fix(parsed["plan"])  # type: ignore[arg-type]
+
+    return {
+        "fixedPlan": result.fixed_plan,
+        "warnings": result.warnings,
+        "diff": result.diff,
+    }

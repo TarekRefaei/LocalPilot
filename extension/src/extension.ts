@@ -4,15 +4,17 @@ import { ChatSessionStore } from './features/chat/chat-session.store';
 import { ChatViewProvider } from './views/chat/chat-view';
 import { PlanViewProvider } from './views/plan/plan-view';
 import { ActViewProvider } from './views/act/act-view';
-import { getAllPlans, selectPlan, openPlan, validatePlanById, approvePlanById, discardPlanById, regeneratePlanById, fixPlanJsonById } from './features/plan/plan-controller';
+import { ExecuteViewProvider } from './views/execute/execute-view';
+import { startPlanExecution, approveAndApply } from './features/execute_v2/execute-controller';
+import { getAllPlans, selectPlan, openPlan, validatePlanById, approvePlanById, discardPlanById, regeneratePlanById } from './features/plan/plan-controller';
 import { ActPersistence } from './features/act/act-persistence';
 import { actState } from './features/act/act-state';
-import { startActByPlanId, runActTask, runAllActTasks, skipActTask } from './features/act/act-controller';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('LocalPilot activated');
   const planViewProvider = new PlanViewProvider();
   const actViewProvider = new ActViewProvider();
+  const executeViewProvider = new ExecuteViewProvider();
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       ChatViewProvider.viewId,
@@ -25,6 +27,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerWebviewViewProvider(
       ActViewProvider.viewId,
       actViewProvider
+    ),
+    vscode.window.registerWebviewViewProvider(
+      ExecuteViewProvider.viewId,
+      executeViewProvider
     )
   );
   registerPlanCommands(context);
@@ -39,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('localpilot.plan.approveById', approvePlanById),
     vscode.commands.registerCommand('localpilot.plan.discardById', discardPlanById),
     vscode.commands.registerCommand('localpilot.plan.regenerateById', (planId: string) => regeneratePlanById(planId, ChatSessionStore.getMessages())),
-    vscode.commands.registerCommand('localpilot.plan.fixJsonById', fixPlanJsonById)
+    // Removed: localpilot.plan.fixJsonById — frontend auto-mutation is disallowed
   );
   const clearChat = vscode.commands.registerCommand('localpilot.chat.clear', () => {
     ChatSessionStore.clear();
@@ -56,7 +62,9 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'localpilot.act.start',
-      startActByPlanId
+      () => {
+        vscode.window.showErrorMessage('Act v1 is deprecated and disabled. Use Execute (v2).');
+      }
     ),
     vscode.commands.registerCommand(
       'localpilot.act.focus',
@@ -68,19 +76,31 @@ export function activate(context: vscode.ExtensionContext) {
     ),
     vscode.commands.registerCommand(
       'localpilot.act.runTask',
-      runActTask
+      () => vscode.window.showErrorMessage('Act v1 is deprecated and disabled. Use Execute (v2).')
     ),
     vscode.commands.registerCommand(
       'localpilot.act.skipTask',
-      skipActTask
+      () => vscode.window.showErrorMessage('Act v1 is deprecated and disabled. Use Execute (v2).')
     ),
     vscode.commands.registerCommand(
       'localpilot.act.runAll',
-      runAllActTasks
+      () => vscode.window.showErrorMessage('Act v1 is deprecated and disabled. Use Execute (v2).')
     ),
     vscode.commands.registerCommand(
       'localpilot.index.sync',
       async () => { /* no-op placeholder */ }
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.execute.start',
+      startPlanExecution
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.execute.apply',
+      approveAndApply
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.execute.refresh',
+      () => executeViewProvider.render()
     )
   );
 

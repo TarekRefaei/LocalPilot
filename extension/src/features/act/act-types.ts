@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import type { Task } from '../../core/entities/task.entity';
 import type { Preview } from './diff-generator';
 
@@ -23,3 +27,4 @@ export interface ExecutableTask {
   error?: string;
   generatedContent?: string;
 }
+

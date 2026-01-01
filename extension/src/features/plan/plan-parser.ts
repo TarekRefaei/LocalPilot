@@ -33,15 +33,6 @@ function extractJsonBlock(markdown: string): string | null {
   if (m && m[1]) {
     return m[1].trim();
   }
-
-  // Fallback: try to locate a raw JSON object
-  const start = markdown.indexOf('{');
-  const end = markdown.lastIndexOf('}');
-  if (start !== -1 && end !== -1 && end > start) {
-    const candidate = markdown.slice(start, end + 1).trim();
-    if (candidate.startsWith('{')) return candidate;
-  }
-
   return null;
 }
 

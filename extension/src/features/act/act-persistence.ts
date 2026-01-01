@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as vscode from 'vscode';
 import type { ActSession } from './act-state';
 
@@ -18,3 +22,4 @@ export class ActPersistence {
     this.context.globalState.update(STORAGE_KEY, undefined);
   }
 }
+

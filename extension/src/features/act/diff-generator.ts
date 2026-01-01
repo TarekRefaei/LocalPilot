@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as Diff from 'diff';
 
 export type Preview =
@@ -27,3 +31,4 @@ export function generatePreview(
 
   return { kind: 'diff', content: patch };
 }
+

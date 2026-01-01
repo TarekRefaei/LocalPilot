@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import type { Plan } from '../../core/entities/plan.entity';
 
 export type ActTaskStatus =
@@ -50,3 +54,4 @@ export const actState = {
     session = null;
   }
 };
+

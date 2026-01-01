@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import { ACT_SYSTEM_PROMPT, buildActPrompt } from './act-prompts';
 
 type GenerateArgs = {
@@ -43,3 +47,4 @@ export class CodeGenerator {
     return content;
   }
 }
+
