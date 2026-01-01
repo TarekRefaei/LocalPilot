@@ -1,4 +1,4 @@
-﻿import * as vscode from 'vscode';
+import * as vscode from 'vscode';
 import { initChat } from '../../webview/chat-controller';
 import { getActiveProjectId } from '../../core/project-context';
 
@@ -7,12 +7,14 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
   resolveWebviewView(view: vscode.WebviewView) {
     view.webview.options = { enableScripts: true };
-    view.webview.html = getHtml();
-    initChat(view, getActiveProjectId());
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+    const projectId = getActiveProjectId();
+    view.webview.html = getHtml(workspaceRoot, projectId);
+    initChat(view, projectId);
   }
 }
 
-function getHtml(): string {
+function getHtml(workspaceRoot: string, projectId: string): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -69,7 +71,10 @@ indexBtn.onclick = () => {
   progress.classList.remove("hidden");
   progress.value = 0;
 
-  const es = new EventSource("http://localhost:8000/api/index/default");
+  const ws = ${JSON.stringify(workspaceRoot)};
+  const pid = ${JSON.stringify(projectId)};
+  const url = "http://localhost:8000/api/index/" + encodeURIComponent(pid) + "?workspace_root=" + encodeURIComponent(ws);
+  const es = new EventSource(url);
 
   es.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);

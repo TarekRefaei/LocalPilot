@@ -1,11 +1,14 @@
 import * as vscode from 'vscode';
+import { planRegistry } from './plan-registry';
 
 let panel: vscode.WebviewPanel | undefined;
+let currentPlanId: string | undefined;
 
-export async function openPlanView(markdown: string) {
+export async function openPlanView(markdown: string, planId?: string) {
+  currentPlanId = planId;
   if (panel) {
     panel.reveal();
-    panel.webview.postMessage({ type: 'plan:update', markdown });
+    panel.webview.postMessage({ type: 'plan:update', markdown, planId });
     return;
   }
 
@@ -16,14 +19,33 @@ export async function openPlanView(markdown: string) {
     { enableScripts: true }
   );
 
-  panel.webview.html = render(markdown);
+  panel.webview.html = render(markdown, planId);
+
+  panel.webview.onDidReceiveMessage(async (msg) => {
+    if (!msg || !msg.type) return;
+    if (msg.type === 'plan:content') {
+      const markdown: string = msg.markdown || '';
+      const targetId: string | undefined = msg.planId || currentPlanId;
+      if (targetId) {
+        planRegistry.update(targetId, { markdown, plan: null, status: 'draft' });
+        await vscode.commands.executeCommand('localpilot.plan.refresh');
+      } else {
+        const selected = planRegistry.getSelected();
+        if (selected.length === 1) {
+          planRegistry.update(selected[0].id, { markdown, plan: null, status: 'draft' });
+          await vscode.commands.executeCommand('localpilot.plan.refresh');
+        }
+      }
+    }
+  });
 
   panel.onDidDispose(() => {
     panel = undefined;
+    currentPlanId = undefined;
   });
 }
 
-function render(markdown: string): string {
+function render(markdown: string, planId?: string): string {
   const escaped = markdown.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   return `
     <!DOCTYPE html>
@@ -50,8 +72,9 @@ function render(markdown: string): string {
           function sendPlanContent() {
             const el = document.getElementById('md');
             const markdown = el && el.value ? el.value : '';
-            vscode.postMessage({ type: 'plan:content', markdown });
+            vscode.postMessage({ type: 'plan:content', markdown, planId: ${JSON.stringify(planId || '')} });
           }
+          document.getElementById('md').addEventListener('input', sendPlanContent);
           window.addEventListener('beforeunload', sendPlanContent);
         </script>
       </body>

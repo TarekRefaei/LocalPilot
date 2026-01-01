@@ -18,6 +18,8 @@ export interface Task {
   details: string[];
   /** IDs of tasks this depends on */
   dependencies: string[];
+  /** Optional expected hash of target file content before applying patch */
+  expectedFileHash?: string;
 }
 
 export type TaskActionType = 'create' | 'modify' | 'delete';

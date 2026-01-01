@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as vscode from 'vscode';
 import * as path from 'path';
 
@@ -86,3 +90,4 @@ function applyUnifiedDiff(original: string, diffLines: string[]): string | null 
 
   return out.join('\n');
 }
+

@@ -55,6 +55,12 @@
                     "id": "localpilot.act",
                     "type": "webview",
                     "icon": "./media/icon-localpilot.svg"
+                },
+                {
+                    "name": "Execute",
+                    "id": "localpilot.execute",
+                    "type": "webview",
+                    "icon": "./media/icon-localpilot.svg"
                 }
             ]
         },
@@ -78,6 +84,18 @@
             {
                 "command": "localpilot.plan.fixJsonById",
                 "title": "LocalPilot: Fix Plan JSON"
+            },
+            {
+                "command": "localpilot.execute.start",
+                "title": "LocalPilot: Start Execution (v2)"
+            },
+            {
+                "command": "localpilot.execute.apply",
+                "title": "LocalPilot: Apply Approved Diff"
+            },
+            {
+                "command": "localpilot.execute.refresh",
+                "title": "LocalPilot: Refresh Execute View"
             }
         ],
         "menus": {
@@ -89,8 +107,13 @@
                 },
                 {
                     "command": "localpilot.act.start",
-                    "when": "view == localpilot.plan",
+                    "when": "false",
                     "group": "navigation@3"
+                },
+                {
+                    "command": "localpilot.execute.start",
+                    "when": "view == localpilot.plan",
+                    "group": "navigation@4"
                 },
                 {
                     "command": "localpilot.chat.clear",

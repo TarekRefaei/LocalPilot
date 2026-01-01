@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -24,3 +28,4 @@ export class BackupManager {
     fs.copyFileSync(backupPath, targetPath);
   }
 }
+

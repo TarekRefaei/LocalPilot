@@ -1,7 +1,7 @@
 ## Project Structure
 
 ```
-. (135 files)
+. (180 files)
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   └── issue_template.md
@@ -27,6 +27,8 @@
 │   │   ├── phase4/
 │   │   │   ├── new-act-plan.md
 │   │   │   └── phase4patch.md
+│   │   ├── phase5/
+│   │   │   └── phase5patch.md
 │   │   ├── master-execution-roadmap.md
 │   │   └── Phase-by-Phase-TODO-List.md
 │   ├── decisions/
@@ -75,8 +77,10 @@
 │   │   │   ├── act/
 │   │   │   │   ├── __tests__/
 │   │   │   │   │   └── act-contract.test.ts
+│   │   │   │   ├── act-apply.ts
 │   │   │   │   ├── act-controller.ts
 │   │   │   │   ├── act-events.ts
+│   │   │   │   ├── act-executor.ts
 │   │   │   │   ├── act-persistence.ts
 │   │   │   │   ├── act-prompts.ts
 │   │   │   │   ├── act-service.ts
@@ -93,12 +97,20 @@
 │   │   │   │   ├── chat-session.store.ts
 │   │   │   │   ├── prompt-builder.ts
 │   │   │   │   └── rag-client.ts
+│   │   │   ├── execute_v2/
+│   │   │   │   ├── execute-client.ts
+│   │   │   │   ├── execute-controller.ts
+│   │   │   │   ├── execute-state.ts
+│   │   │   │   └── execute-types.ts
 │   │   │   ├── ollama/
 │   │   │   │   └── connection-manager.ts
 │   │   │   └── plan/
 │   │   │       ├── plan-approval.ts
 │   │   │       ├── plan-client.ts
 │   │   │       ├── plan-controller.ts
+│   │   │       ├── plan-diff.d.ts
+│   │   │       ├── plan-diff.ts
+│   │   │       ├── plan-normalizer.ts
 │   │   │       ├── plan-parser.ts
 │   │   │       ├── plan-registry.ts
 │   │   │       ├── plan-state.ts
@@ -107,6 +119,8 @@
 │   │   ├── infrastructure/
 │   │   │   └── http/
 │   │   │       └── api-client.ts
+│   │   ├── ollama/
+│   │   │   └── ollama-chat-client.ts
 │   │   ├── panels/
 │   │   │   └── main-panel.ts
 │   │   ├── prompts/
@@ -117,6 +131,8 @@
 │   │   │   │   └── act-view.ts
 │   │   │   ├── chat/
 │   │   │   │   └── chat-view.ts
+│   │   │   ├── execute/
+│   │   │   │   └── execute-view.ts
 │   │   │   └── plan/
 │   │   │       └── plan-view.ts
 │   │   ├── webview/
@@ -133,6 +149,45 @@
 ├── server/
 │   ├── .pytest_cache/
 │   │   └── README.md
+│   ├── act_v2/
+│   │   ├── apply/
+│   │   │   ├── __init__.py
+│   │   │   ├── apply_errors.py
+│   │   │   ├── patch_applier.py
+│   │   │   └── workspace_guard.py
+│   │   ├── compiler/
+│   │   │   ├── __init__.py
+│   │   │   ├── plan_compiler.py
+│   │   │   └── task_graph.py
+│   │   ├── context/
+│   │   │   ├── __init__.py
+│   │   │   ├── task_context_builder.py
+│   │   │   └── workspace_reader.py
+│   │   ├── ledger/
+│   │   │   ├── __init__.py
+│   │   │   ├── execution_ledger.py
+│   │   │   └── models.py
+│   │   ├── llm/
+│   │   │   ├── __init__.py
+│   │   │   ├── confined_prompt.py
+│   │   │   ├── invocation_service.py
+│   │   │   ├── llm_client_stub.py
+│   │   │   └── ollama_client.py
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   ├── execution_state.py
+│   │   │   └── execution_task.py
+│   │   ├── validation/
+│   │   │   ├── __init__.py
+│   │   │   ├── diff_parser.py
+│   │   │   ├── diff_validator.py
+│   │   │   └── validation_errors.py
+│   │   ├── __init__.py
+│   │   ├── api.py
+│   │   ├── apply_engine.py
+│   │   ├── diff_validator.py
+│   │   ├── errors.py
+│   │   └── index_hook.py
 │   ├── api/
 │   │   ├── routes/
 │   │   │   ├── __init__.py
@@ -174,6 +229,9 @@
 │   │   ├── symbol_index.py
 │   │   └── vector_store.py
 │   ├── plan/
+│   │   ├── auto_fix/
+│   │   │   ├── __init__.py
+│   │   │   └── plan_auto_fixer.py
 │   │   ├── __init__.py
 │   │   ├── plan_parser.py
 │   │   └── plan_service.py
@@ -196,7 +254,7 @@
 
 ## extension/package.json
 
-*Size: 3,204 bytes | Modified: 2025-12-26T21:28:01.072Z*
+*Size: 4,035 bytes | Modified: 2025-12-28T18:51:15.237Z*
 
 <details>
 <summary>View code</summary>
@@ -259,6 +317,12 @@
                     "id": "localpilot.act",
                     "type": "webview",
                     "icon": "./media/icon-localpilot.svg"
+                },
+                {
+                    "name": "Execute",
+                    "id": "localpilot.execute",
+                    "type": "webview",
+                    "icon": "./media/icon-localpilot.svg"
                 }
             ]
         },
@@ -282,6 +346,18 @@
             {
                 "command": "localpilot.plan.fixJsonById",
                 "title": "LocalPilot: Fix Plan JSON"
+            },
+            {
+                "command": "localpilot.execute.start",
+                "title": "LocalPilot: Start Execution (v2)"
+            },
+            {
+                "command": "localpilot.execute.apply",
+                "title": "LocalPilot: Apply Approved Diff"
+            },
+            {
+                "command": "localpilot.execute.refresh",
+                "title": "LocalPilot: Refresh Execute View"
             }
         ],
         "menus": {
@@ -293,8 +369,13 @@
                 },
                 {
                     "command": "localpilot.act.start",
-                    "when": "view == localpilot.plan",
+                    "when": "false",
                     "group": "navigation@3"
+                },
+                {
+                    "command": "localpilot.execute.start",
+                    "when": "view == localpilot.plan",
+                    "group": "navigation@4"
                 },
                 {
                     "command": "localpilot.chat.clear",
@@ -975,7 +1056,7 @@ export interface TaskSchema {
 
 ## extension/src/extension.ts
 
-*Size: 3,111 bytes | Modified: 2025-12-26T21:26:43.786Z*
+*Size: 4,452 bytes | Modified: 2025-12-29T18:53:18.853Z*
 
 <details>
 <summary>View code</summary>
@@ -987,14 +1068,18 @@ import { ChatSessionStore } from './features/chat/chat-session.store';
 import { ChatViewProvider } from './views/chat/chat-view';
 import { PlanViewProvider } from './views/plan/plan-view';
 import { ActViewProvider } from './views/act/act-view';
+import { ExecuteViewProvider } from './views/execute/execute-view';
+import { startPlanExecution, approveAndApply } from './features/execute_v2/execute-controller';
 import { getAllPlans, selectPlan, openPlan, validatePlanById, approvePlanById, discardPlanById, regeneratePlanById, fixPlanJsonById } from './features/plan/plan-controller';
 import { ActPersistence } from './features/act/act-persistence';
 import { actState } from './features/act/act-state';
-import { startActByPlanId } from './features/act/act-controller';
+import { startActByPlanId, runActTask, runAllActTasks, skipActTask } from './features/act/act-controller';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('LocalPilot activated');
   const planViewProvider = new PlanViewProvider();
+  const actViewProvider = new ActViewProvider();
+  const executeViewProvider = new ExecuteViewProvider();
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       ChatViewProvider.viewId,
@@ -1006,7 +1091,11 @@ export function activate(context: vscode.ExtensionContext) {
     ),
     vscode.window.registerWebviewViewProvider(
       ActViewProvider.viewId,
-      new ActViewProvider()
+      actViewProvider
+    ),
+    vscode.window.registerWebviewViewProvider(
+      ExecuteViewProvider.viewId,
+      executeViewProvider
     )
   );
   registerPlanCommands(context);
@@ -1038,11 +1127,45 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'localpilot.act.start',
-      startActByPlanId
+      () => {
+        vscode.window.showWarningMessage('Act v1 is deprecated. Use Execute (v2).');
+      }
     ),
     vscode.commands.registerCommand(
       'localpilot.act.focus',
-      () => vscode.commands.executeCommand('workbench.view.extension.localpilot.act')
+      () => vscode.commands.executeCommand('workbench.view.extension.localpilot')
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.act.refresh',
+      () => actViewProvider.render()
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.act.runTask',
+      runActTask
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.act.skipTask',
+      skipActTask
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.act.runAll',
+      runAllActTasks
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.index.sync',
+      async () => { /* no-op placeholder */ }
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.execute.start',
+      startPlanExecution
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.execute.apply',
+      approveAndApply
+    ),
+    vscode.commands.registerCommand(
+      'localpilot.execute.refresh',
+      () => executeViewProvider.render()
     )
   );
 
@@ -1070,12 +1193,16 @@ export function deactivate() {}
 
 ## extension/src/features/act/__tests__/act-contract.test.ts
 
-*Size: 1,192 bytes | Modified: 2025-12-26T22:50:34.047Z*
+*Size: 1,281 bytes | Modified: 2025-12-28T21:40:41.225Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import { describe, it, expect } from 'vitest';
 import { validatePlan } from '../../plan/plan-validator';
 
@@ -1129,6 +1256,114 @@ describe('Plan → Act Contract', () => {
   });
 });
 
+
+```
+
+</details>
+
+
+## extension/src/features/act/act-apply.ts
+
+*Size: 2,163 bytes | Modified: 2025-12-28T21:40:41.189Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
+import * as vscode from 'vscode';
+import * as path from 'path';
+
+/**
+ * VERY SMALL unified diff applier.
+ * Supports add/replace lines.
+ * (Enough for Phase 4.8; full patch engine can come later.)
+ */
+export async function applyDiff(diff: string): Promise<boolean> {
+  if (!diff.trim().startsWith('---')) {
+    // empty or invalid diff = no-op success
+    return true;
+  }
+
+  const lines = diff.split('\n');
+
+  let targetFile: string | null = null;
+  const hunks: string[] = [];
+
+  for (const line of lines) {
+    if (line.startsWith('+++ ')) {
+      targetFile = line.replace('+++ ', '').trim();
+      continue;
+    }
+    if (targetFile) hunks.push(line);
+  }
+
+  if (!targetFile) {
+    vscode.window.showErrorMessage('Invalid diff: no target file.');
+    return false;
+  }
+
+  const ws = vscode.workspace.workspaceFolders?.[0];
+  if (!ws) {
+    vscode.window.showErrorMessage('No workspace open.');
+    return false;
+  }
+
+  const filePath = vscode.Uri.file(
+    path.join(ws.uri.fsPath, targetFile.replace(/^b\//, ''))
+  );
+
+  const doc = await vscode.workspace.openTextDocument(filePath);
+  const text = doc.getText();
+  const newText = applyUnifiedDiff(text, hunks);
+
+  if (newText === null) {
+    vscode.window.showErrorMessage('Failed to apply diff.');
+    return false;
+  }
+
+  const edit = new vscode.WorkspaceEdit();
+  edit.replace(
+    filePath,
+    new vscode.Range(
+      doc.positionAt(0),
+      doc.positionAt(text.length)
+    ),
+    newText
+  );
+
+  return vscode.workspace.applyEdit(edit);
+}
+
+/**
+ * VERY BASIC unified diff applier.
+ * (Insert/remove lines only; safe for generated code.)
+ */
+function applyUnifiedDiff(original: string, diffLines: string[]): string | null {
+  const out: string[] = [];
+  const src = original.split('\n');
+  let srcIndex = 0;
+
+  for (const line of diffLines) {
+    if (line.startsWith('@@')) continue;
+
+    if (line.startsWith('+')) {
+      out.push(line.slice(1));
+    } else if (line.startsWith('-')) {
+      srcIndex++;
+    } else {
+      out.push(src[srcIndex] ?? '');
+      srcIndex++;
+    }
+  }
+
+  return out.join('\n');
+}
+
+
 ```
 
 </details>
@@ -1136,20 +1371,43 @@ describe('Plan → Act Contract', () => {
 
 ## extension/src/features/act/act-controller.ts
 
-*Size: 1,133 bytes | Modified: 2025-12-26T23:11:07.540Z*
+*Size: 2,085 bytes | Modified: 2025-12-28T21:40:41.190Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as vscode from 'vscode';
 import { planRegistry } from '../plan/plan-registry';
 import { ActService } from './act-service';
 
 const actService = new ActService();
 
-export function startActByPlanId(planId: string) {
-  const stored = planRegistry.getPlan(planId);
+export async function startActByPlanId(planId?: string) {
+  let targetId = planId;
+
+  if (!targetId) {
+    const selected = planRegistry.getSelected();
+    if (selected.length === 1) {
+      targetId = selected[0].id;
+    } else {
+      const ready = planRegistry
+        .getPlans()
+        .find(p => p.status === 'approved' && p.plan && (!p.warnings || !p.warnings.length));
+      if (ready) targetId = ready.id;
+    }
+  }
+
+  if (!targetId) {
+    vscode.window.showErrorMessage('Plan not found.');
+    return;
+  }
+
+  const stored = planRegistry.getPlan(targetId);
 
   if (!stored) {
     vscode.window.showErrorMessage('Plan not found.');
@@ -1163,7 +1421,7 @@ export function startActByPlanId(planId: string) {
     return;
   }
 
-  if (stored.plan.id !== planId) {
+  if (stored.plan.id !== targetId) {
     vscode.window.showErrorMessage(
       'Internal error: plan identity mismatch. Please revalidate the plan.'
     );
@@ -1172,17 +1430,31 @@ export function startActByPlanId(planId: string) {
 
   try {
     // Lock plan
-    planRegistry.update(planId, { status: 'acting' });
-
-    // Start Act Session
+    planRegistry.update(targetId, { status: 'acting' });
+    // Start Act Session BEFORE refresh to ensure view has session
     actService.start(stored.plan);
 
-    // Focus Act view
-    vscode.commands.executeCommand('localpilot.act.focus');
+    // Then refresh and focus
+    await vscode.commands.executeCommand('localpilot.plan.refresh');
+    await vscode.commands.executeCommand('localpilot.act.refresh');
+    await vscode.commands.executeCommand('localpilot.act.focus');
   } catch (err: any) {
     vscode.window.showErrorMessage(err?.message ?? 'Failed to start Act Mode.');
   }
 }
+
+export async function runActTask(taskId: string) {
+  await actService.runTask(taskId);
+}
+
+export async function runAllActTasks() {
+  await actService.runAll();
+}
+
+export function skipActTask(taskId: string) {
+  actService.skip(taskId);
+}
+
 
 ```
 
@@ -1191,12 +1463,16 @@ export function startActByPlanId(planId: string) {
 
 ## extension/src/features/act/act-events.ts
 
-*Size: 211 bytes | Modified: 2025-12-26T19:26:35.823Z*
+*Size: 300 bytes | Modified: 2025-12-28T21:40:41.191Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 export type ActEvent =
   | { type: 'act:started' }
   | { type: 'act:paused' }
@@ -1205,6 +1481,56 @@ export type ActEvent =
   | { type: 'act:completed' }
   | { type: 'task:advance'; index: number };
 
+
+```
+
+</details>
+
+
+## extension/src/features/act/act-executor.ts
+
+*Size: 912 bytes | Modified: 2025-12-28T21:40:41.192Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
+import * as vscode from 'vscode';
+import { OllamaChatClient, type ChatMessage } from '../../ollama/ollama-chat-client.js';
+import { ACT_MODE_SYSTEM_PROMPT } from './act-prompts.js';
+import type { Task } from '../../core/entities/task.entity';
+
+export async function executeTask(
+  task: Task,
+  workspaceRoot: vscode.Uri
+): Promise<string> {
+  const client = new OllamaChatClient();
+
+  const messages: ChatMessage[] = [
+    { role: 'system', content: ACT_MODE_SYSTEM_PROMPT },
+    {
+      role: 'user',
+      content: JSON.stringify({
+        task: {
+          id: task.id,
+          title: task.title,
+          filePath: task.filePath,
+          actionType: task.actionType,
+          details: task.details,
+        },
+        workspaceRoot: workspaceRoot.fsPath,
+      }),
+    },
+  ];
+
+  return client.chat(messages);
+}
+
+
 ```
 
 </details>
@@ -1212,14 +1538,18 @@ export type ActEvent =
 
 ## extension/src/features/act/act-persistence.ts
 
-*Size: 512 bytes | Modified: 2025-12-26T19:26:35.750Z*
+*Size: 599 bytes | Modified: 2025-12-28T21:40:41.195Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as vscode from 'vscode';
-import type { ActSession } from './act-session';
+import type { ActSession } from './act-state';
 
 const STORAGE_KEY = 'localpilot.act.session';
 
@@ -1239,6 +1569,7 @@ export class ActPersistence {
   }
 }
 
+
 ```
 
 </details>
@@ -1246,60 +1577,39 @@ export class ActPersistence {
 
 ## extension/src/features/act/act-prompts.ts
 
-*Size: 1,201 bytes | Modified: 2025-12-26T19:35:34.314Z*
+*Size: 609 bytes | Modified: 2025-12-28T21:40:41.197Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
-export const ACT_SYSTEM_PROMPT = `
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
+export const ACT_MODE_SYSTEM_PROMPT = `
 You are operating in ACT MODE.
 
 
-You must generate CODE ONLY for a SINGLE FILE.
+Your task:
+- Implement EXACTLY ONE task from an approved implementation plan.
+- Generate a UNIFIED DIFF ONLY.
+- Modify ONLY the files specified in the task.
+- Do NOT explain anything.
+- Do NOT include markdown.
+- Do NOT include JSON.
+- Do NOT repeat the plan.
 
 
-RULES (MANDATORY):
-- Output ONLY raw file content.
-- NO markdown.
-- NO explanations.
-- NO comments about what you did.
-- NO multiple files.
-- Respect the given filePath and actionType.
-- If modifying, preserve unrelated code.
-- If information is missing, return the BEST SAFE IMPLEMENTATION based on context.
+Rules:
+- Output MUST start with --- and +++ lines.
+- The diff MUST be valid.
+- If no changes are required, output an empty diff.
+
+
+Failure to follow these rules is a critical error.
 `;
 
-export function buildActPrompt(args: {
-  actionType: 'create' | 'modify' | 'delete';
-  filePath: string;
-  taskTitle: string;
-  taskDescription: string;
-  details: string[];
-  existingContent?: string;
-  ragContext?: string;
-}) {
-  const parts: string[] = [];
-
-  parts.push(`Task: ${args.taskTitle}`);
-  parts.push(`Description: ${args.taskDescription}`);
-  parts.push(`Action: ${args.actionType}`);
-  parts.push(`Target file: ${args.filePath}`);
-
-  if (args.details?.length) {
-    parts.push(`Details:\n- ${args.details.join('\n- ')}`);
-  }
-
-  if (args.existingContent) {
-    parts.push(`Existing file content:\n${args.existingContent}`);
-  }
-
-  if (args.ragContext) {
-    parts.push(`Relevant project context:\n${args.ragContext}`);
-  }
-
-  return parts.join('\n\n');
-}
 
 ```
 
@@ -1308,198 +1618,97 @@ export function buildActPrompt(args: {
 
 ## extension/src/features/act/act-service.ts
 
-*Size: 4,940 bytes | Modified: 2025-12-26T19:50:12.573Z*
+*Size: 2,337 bytes | Modified: 2025-12-28T21:40:41.197Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import { actState } from './act-state';
-import type { ActSession } from './act-session';
 import type { Plan } from '../../core/entities/plan.entity';
-import { CodeGenerator } from './code-generator';
-import { generatePreview } from './diff-generator';
-import * as path from 'path';
 import * as vscode from 'vscode';
-import { BackupManager } from './backup-manager';
-import { FileWriter } from './file-writer';
-import { triggerIndexSync } from './index-sync';
+import { planRegistry } from '../plan/plan-registry';
+import { executeTask } from './act-executor.js';
+import { applyDiff } from './act-apply.js';
 
-function genId(): string {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
+// Phase 4.7 backbone: simplified execution state and actions
 
 export class ActService {
-  start(plan: Plan): ActSession {
-    if (actState.hasActiveSession()) {
-      throw new Error('Act session already active.');
+  start(plan: Plan) {
+    actState.set({
+      planId: plan.id,
+      planTitle: (plan as any).title ?? 'Plan',
+      currentIndex: 0,
+      tasks: [...plan.tasks]
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map(t => ({ id: t.id, title: t.title, status: 'pending' as const }))
+    });
+  }
+
+  // Legacy run/pause/resume no-ops retained for compatibility
+  run() {}
+  pause() {}
+  resume() {}
+
+  async runTask(taskId: string) {
+    const s = actState.get();
+    if (!s) return;
+
+    const plan = planRegistry.getPlan(s.planId)?.plan;
+    if (!plan) throw new Error('Plan missing');
+    const task = plan.tasks.find(t => t.id === taskId);
+    if (!task) throw new Error('Task missing');
+
+    actState.updateTask(taskId, 'running');
+    await vscode.commands.executeCommand('localpilot.act.refresh');
+
+    try {
+      const root = vscode.workspace.workspaceFolders?.[0]?.uri;
+      if (!root) throw new Error('No workspace folder is open.');
+
+      const diff = await executeTask(task as any, root);
+      const applied = await applyDiff(diff);
+      if (!applied) {
+        actState.updateTask(taskId, 'skipped');
+        return;
+      }
+
+      actState.updateTask(taskId, 'done');
+    } catch {
+      actState.updateTask(taskId, 'failed');
     }
 
-    const session: ActSession = {
-      sessionId: genId(),
-      planId: plan.id,
-      status: 'idle',
-      currentTaskIndex: 0,
-      tasks: plan.tasks.map(t => ({
-        task: t,
-        state: 'pending',
-      })),
-      startedAt: Date.now(),
-      lastUpdatedAt: Date.now(),
-    };
-
-    actState.set(session);
-    return session;
+    await vscode.commands.executeCommand('localpilot.act.refresh');
   }
 
-  run() {
+  async runAll() {
     const s = actState.get();
     if (!s) return;
-    actState.update({ status: 'running' });
+    for (const t of s.tasks) {
+      if (t.status !== 'pending') continue;
+      await this.runTask(t.id);
+      const updated = actState.get();
+      const after = updated?.tasks.find(x => x.id === t.id);
+      if (after?.status === 'failed') break;
+    }
+    try {
+      await vscode.commands.executeCommand('localpilot.index.sync');
+    } catch {}
   }
 
-  pause() {
-    const s = actState.get();
-    if (!s) return;
-    actState.update({ status: 'paused' });
-  }
-
-  resume() {
-    const s = actState.get();
-    if (!s) return;
-    actState.update({ status: 'running' });
+  skip(taskId: string) {
+    actState.updateTask(taskId, 'skipped');
   }
 
   cancel() {
     actState.clear();
   }
-
-  advanceTask() {
-    const s = actState.get();
-    if (!s) return;
-    const next = s.currentTaskIndex + 1;
-    if (next >= s.tasks.length) {
-      actState.update({ status: 'completed' });
-    } else {
-      actState.update({ currentTaskIndex: next });
-    }
-  }
-
-  getSession(): ActSession | null {
-    return actState.get();
-  }
-
-  async generateCurrentPreview(model: string) {
-    const s = actState.get();
-    if (!s) return;
-
-    const idx = s.currentTaskIndex;
-    const et = s.tasks[idx];
-    if (!et || et.state !== 'pending') return;
-
-    const generator = new CodeGenerator();
-
-    const code = await generator.generate({
-      model,
-      actionType: et.task.actionType,
-      filePath: et.task.filePath,
-      taskTitle: et.task.title,
-      taskDescription: et.task.description,
-      details: et.task.details,
-      // existingContent to be provided in Phase 4.4 when reading from FS
-    });
-
-    const preview = generatePreview(
-      et.task.actionType,
-      undefined,
-      code
-    );
-
-    s.tasks[idx] = {
-      ...et,
-      state: 'generated',
-      preview,
-    };
-
-    actState.update({ tasks: s.tasks });
-  }
-
-  async applyCurrent(projectId: string, workspaceRoot: string) {
-    const s = actState.get();
-    if (!s) return;
-
-    const idx = s.currentTaskIndex;
-    const et = s.tasks[idx];
-    if (!et || et.state !== 'generated') return;
-
-    const targetPath = path.join(workspaceRoot, et.task.filePath);
-    const backupMgr = new BackupManager(workspaceRoot);
-    const writer = new FileWriter();
-
-    let backup: string | null = null;
-    try {
-      backup = backupMgr.backup(targetPath);
-
-      if (et.task.actionType === 'delete') {
-        writer.delete(targetPath);
-      } else {
-        // Phase 4.3 stores preview content; use it for writing
-        writer.write(targetPath, et.preview!.content);
-      }
-
-      s.tasks[idx] = { ...et, state: 'applied', backupPath: backup ?? undefined };
-      actState.update({ tasks: s.tasks });
-
-      await triggerIndexSync(projectId);
-
-      this.advanceTask();
-      // Auto-continue: generate next preview if not completed
-      const after = actState.get();
-      if (after && after.status !== 'completed') {
-        try {
-          await this.generateCurrentPreview('qwen2.5-coder:7b');
-        } catch {}
-      }
-    } catch (err: any) {
-      if (backup) {
-        backupMgr.restore(backup, targetPath);
-      }
-      s.tasks[idx] = { ...et, state: 'error', error: String(err) };
-      actState.update({ tasks: s.tasks, status: 'paused' });
-      vscode.window.showErrorMessage('Apply failed. Changes rolled back.');
-    }
-  }
-
-  async editCurrent(workspaceRoot: string) {
-    const s = actState.get();
-    if (!s) return;
-
-    const et = s.tasks[s.currentTaskIndex];
-    if (!et || et.state !== 'generated') return;
-
-    const fileUri = vscode.Uri.file(path.join(workspaceRoot, et.task.filePath));
-    const doc = await vscode.workspace.openTextDocument(fileUri);
-    await vscode.window.showTextDocument(doc);
-
-    s.tasks[s.currentTaskIndex] = { ...et, state: 'applied' };
-    actState.update({ tasks: s.tasks });
-  }
-
-  skipCurrent() {
-    const s = actState.get();
-    if (!s) return;
-
-    const idx = s.currentTaskIndex;
-    s.tasks[idx] = { ...s.tasks[idx], state: 'skipped' };
-    actState.update({ tasks: s.tasks });
-    this.advanceTask();
-
-    const after = actState.get();
-    if (after && after.status !== 'completed') {
-      this.generateCurrentPreview('qwen2.5-coder:7b').catch(() => {});
-    }
-  }
 }
+
 
 ```
 
@@ -1508,12 +1717,16 @@ export class ActService {
 
 ## extension/src/features/act/act-session.ts
 
-*Size: 270 bytes | Modified: 2025-12-24T23:44:55.227Z*
+*Size: 359 bytes | Modified: 2025-12-28T21:40:41.198Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import type { ExecutableTask, ActSessionStatus } from './act-types';
 
 export interface ActSession {
@@ -1526,6 +1739,7 @@ export interface ActSession {
   lastUpdatedAt: number;
 }
 
+
 ```
 
 </details>
@@ -1533,40 +1747,69 @@ export interface ActSession {
 
 ## extension/src/features/act/act-state.ts
 
-*Size: 583 bytes | Modified: 2025-12-26T19:26:58.900Z*
+*Size: 1,178 bytes | Modified: 2025-12-28T21:40:41.200Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
-import type { ActSession } from './act-session';
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
+import type { Plan } from '../../core/entities/plan.entity';
 
-class ActStateStore {
-  private session: ActSession | null = null;
+export type ActTaskStatus =
+  | 'pending'
+  | 'running'
+  | 'done'
+  | 'failed'
+  | 'skipped';
 
-  get(): ActSession | null {
-    return this.session;
-  }
-
-  set(session: ActSession) {
-    this.session = session;
-  }
-
-  update(patch: Partial<ActSession>) {
-    if (!this.session) return;
-    this.session = { ...this.session, ...patch, lastUpdatedAt: Date.now() };
-  }
-
-  clear() {
-    this.session = null;
-  }
-
-  hasActiveSession(): boolean {
-    return !!this.session && this.session.status !== 'completed';
-  }
+export interface ActTask {
+  id: string;
+  title: string;
+  status: ActTaskStatus;
 }
 
-export const actState = new ActStateStore();
+export interface ActSession {
+  planId: string;
+  planTitle: string;
+  tasks: ActTask[];
+  currentIndex: number;
+}
+
+let session: ActSession | null = null;
+
+export const actState = {
+  set(s: ActSession) {
+    session = s;
+  },
+  get() {
+    return session;
+  },
+  // Back-compat: allow legacy service to merge arbitrary fields (e.g., status)
+  update(patch: any) {
+    if (!session) return;
+    session = { ...(session as any), ...(patch as any) } as ActSession;
+  },
+  // Back-compat: signal if there is any active session
+  hasActiveSession(): boolean {
+    return !!session;
+  },
+  updateTask(id: string, status: ActTaskStatus) {
+    if (!session) return;
+    const t = session.tasks.find(t => t.id === id);
+    if (t) t.status = status;
+  },
+  advance() {
+    if (session) session.currentIndex++;
+  },
+  clear() {
+    session = null;
+  }
+};
+
 
 ```
 
@@ -1575,12 +1818,16 @@ export const actState = new ActStateStore();
 
 ## extension/src/features/act/act-types.ts
 
-*Size: 485 bytes | Modified: 2025-12-26T19:52:28.259Z*
+*Size: 574 bytes | Modified: 2025-12-28T21:40:41.201Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import type { Task } from '../../core/entities/task.entity';
 import type { Preview } from './diff-generator';
 
@@ -1607,6 +1854,7 @@ export interface ExecutableTask {
   generatedContent?: string;
 }
 
+
 ```
 
 </details>
@@ -1614,12 +1862,16 @@ export interface ExecutableTask {
 
 ## extension/src/features/act/backup-manager.ts
 
-*Size: 702 bytes | Modified: 2025-12-26T19:47:18.055Z*
+*Size: 791 bytes | Modified: 2025-12-28T21:40:41.204Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1647,6 +1899,7 @@ export class BackupManager {
   }
 }
 
+
 ```
 
 </details>
@@ -1654,12 +1907,16 @@ export class BackupManager {
 
 ## extension/src/features/act/code-generator.ts
 
-*Size: 1,161 bytes | Modified: 2025-12-26T19:36:51.551Z*
+*Size: 1,250 bytes | Modified: 2025-12-28T21:40:41.205Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import { ACT_SYSTEM_PROMPT, buildActPrompt } from './act-prompts';
 
 type GenerateArgs = {
@@ -1706,6 +1963,7 @@ export class CodeGenerator {
   }
 }
 
+
 ```
 
 </details>
@@ -1713,12 +1971,16 @@ export class CodeGenerator {
 
 ## extension/src/features/act/diff-generator.ts
 
-*Size: 696 bytes | Modified: 2025-12-26T19:37:15.696Z*
+*Size: 785 bytes | Modified: 2025-12-28T21:40:41.207Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as Diff from 'diff';
 
 export type Preview =
@@ -1749,6 +2011,7 @@ export function generatePreview(
   return { kind: 'diff', content: patch };
 }
 
+
 ```
 
 </details>
@@ -1756,12 +2019,16 @@ export function generatePreview(
 
 ## extension/src/features/act/file-writer.ts
 
-*Size: 374 bytes | Modified: 2025-12-26T19:48:30.286Z*
+*Size: 463 bytes | Modified: 2025-12-28T21:40:41.209Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1779,6 +2046,7 @@ export class FileWriter {
   }
 }
 
+
 ```
 
 </details>
@@ -1786,12 +2054,16 @@ export class FileWriter {
 
 ## extension/src/features/act/index-sync.ts
 
-*Size: 396 bytes | Modified: 2025-12-26T19:49:13.299Z*
+*Size: 485 bytes | Modified: 2025-12-28T21:40:41.211Z*
 
 <details>
 <summary>View code</summary>
 
 ```typescript
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 import * as vscode from 'vscode';
 
 export async function triggerIndexSync(projectId: string) {
@@ -1803,6 +2075,7 @@ export async function triggerIndexSync(projectId: string) {
     vscode.window.showWarningMessage('Index sync failed. You may re-index manually.');
   }
 }
+
 
 ```
 
@@ -2010,6 +2283,226 @@ export async function queryRAG(
 </details>
 
 
+## extension/src/features/execute_v2/execute-client.ts
+
+*Size: 1,361 bytes | Modified: 2025-12-29T21:27:46.216Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+const API = 'http://localhost:8000/api';
+
+export async function startExecution(payload: { planId: string; markdown: string ; workspaceRoot: string}) {
+  // Backend expects both planId and plan markdown; it will parse and bind identity.
+  return post(`/execute/plan`, payload);
+}
+
+export async function applyDiff(executionId: string) {
+  return post(`/execute/${executionId}/apply`);
+}
+
+export async function reindex(executionId: string) {
+  return post(`/execute/${executionId}/reindex`);
+}
+
+export async function getExecution(executionId: string) {
+  return get(`/execute/${executionId}`);
+}
+
+export async function prepareTask(executionId: string, taskId: string) {
+  return post(`/execute/${executionId}/prepare/${taskId}`);
+}
+
+export async function invokeTask(executionId: string, taskId: string) {
+  return post(`/execute/${executionId}/invoke/${taskId}`);
+}
+
+async function post(path: string, body?: any) {
+  const res = await fetch(API + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(await res.text().catch(() => `${res.status}`));
+  return res.json();
+}
+
+async function get(path: string) {
+  const res = await fetch(API + path);
+  if (!res.ok) throw new Error(await res.text().catch(() => `${res.status}`));
+  return res.json();
+}
+
+```
+
+</details>
+
+
+## extension/src/features/execute_v2/execute-controller.ts
+
+*Size: 2,944 bytes | Modified: 2025-12-29T21:27:48.966Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+import * as vscode from 'vscode';
+import * as api from './execute-client';
+import { executionState } from './execute-state';
+import { planRegistry } from '../plan/plan-registry';
+
+export async function startPlanExecution(planId?: string) {
+  try {
+    let targetId = planId;
+
+    // 1) If no planId passed, resolve from selection
+    if (!targetId) {
+      const selected = planRegistry.getSelected();
+      if (selected.length === 1) {
+        targetId = selected[0].id;
+      }
+    }
+
+    // 2) Fallback: first approved plan
+    if (!targetId) {
+      const approved = planRegistry
+        .getPlans()
+        .find((p) => p.status === 'approved' && p.plan);
+      if (approved) {
+        targetId = approved.id;
+      }
+    }
+
+    // 3) Final guard
+    if (!targetId) {
+      vscode.window.showErrorMessage('No approved plan selected. Please select a plan first.');
+      return;
+    }
+
+    const stored = planRegistry.getPlan(targetId);
+
+    if (!stored || !stored.plan) {
+      vscode.window.showErrorMessage(`Plan ${targetId} not found or not approved.`);
+      return;
+    }
+
+    if (stored.status !== 'approved') {
+      vscode.window.showErrorMessage(`Plan ${targetId} must be approved before execution.`);
+      return;
+    }
+
+    // Start execution
+    const workspace = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspace) {
+      vscode.window.showErrorMessage('No workspace folder open.');
+      return;
+    }
+    const exec = await api.startExecution({
+      planId: stored.id,
+      markdown: stored.markdown,
+      workspaceRoot: workspace,
+    });
+
+
+    executionState.set({
+      executionId: exec.execution_id,
+      planTitle: stored.title || 'Plan',
+      status: exec.status,
+    });
+    vscode.commands.executeCommand('localpilot.execute.refresh');
+
+    const firstTask = exec.tasks?.[0];
+    if (firstTask) {
+      await api.prepareTask(exec.execution_id, firstTask.task_id);
+      const invokeRes = await api.invokeTask(exec.execution_id, firstTask.task_id);
+      executionState.set({
+        executionId: exec.execution_id,
+        planTitle: stored.title || 'Plan',
+        status: 'awaiting_human',
+        currentTask: firstTask.task_id,
+        diff: invokeRes.diff,
+      });
+      vscode.commands.executeCommand('localpilot.execute.refresh');
+    }
+
+    vscode.commands.executeCommand('localpilot.execute.refresh');
+  } catch (err: any) {
+    vscode.window.showErrorMessage(`Failed to start execution: ${err?.message ?? err}`);
+  }
+}
+
+export async function approveAndApply() {
+  try {
+    const s = executionState.get();
+    if (!s) return;
+
+    await api.applyDiff(s.executionId);
+    await api.reindex(s.executionId);
+
+    vscode.window.showInformationMessage('Changes applied & indexed');
+    executionState.clear();
+    vscode.commands.executeCommand('localpilot.execute.refresh');
+  } catch (err: any) {
+    vscode.window.showErrorMessage(`Apply failed: ${err?.message ?? err}`);
+  }
+}
+
+```
+
+</details>
+
+
+## extension/src/features/execute_v2/execute-state.ts
+
+*Size: 319 bytes | Modified: 2025-12-27T22:47:04.998Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+export interface ExecutionUIState {
+  executionId: string;
+  planTitle: string;
+  status: string;
+  currentTask?: string;
+  diff?: string;
+}
+
+let state: ExecutionUIState | null = null;
+
+export const executionState = {
+  set(s: ExecutionUIState) { state = s; },
+  get() { return state; },
+  clear() { state = null; }
+};
+
+```
+
+</details>
+
+
+## extension/src/features/execute_v2/execute-types.ts
+
+*Size: 180 bytes | Modified: 2025-12-27T22:49:53.075Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+export interface BackendExecution {
+  execution_id: string;
+  plan_id: string;
+  status: string;
+  current_task_id?: string;
+  tasks?: Array<{ task_id: string; title: string }>;
+}
+
+```
+
+</details>
+
+
 ## extension/src/features/ollama/connection-manager.ts
 
 *Size: 487 bytes | Modified: 2025-12-14T01:25:14.715Z*
@@ -2102,7 +2595,7 @@ export async function generatePlan(
 
 ## extension/src/features/plan/plan-controller.ts
 
-*Size: 7,543 bytes | Modified: 2025-12-26T23:10:43.519Z*
+*Size: 10,948 bytes | Modified: 2025-12-30T20:41:25.783Z*
 
 <details>
 <summary>View code</summary>
@@ -2114,14 +2607,46 @@ import { openPlanView } from './plan-view-controller';
 import { isIndexed } from '../../infrastructure/http/api-client';
 import { getActiveProjectId } from '../../core/project-context';
 import { parsePlanMarkdown } from './plan-parser';
-import { validatePlan } from './plan-validator';
+import { validatePlan, type ValidationWarning } from './plan-validator';
+import { normalizePlan } from './plan-normalizer';
+import { buildPlanFixDiff } from './plan-diff';
 import { approvePlan } from './plan-approval';
 import { planState } from './plan-state';
 import { planRegistry } from './plan-registry';
+import { autoFixPlanPreview } from '../../infrastructure/http/api-client';
 
 function genId(): string {
   const rnd = (globalThis as any).crypto?.randomUUID?.();
   return rnd || (Math.random().toString(36).slice(2) + Date.now().toString(36));
+}
+
+export async function autoFixPreviewById(planId: string) {
+  const stored = planRegistry.getPlan(planId);
+  if (!stored) return;
+  if (!stored.markdown) {
+    vscode.window.showWarningMessage('No plan markdown to auto-fix.');
+    return;
+  }
+
+  try {
+    const res = await autoFixPlanPreview(stored.markdown);
+    // Preview unified diff
+    const doc = await vscode.workspace.openTextDocument({ content: res.diff, language: 'diff' });
+    await vscode.window.showTextDocument(doc, { preview: true });
+
+    // Surface warnings inline in the Plan view without mutating plan/markdown
+    const mapped = (res.warnings || []).map(w => ({ code: 'auto_fix', message: w }));
+    planRegistry.update(planId, { warnings: mapped as any });
+    await vscode.commands.executeCommand('localpilot.plan.refresh');
+
+    if (mapped.length) {
+      vscode.window.showInformationMessage(`Auto-fix preview generated with ${mapped.length} warning(s).`);
+    } else {
+      vscode.window.showInformationMessage('Auto-fix preview generated.');
+    }
+  } catch (err: any) {
+    vscode.window.showErrorMessage(`Auto-fix preview failed: ${err?.message ?? err}`);
+  }
 }
 
 export async function createPlanFromChat(messages: any[]) {
@@ -2242,15 +2767,41 @@ export async function validatePlanById(planId: string) {
     return;
   }
 
-  const warnings = validatePlan(parsed.plan);
+  // Normalize paths to workspace-relative
+  const norm = normalizePlan(parsed.plan as any);
+
+  // Structural validation
+  const structural = validatePlan(norm.plan);
+  const normAsValidation: ValidationWarning[] = (norm.warnings || []).map(w => ({
+    code: 'normalized_path',
+    message: w.message,
+    taskId: w.taskId,
+    path: w.field ? `tasks[].${w.field}` : undefined,
+  }));
+  const warnings: ValidationWarning[] = [...normAsValidation, ...structural];
+
   planRegistry.update(planId, {
     plan: {
-      ...parsed.plan,
+      ...norm.plan,
       id: planId,
     },
     warnings,
     status: 'draft',
   });
+
+  if (norm.changed) {
+    vscode.window.showInformationMessage(
+      'Plan paths were normalized to workspace-relative paths.'
+    );
+    try {
+      const diff = buildPlanFixDiff(
+        stored.markdown,
+        JSON.stringify(norm.plan, null, 2)
+      );
+      const doc = await vscode.workspace.openTextDocument({ content: diff, language: 'diff' });
+      await vscode.window.showTextDocument(doc, { preview: true });
+    } catch {}
+  }
 
   vscode.window.showInformationMessage(
     warnings.length
@@ -2287,7 +2838,7 @@ export async function fixPlanJsonById(planId: string) {
         task.filePath = prev?.filePath || 'TODO_FILE_PATH';
       }
     }
-    if (w.code === 'invalid_action_type') {
+    if (w.code === 'invalid_action_type' || w.code === 'missing_action_type') {
       const task = plan.tasks.find((t) => t.id === w.taskId);
       if (task) {
         task.actionType = 'modify';
@@ -2298,13 +2849,22 @@ export async function fixPlanJsonById(planId: string) {
   // Re-run validation
   const afterFixWarnings = validatePlan(plan);
 
+  // Normalize after fixes
+  const norm = normalizePlan(plan as any);
+  const normAsValidation: ValidationWarning[] = (norm.warnings || []).map(w => ({
+    code: 'normalized_path',
+    message: w.message,
+    taskId: w.taskId,
+    path: w.field ? `tasks[].${w.field}` : undefined,
+  }));
+
   planRegistry.update(planId, {
     plan: {
       ...plan,
       id: planId,
     },
     markdown: stored.markdown,
-    warnings: afterFixWarnings,
+    warnings: [...normAsValidation, ...afterFixWarnings],
     status: 'draft',
   });
 
@@ -2318,34 +2878,58 @@ export async function fixPlanJsonById(planId: string) {
 
 export async function approvePlanById(planId: string) {
   const stored = planRegistry.getPlan(planId);
-  if (!stored) return;
-
-  // Auto-parse & validate
-  const parsed = parsePlanMarkdown(stored.markdown);
-  if (!parsed.plan) {
-    vscode.window.showErrorMessage(
-      'Cannot approve: plan JSON is invalid. Please fix and validate.'
-    );
+  if (!stored) {
+    vscode.window.showErrorMessage('Plan not found.');
     return;
   }
 
-  const warnings = validatePlan(parsed.plan);
-  if (warnings.length) {
+  const parsed = parsePlanMarkdown(stored.markdown);
+  if (!parsed.plan) {
+    vscode.window.showErrorMessage('Cannot approve: plan JSON is invalid.');
+    return;
+  }
+
+  // Normalize before approval
+  const norm = normalizePlan(parsed.plan as any);
+  if (norm.changed) {
+    vscode.window.showInformationMessage(
+      'Plan paths were normalized to workspace-relative paths.'
+    );
+    try {
+      const diff = buildPlanFixDiff(
+        stored.markdown,
+        JSON.stringify(norm.plan, null, 2)
+      );
+      const doc = await vscode.workspace.openTextDocument({ content: diff, language: 'diff' });
+      await vscode.window.showTextDocument(doc, { preview: true });
+    } catch {}
+  }
+
+  const structural = validatePlan(norm.plan);
+  const normAsValidation: ValidationWarning[] = (norm.warnings || []).map(w => ({
+    code: 'normalized_path',
+    message: w.message,
+    taskId: w.taskId,
+    path: w.field ? `tasks[].${w.field}` : undefined,
+  }));
+  if (structural.length) {
     vscode.window.showWarningMessage(
       'Cannot approve: plan has validation warnings.'
     );
     return;
   }
 
-  const approved = {
-    ...approvePlan(parsed.plan),
-    id: planId,
-  };
+  const approved = approvePlan({
+    ...norm.plan,
+    id: planId, // enforce identity
+  });
 
+  // Sync back into registry authoritatively
   planRegistry.update(planId, {
+    markdown: stored.markdown,
     plan: approved,
     status: 'approved',
-    warnings: [],
+    warnings: normAsValidation,
   });
 
   await vscode.commands.executeCommand('localpilot.plan.refresh');
@@ -2383,6 +2967,112 @@ export async function regeneratePlanById(planId: string, messages: any[]) {
   });
 
   await vscode.commands.executeCommand('localpilot.plan.refresh');
+}
+
+```
+
+</details>
+
+
+## extension/src/features/plan/plan-diff.d.ts
+
+*Size: 73 bytes | Modified: 2025-12-29T22:28:56.634Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+export function buildPlanFixDiff(before: string, after: string): string;
+
+```
+
+</details>
+
+
+## extension/src/features/plan/plan-diff.ts
+
+*Size: 385 bytes | Modified: 2025-12-29T22:24:23.431Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+import { diffLines } from 'diff';
+
+export function buildPlanFixDiff(before: string, after: string): string {
+  const diff = diffLines(before ?? '', after ?? '');
+  let out = '';
+
+  diff.forEach(part => {
+    const prefix = part.added ? '+' : part.removed ? '-' : ' ';
+    out += part.value
+      .split('\n')
+      .map(line => prefix + line)
+      .join('\n');
+  });
+
+  return out;
+}
+
+```
+
+</details>
+
+
+## extension/src/features/plan/plan-normalizer.ts
+
+*Size: 1,002 bytes | Modified: 2025-12-29T22:17:56.387Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+import * as path from 'path';
+
+export interface PlanLintWarning {
+  message: string;
+  taskId?: string;
+  field?: string;
+}
+
+export function normalizePlan(plan: any): {
+  plan: any;
+  warnings: PlanLintWarning[];
+  changed: boolean;
+} {
+  const warnings: PlanLintWarning[] = [];
+  let changed = false;
+
+  if (!plan?.tasks) {
+    return { plan, warnings, changed };
+  }
+
+  for (const task of plan.tasks) {
+    if (!task.filePath) continue;
+
+    const original = task.filePath;
+
+    // Windows absolute path
+    if (/^[A-Za-z]:[\\/]/.test(task.filePath)) {
+      task.filePath = path.basename(task.filePath);
+    }
+
+    // Unix absolute path
+    if (task.filePath.startsWith('/')) {
+      task.filePath = path.basename(task.filePath);
+    }
+
+    if (original !== task.filePath) {
+      warnings.push({
+        taskId: task.id,
+        field: 'filePath',
+        message: `Absolute path normalized to '${task.filePath}'`,
+      });
+      changed = true;
+    }
+  }
+
+  return { plan, warnings, changed };
 }
 
 ```
@@ -2491,7 +3181,7 @@ function mapTask(t: TaskSchema): Task {
 
 ## extension/src/features/plan/plan-registry.ts
 
-*Size: 1,595 bytes | Modified: 2025-12-24T23:48:06.656Z*
+*Size: 1,595 bytes | Modified: 2025-12-27T21:27:36.011Z*
 
 <details>
 <summary>View code</summary>
@@ -2625,7 +3315,7 @@ export const planState = new PlanStateStore();
 
 ## extension/src/features/plan/plan-validator.ts
 
-*Size: 2,251 bytes | Modified: 2025-12-26T22:47:40.915Z*
+*Size: 2,413 bytes | Modified: 2025-12-27T21:27:36.011Z*
 
 <details>
 <summary>View code</summary>
@@ -2701,6 +3391,10 @@ export function validatePlan(plan: Plan | null | undefined): ValidationWarning[]
   }
 
   return warnings;
+}
+
+export function isPlanActReady(plan: Plan | null | undefined, warnings: ValidationWarning[] = []): boolean {
+  return !!plan && (warnings?.length ?? 0) === 0;
 }
 
 ```
@@ -2784,7 +3478,7 @@ function render(markdown: string): string {
 
 ## extension/src/infrastructure/http/api-client.ts
 
-*Size: 989 bytes | Modified: 2025-12-20T23:56:57.476Z*
+*Size: 1,468 bytes | Modified: 2025-12-30T20:41:53.510Z*
 
 <details>
 <summary>View code</summary>
@@ -2823,6 +3517,83 @@ export async function isIndexed(projectId: string): Promise<boolean> {
     return true;
   } catch (e: any) {
     return false;
+  }
+}
+
+export async function autoFixPlanPreview(markdown: string): Promise<{ fixedPlan: any; warnings: string[]; diff: string }>
+{
+  const res = await fetch('http://localhost:8000/api/plan/auto-fix', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ markdown }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`auto_fix_failed: ${res.status} ${text}`);
+  }
+  return await res.json();
+}
+
+```
+
+</details>
+
+
+## extension/src/ollama/ollama-chat-client.ts
+
+*Size: 1,210 bytes | Modified: 2025-12-27T21:27:36.012Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
+
+export class OllamaChatClient {
+  async chat(messages: ChatMessage[]): Promise<string> {
+    const WS = require('ws');
+    const ws = new WS('ws://localhost:8000/ws/chat');
+
+    return new Promise<string>((resolve, reject) => {
+      let buffer = '';
+
+      ws.on('open', () => {
+        try {
+          ws.send(
+            JSON.stringify({
+              model: 'qwen2.5-coder:7b-instruct-q4_K_M',
+              messages,
+            })
+          );
+        } catch (e) {
+          reject(e);
+        }
+      });
+
+      ws.on('message', (raw: any) => {
+        try {
+          const msg = JSON.parse(raw.toString());
+          if (msg.type === 'token' && typeof msg.value === 'string') {
+            buffer += msg.value;
+          }
+          if (msg.type === 'done') {
+            resolve(buffer);
+            ws.close();
+          }
+        } catch (e) {
+          // ignore malformed frames
+        }
+      });
+
+      ws.on('error', (err: any) => {
+        reject(err);
+      });
+
+      ws.on('close', () => {
+        // if closed without done, resolve whatever we have
+        resolve(buffer);
+      });
+    });
   }
 }
 
@@ -3089,7 +3860,7 @@ If unsafe or incomplete:
 
 ## extension/src/views/act/act-view.ts
 
-*Size: 4,346 bytes | Modified: 2025-12-26T19:51:37.049Z*
+*Size: 3,350 bytes | Modified: 2025-12-27T21:27:36.013Z*
 
 <details>
 <summary>View code</summary>
@@ -3097,141 +3868,134 @@ If unsafe or incomplete:
 ```typescript
 import * as vscode from 'vscode';
 import { actState } from '../../features/act/act-state';
-import { ActService } from '../../features/act/act-service';
-import { getActiveProjectId } from '../../core/project-context';
 
 export class ActViewProvider implements vscode.WebviewViewProvider {
   static readonly viewId = 'localpilot.act';
-  private service = new ActService();
+  private view?: vscode.WebviewView;
 
   resolveWebviewView(view: vscode.WebviewView) {
+    this.view = view;
     view.webview.options = { enableScripts: true };
+
     view.webview.onDidReceiveMessage(async (msg) => {
-      if (!msg || !msg.type) return;
-      switch (msg.type) {
-        case 'act:run': {
-          this.service.run();
-          try {
-            await this.service.generateCurrentPreview('qwen2.5-coder:7b');
-          } catch (e) {
-            // silent for Phase 4.3
-          }
-          this.render(view);
-          break;
-        }
-        case 'act:resume': {
-          this.service.resume();
-          this.render(view);
-          break;
-        }
-        case 'act:apply': {
-          const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-          if (!root) {
-            vscode.window.showErrorMessage('No workspace folder is open.');
-            return;
-          }
-          const projectId = getActiveProjectId();
-          await this.service.applyCurrent(projectId, root);
-          this.render(view);
-          break;
-        }
-        case 'act:edit': {
-          const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-          if (!root) {
-            vscode.window.showErrorMessage('No workspace folder is open.');
-            return;
-          }
-          await this.service.editCurrent(root);
-          this.render(view);
-          break;
-        }
-        case 'act:skip': {
-          this.service.skipCurrent();
-          this.render(view);
-          break;
-        }
-      }
+      if (!msg?.command) return;
+
+      await vscode.commands.executeCommand(msg.command, msg.taskId);
+      await vscode.commands.executeCommand('localpilot.act.refresh');
     });
-    this.render(view);
+
+    this.render();
   }
 
-  private render(view: vscode.WebviewView) {
-    const s = actState.get();
+  render() {
+    if (!this.view) return;
 
-    if (!s) {
-      view.webview.html = `
-        <h3>Act Mode</h3><p>No active session.</p>
+    const session = actState.get();
+
+    if (!session) {
+      this.view.webview.html = `
+        <style>
+          body { color: #888; font-family: sans-serif; padding: 8px; }
+        </style>
+        <em>No active Act session.</em>
       `;
       return;
     }
 
-    const controls =
-      s.status === 'idle'
-        ? `<button id="runAll">▶ Run All</button>`
-        : s.status === 'paused'
-        ? `<button id="resume">▶ Resume</button>`
-        : `<button disabled>Generating…</button>`;
+    this.view.webview.html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: sans-serif;
+            padding: 8px;
+          }
+          h3 { margin-bottom: 4px; }
+          .plan {
+            font-size: 12px;
+            color: #9cdcfe;
+            margin-bottom: 8px;
+          }
+          ul {
+            list-style: none;
+            padding-left: 0;
+          }
+          li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 0;
+          }
+          button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #d4d4d4;
+          }
+          button:hover { color: white; }
+          .status {
+            width: 18px;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <h3>Act Mode</h3>
+        <div class="plan"><b>Plan:</b> ${escapeHtml(session.planTitle)}</div>
 
-    const tasks = s.tasks
-      .map((t, i) => {
-        const marker =
-          i === s.currentTaskIndex ? '➡️' :
-          t.state === 'pending' ? '⬜' : '✅';
-        return `<li>${marker} ${t.task.title}</li>`;
-      })
-      .join('');
+        <button onclick="runAll()">▶ Run All</button>
 
-    const current = s.tasks[s.currentTaskIndex];
+        <ul>
+          ${session.tasks.map(t => `
+            <li>
+              <span class="status">${icon(t.status)}</span>
+              <span>${escapeHtml(t.title)}</span>
+              <button onclick="run('${t.id}')" title="Run">▶</button>
+              <button onclick="skip('${t.id}')" title="Skip">⏭</button>
+            </li>
+          `).join('')}
+        </ul>
 
-    let review = '';
-    if (current?.state === 'generated') {
-      const body =
-        current.preview?.kind === 'diff'
-          ? `<pre>${current.preview.content}</pre>`
-          : `<pre>${current.preview?.content ?? ''}</pre>`;
-
-      review = `
-        <h4>Review</h4>
-        ${body}
-        <button id="applyBtn">✓ Apply</button>
-        <button id="editBtn">✏ Edit</button>
-        <button id="skipBtn">⏭ Skip</button>
-      `;
-    }
-
-    view.webview.html = `
-      <h3>Act Mode</h3>
-      <p><b>Plan:</b> ${s.planId}</p>
-      <p>Status: ${s.status}</p>
-      ${controls}
-      <ul>${tasks}</ul>
-      ${review}
-      <p><small>Backups before writes; index sync after apply.</small></p>
-      <script>
-        const vscode = acquireVsCodeApi();
-        const runAll = document.getElementById('runAll');
-        if (runAll) runAll.addEventListener('click', () => {
-          vscode.postMessage({ type: 'act:run' });
-        });
-        const resume = document.getElementById('resume');
-        if (resume) resume.addEventListener('click', () => {
-          vscode.postMessage({ type: 'act:resume' });
-        });
-        const applyBtn = document.getElementById('applyBtn');
-        if (applyBtn) applyBtn.addEventListener('click', () => {
-          vscode.postMessage({ type: 'act:apply' });
-        });
-        const editBtn = document.getElementById('editBtn');
-        if (editBtn) editBtn.addEventListener('click', () => {
-          vscode.postMessage({ type: 'act:edit' });
-        });
-        const skipBtn = document.getElementById('skipBtn');
-        if (skipBtn) skipBtn.addEventListener('click', () => {
-          vscode.postMessage({ type: 'act:skip' });
-        });
-      </script>
+        <script>
+          const vscode = acquireVsCodeApi();
+          function run(id) {
+            vscode.postMessage({ command: 'localpilot.act.runTask', taskId: id });
+          }
+          function skip(id) {
+            vscode.postMessage({ command: 'localpilot.act.skipTask', taskId: id });
+          }
+          function runAll() {
+            vscode.postMessage({ command: 'localpilot.act.runAll' });
+          }
+        </script>
+      </body>
+      </html>
     `;
   }
+}
+
+function icon(status: string): string {
+  switch (status) {
+    case 'pending': return '⬜';
+    case 'running': return '⏳';
+    case 'done': return '✅';
+    case 'failed': return '❌';
+    case 'skipped': return '⏭';
+    default: return '⬜';
+  }
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[m]!));
 }
 
 ```
@@ -3438,9 +4202,84 @@ window.addEventListener("message", (e) => {
 </details>
 
 
+## extension/src/views/execute/execute-view.ts
+
+*Size: 1,466 bytes | Modified: 2025-12-29T18:54:39.898Z*
+
+<details>
+<summary>View code</summary>
+
+```typescript
+import * as vscode from 'vscode';
+import { executionState } from '../../features/execute_v2/execute-state';
+
+export class ExecuteViewProvider implements vscode.WebviewViewProvider {
+  static viewId = 'localpilot.execute';
+  private view?: vscode.WebviewView;
+
+  resolveWebviewView(view: vscode.WebviewView) {
+    this.view = view;
+    view.webview.options = { enableScripts: true };
+    this.render();
+  }
+
+  render() {
+    if (!this.view) return;
+
+    const s = executionState.get();
+
+    if (!s) {
+      this.view.webview.html = '<em>No active execution</em>';
+      return;
+    }
+
+    this.view.webview.html = `
+      <h3>Execution: ${escapeHtml(s.planTitle)}</h3>
+
+      <p>Status: <b>${s.status}</b></p>
+
+      ${s.diff ? `
+        <h4>Proposed Changes</h4>
+        <pre>${escapeHtml(s.diff)}</pre>
+        <button onclick="approve()">Apply</button>
+      ` : ` 
+        <em>Waiting for task output…</em>
+      `}
+
+      <script>
+        const vscode = acquireVsCodeApi();
+        function approve() {
+          vscode.postMessage({ command: 'apply' });
+        }
+      </script>
+    `;
+
+    this.view.webview.onDidReceiveMessage(msg => {
+      if (msg.command === 'apply') {
+        vscode.commands.executeCommand('localpilot.execute.apply');
+      }
+    });
+  }
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  } as any)[m]);
+}
+
+```
+
+</details>
+
+
 ## extension/src/views/plan/plan-view.ts
 
-*Size: 6,509 bytes | Modified: 2025-12-26T22:49:50.511Z*
+*Size: 6,539 bytes | Modified: 2025-12-27T21:27:36.014Z*
 
 <details>
 <summary>View code</summary>
@@ -3541,7 +4380,7 @@ function render(plans: any[]): string {
           .map(
             (w: any) => `
           <li>
-            <b>Task ${w.taskId ?? '?'}</b>: ${w.message}
+            <b>${w.path ?? (w.taskId ? `task ${w.taskId}` : 'task')}</b>: ${w.message}
             ${w.suggestion ? `<em>→ ${w.suggestion}</em>` : ''}
           </li>`
           )
@@ -4005,222 +4844,6 @@ Privacy-first AI coding agent for VS Code using local LLMs.
 </details>
 
 
-## scripts/dev.ps1
-
-*Size: 4,918 bytes | Modified: 2025-12-20T00:00:18.138Z*
-
-<details>
-<summary>View code</summary>
-
-```powershell
-#requires -Version 5.1
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-function Clear-Port {
-  param (
-    [Parameter(Mandatory)]
-    [int]$Port
-  )
-
-  Write-Host "Checking if port $Port is in use..."
-
-  try {
-    $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
-  } catch {
-    Write-Warning "Get-NetTCPConnection failed. Cannot auto-clear port."
-    return
-  }
-
-  if (-not $connections) {
-    Write-Host "Port $Port is free."
-    return
-  }
-
-  $owningProcessIds = $connections |
-    Select-Object -ExpandProperty OwningProcess -Unique
-
-  foreach ($processId in $owningProcessIds) {
-    try {
-      $proc = Get-Process -Id $processId -ErrorAction Stop
-      Write-Warning "Stopping process $($proc.ProcessName) (PID $processId) using port $Port"
-      Stop-Process -Id $processId -Force -ErrorAction Stop
-    } catch {
-      Write-Warning "Failed to stop process with PID $processId"
-    }
-  }
-
-  Start-Sleep -Milliseconds 500
-
-  # Verify
-  $stillUsed = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
-  if ($stillUsed) {
-    throw "Port $Port is still in use after cleanup."
-  }
-
-  Write-Host "Port $Port successfully cleared."
-}
-
-
-# =========================
-# CONFIGURATION
-# =========================
-$Port        = 8000
-$BindHost    = '0.0.0.0'
-$HealthPath  = '/health'
-$OllamaUrl   = 'http://127.0.0.1:11434'
-$DevReload  = $false   # set to $true ONLY when running backend in foreground
-
-# =========================
-# PATHS
-# =========================
-$RepoRoot     = Split-Path -Parent $PSScriptRoot
-$ServerDir    = Join-Path $RepoRoot 'server'
-$ExtensionDir = Join-Path $RepoRoot 'extension'
-$VenvPython   = Join-Path $RepoRoot '.venv\Scripts\python.exe'
-if (-not (Test-Path $VenvPython)) { $VenvPython = 'python' }
-
-$HostUrl = "http://localhost:${Port}"
-
-Write-Host "== LocalPilot Dev Runner ==" -ForegroundColor Cyan
-Write-Host "Repo:     $RepoRoot"
-Write-Host "Backend:  $HostUrl"
-Write-Host "Ollama:   $OllamaUrl"
-Write-Host ""
-
-# =========================
-# 1) BACKEND DEPENDENCIES
-# =========================
-$Requirements = Join-Path $ServerDir 'requirements.txt'
-if (Test-Path $Requirements) {
-  Write-Host "Installing backend requirements..."
-  & $VenvPython -m pip install -r $Requirements | Out-Host
-}
-
-# =========================
-# 2) PORT CHECK
-# =========================
-Write-Host "Checking port $Port availability..."
-try {
-  Clear-Port -Port $Port
-} catch {
-  Write-Error $_
-  exit 1
-}
-
-# =========================
-# 3) START BACKEND
-# =========================
-Write-Host "Starting backend..."
-
-$BackendArgs = @(
-  '-m', 'uvicorn',
-  'server.main:app',
-  '--host', $BindHost,
-  '--port', $Port,
-  '--log-level', 'debug'
-)
-
-if ($DevReload) {
-  $BackendArgs += '--reload'
-}
-
-$BackendProcess = Start-Process `
-  -FilePath $VenvPython `
-  -ArgumentList $BackendArgs `
-  -WorkingDirectory $RepoRoot `
-  -NoNewWindow `
-  -PassThru
-
-# =========================
-# 4) HEALTH CHECK
-# =========================
-Write-Host "Waiting for backend to accept connections..."
-
-$Deadline = (Get-Date).AddSeconds(30)
-$Healthy = $false
-
-while ((Get-Date) -lt $Deadline) {
-  try {
-    $client = New-Object System.Net.Sockets.TcpClient
-    $client.Connect("localhost", $Port)
-    $client.Close()
-    $Healthy = $true
-    break
-  } catch {
-    Start-Sleep -Milliseconds 500
-  }
-
-  if ($BackendProcess.HasExited) {
-    Write-Error "Backend exited during startup."
-    exit 1
-  }
-}
-
-if (-not $Healthy) {
-  Write-Error "Backend did not open port $Port within timeout."
-  Stop-Process -Id $BackendProcess.Id -Force -ErrorAction SilentlyContinue
-  exit 1
-}
-
-Write-Host "Backend is accepting connections." -ForegroundColor Green
-
-# =========================
-# 5) BUILD EXTENSION
-# =========================
-Write-Host "Preparing extension..."
-Set-Location $ExtensionDir
-
-if (-not (Test-Path 'node_modules')) {
-  npm install
-}
-
-npm run build
-if ($LASTEXITCODE -ne 0) {
-  Write-Error "Extension build failed."
-  Stop-Process -Id $BackendProcess.Id -Force
-  exit 1
-}
-
-# =========================
-# 6) LAUNCH VS CODE
-# =========================
-$codeCmd = Get-Command code -ErrorAction SilentlyContinue
-if (-not $codeCmd) {
-  Write-Warning "VS Code CLI 'code' not found."
-  Write-Host "Run manually:"
-  Write-Host "  code --extensionDevelopmentPath `"$ExtensionDir`""
-} else {
-  Write-Host "Launching VS Code Extension Development Host..."
-  Start-Process "code" "--disable-extensions --extensionDevelopmentPath `"$ExtensionDir`""
-  # & code --disable-extensions --extensionDevelopmentPath $ExtensionDir
-}
-
-Write-Host ""
-Write-Host "== Backend running. Press Ctrl+C to stop ==" -ForegroundColor Cyan
-
-# =========================
-# 7) SHUTDOWN HANDLING
-# =========================
-try {
-  while ($true) {
-    Start-Sleep -Seconds 1
-  }
-}
-finally {
-  Write-Host "Stopping backend..."
-  try {
-    Stop-Process -Id $BackendProcess.Id -Force
-  } catch {}
-}
-
-
-
-
-```
-
-</details>
-
-
 ## server/__init__.py
 
 *Size: 0 bytes | Modified: 2025-12-16T19:21:50.561Z*
@@ -4251,6 +4874,1260 @@ which provides the `--lf` and `--ff` options, as well as the `cache` fixture.
 **Do not** commit this to version control.
 
 See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more information.
+
+```
+
+</details>
+
+
+## server/act_v2/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-27T22:07:07.793Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/act_v2/api.py
+
+*Size: 5,854 bytes | Modified: 2025-12-29T21:59:11.921Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from fastapi import APIRouter, HTTPException
+from typing import Dict
+from pathlib import Path
+
+from server.plan.plan_parser import PlanParser
+from server.act_v2.compiler.plan_compiler import compile_plan
+from server.act_v2.ledger.execution_ledger import ExecutionLedger
+from server.act_v2.context.task_context_builder import build_task_context
+from server.act_v2.llm.invocation_service import InvocationService
+from server.act_v2.llm.ollama_client import OllamaClient
+from server.act_v2.validation.validation_errors import DiffValidationError
+from server.act_v2.diff_validator import DiffValidationError as StrictDiffValidationError
+from server.act_v2.apply.apply_errors import ApplyError
+from server.act_v2.apply_engine import ApplyEngine
+from server.act_v2.index_hook import reindex_files
+from server.act_v2.errors import PlanCompilationError
+
+
+router = APIRouter(prefix="/api/execute", tags=["act_v2"])
+
+ledger = ExecutionLedger()
+
+client = OllamaClient(
+    base_url="http://127.0.0.1:11434",
+    model="qwen2.5-coder:7b-instruct-q4_K_M",
+)
+invoker = InvocationService(client)
+
+
+@router.post("/plan")
+def compile_plan_endpoint(payload: Dict):
+    """
+    Compile an APPROVED plan into an execution graph.
+    """
+    try:
+        plan_id = payload.get("planId")
+        markdown = payload.get("markdown")
+        workspace_root = payload.get("workspaceRoot")
+
+        if not workspace_root:
+            raise HTTPException(status_code=400, detail="workspaceRoot required")
+
+        if not plan_id or not markdown:
+            raise HTTPException(status_code=400, detail="planId and markdown required")
+
+        parser = PlanParser()
+        parsed = parser.parse(markdown)
+
+        if not parsed.get("plan"):
+            raise HTTPException(status_code=400, detail="Invalid plan JSON")
+
+        execution = compile_plan(parsed["plan"], workspace_root)
+        execution.plan_id = plan_id  # canonical identity
+        ledger.create(execution)
+        return execution.model_dump()
+
+    except PlanCompilationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+
+@router.get("/{execution_id}")
+def get_execution_state(execution_id: str):
+    state = ledger.get(execution_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Execution not found")
+    return state.dict()
+
+
+@router.post("/{execution_id}/prepare/{task_id}")
+def prepare_task_context(execution_id: str, task_id: str):
+    state = ledger.get(execution_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Execution not found")
+
+    task = next((t for t in state.tasks if t.task_id == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    workspace = Path(state.workspace_root)  # TEMP: Phase 5.3 will formalize workspace root
+    context = build_task_context(task, workspace)
+    context["workspace_root"] = str(workspace)
+
+    state.status = "context_ready"
+    state.current_task_id = task_id
+    state.context = context
+    ledger.update(execution_id, state)
+
+    return {
+        "execution_id": execution_id,
+        "task_id": task_id,
+        "context": context,
+    }
+
+
+@router.post("/{execution_id}/invoke/{task_id}")
+def invoke_task(execution_id: str, task_id: str):
+    state = ledger.get(execution_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Execution not found")
+
+    task = next((t for t in state.tasks if t.task_id == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if state.status != "context_ready":
+        raise HTTPException(status_code=400, detail="Context not prepared")
+
+    try:
+        diff = invoker.invoke_task(task, state.context or {})
+        state.status = "awaiting_human"
+        state.last_diff = diff
+        state.last_error = None
+        ledger.update(execution_id, state)
+        return {
+            "status": "awaiting_human",
+            "diff": diff,
+        }
+
+    except (DiffValidationError, StrictDiffValidationError) as e:
+        state.status = "failed"
+        state.last_error = str(e)
+        ledger.update(execution_id, state)
+        raise HTTPException(
+            status_code=422,
+            detail=f"Execution blocked by safety rule: {e}",
+        )
+
+
+@router.post("/{execution_id}/apply")
+def apply_execution(execution_id: str):
+    state = ledger.get(execution_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Execution not found")
+
+    if state.status != "awaiting_human":
+        raise HTTPException(
+            status_code=400,
+            detail="Execution not awaiting approval",
+        )
+
+    try:
+        workspace = Path(state.context["workspace_root"])  # type: ignore[index]
+        engine = ApplyEngine(workspace)
+        changed = engine.apply(state.last_diff or "")
+        reindex_files(state.plan_id, changed, workspace)
+
+        state.status = "completed"
+        ledger.update(execution_id, state)
+
+        return {"status": "applied"}
+
+    except ApplyError as e:
+        state.status = "failed"
+        state.last_error = str(e)
+        ledger.update(execution_id, state)
+        raise HTTPException(status_code=422, detail=str(e))
+
+
+@router.post("/{execution_id}/reindex")
+def reindex_after_apply(execution_id: str):
+    state = ledger.get(execution_id)
+    if not state or state.status != "completed":
+        raise HTTPException(status_code=400, detail="Execution not completed")
+
+    workspace = Path(state.context["workspace_root"])  # type: ignore[index]
+    reindex_files(state.plan_id, [], workspace)
+
+    return {"status": "indexed"}
+
+
+# Human Gate (Final)
+act_router = APIRouter(prefix="/api/act", tags=["act_v2"])
+
+@act_router.post("/approve")
+def approve_task(task_id: str):
+    # block until user approval recorded (placeholder)
+    return {"approved": True}
+
+```
+
+</details>
+
+
+## server/act_v2/apply_engine.py
+
+*Size: 1,368 bytes | Modified: 2025-12-30T20:23:21.934Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import subprocess
+import tempfile
+import shutil
+from pathlib import Path
+import logging
+from server.act_v2.apply.apply_errors import ApplyError
+
+
+logger = logging.getLogger(__name__)
+
+
+class ApplyEngine:
+    def __init__(self, workspace: Path):
+        self.workspace = workspace
+
+    def apply(self, diff: str) -> list[str]:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            shutil.copytree(self.workspace, tmp_path / "repo", dirs_exist_ok=True)
+
+            proc = subprocess.run(
+                ["git", "apply", "--whitespace=nowarn"],
+                input=diff,
+                text=True,
+                cwd=tmp_path / "repo",
+                capture_output=True,
+            )
+
+            if proc.returncode != 0:
+                logger.error("GIT APPLY ERROR:\n%s", proc.stderr)
+                raise ApplyError(
+                    "Patch could not be applied cleanly.\n"
+                    "Reason:\n" + proc.stderr
+                )
+
+            shutil.copytree(
+                tmp_path / "repo",
+                self.workspace,
+                dirs_exist_ok=True,
+            )
+
+        return self._changed_files(diff)
+
+    def _changed_files(self, diff: str) -> list[str]:
+        return [
+            line[6:]
+            for line in diff.splitlines()
+            if line.startswith("+++ b/")
+        ]
+
+```
+
+</details>
+
+
+## server/act_v2/apply/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-27T22:36:17.244Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/act_v2/apply/apply_errors.py
+
+*Size: 139 bytes | Modified: 2025-12-27T22:36:43.056Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+class ApplyError(Exception):
+    pass
+
+
+class PatchApplyFailed(ApplyError):
+    pass
+
+
+class WorkspaceWriteViolation(ApplyError):
+    pass
+
+```
+
+</details>
+
+
+## server/act_v2/apply/patch_applier.py
+
+*Size: 852 bytes | Modified: 2025-12-27T22:38:25.188Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import subprocess
+from pathlib import Path
+
+from .apply_errors import PatchApplyFailed
+
+
+def apply_patch(diff: str, workspace_root: Path) -> None:
+    if not diff.strip():
+        return
+
+    # Safety: ensure git repo exists
+    if not (workspace_root / ".git").exists():
+        raise PatchApplyFailed("Workspace is not a git repository")
+
+    # Dry-run first
+    dry = subprocess.run(
+        ["git", "apply", "--check"],
+        input=diff,
+        cwd=workspace_root,
+        text=True,
+        capture_output=True,
+    )
+
+    if dry.returncode != 0:
+        raise PatchApplyFailed(dry.stderr)
+
+    # Apply for real
+    apply = subprocess.run(
+        ["git", "apply"],
+        input=diff,
+        cwd=workspace_root,
+        text=True,
+        capture_output=True,
+    )
+
+    if apply.returncode != 0:
+        raise PatchApplyFailed(apply.stderr)
+
+```
+
+</details>
+
+
+## server/act_v2/apply/workspace_guard.py
+
+*Size: 279 bytes | Modified: 2025-12-27T22:37:13.850Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pathlib import Path
+
+
+def assert_path_allowed(root: Path, target: Path):
+    root = root.resolve()
+    target = target.resolve()
+
+    if not str(target).startswith(str(root)):
+        raise PermissionError(
+            f"Write outside workspace blocked: {target}"
+        )
+
+```
+
+</details>
+
+
+## server/act_v2/compiler/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-27T22:07:08.538Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/act_v2/compiler/plan_compiler.py
+
+*Size: 1,616 bytes | Modified: 2025-12-29T21:58:49.739Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from typing import Dict, Union
+from uuid import uuid4
+
+
+from server.plan.plan_parser import PlanSchema
+from server.act_v2.models.execution_state import ExecutionState
+from server.act_v2.compiler.task_graph import build_task_graph
+from server.act_v2.errors import PlanCompilationError
+from pathlib import Path
+
+
+
+ALLOWED_ACTIONS = {"create", "modify", "delete"}
+
+
+def compile_plan(plan: Union[PlanSchema, Dict], workspace_root: str) -> ExecutionState:
+    """
+    Deterministically compile a validated Plan into an executable task graph.
+    Accepts either a PlanSchema or a dict conforming to PlanSchema.
+    Only executable tasks (create/modify/delete with a non-empty filePath) are included.
+    """
+    if isinstance(plan, dict):
+        plan = PlanSchema(**plan)
+
+    executable_tasks = []
+
+    for t in plan.tasks:
+        if t.actionType not in ALLOWED_ACTIONS:
+            continue
+        if not t.filePath:
+            continue
+        executable_tasks.append(t)
+
+    if not executable_tasks:
+        raise PlanCompilationError("No executable tasks found in plan")
+
+    tasks = build_task_graph(
+        plan.copy(update={"tasks": executable_tasks})
+    )
+
+    # Enforce workspace-relative paths
+    for t in tasks:
+        if Path(t.file_path).is_absolute():
+            raise PlanCompilationError(
+                f"Illegal absolute path in plan task '{t.task_id}': {t.file_path}"
+            )
+
+    return ExecutionState(
+        execution_id=str(uuid4()),
+        plan_id=plan.id,
+        workspace_root=workspace_root,
+        status="pending",
+        current_task_id=None,
+        tasks=tasks,
+    )
+
+```
+
+</details>
+
+
+## server/act_v2/compiler/task_graph.py
+
+*Size: 812 bytes | Modified: 2025-12-29T21:39:53.308Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from typing import List
+from server.plan.plan_parser import PlanSchema
+from server.act_v2.models.execution_task import ExecutionTask
+from pathlib import Path
+
+
+def build_task_graph(plan: PlanSchema) -> List[ExecutionTask]:
+    """
+    Converts plan.tasks into a strictly ordered, dependency-safe graph.
+    """
+    sorted_tasks = sorted(plan.tasks, key=lambda t: t.orderIndex)
+
+    graph: List[ExecutionTask] = []
+
+    for t in sorted_tasks:
+        rel_path = Path(t.filePath).as_posix()
+        graph.append(
+            ExecutionTask(
+                task_id=t.id,
+                title=t.title,
+                file_path=rel_path,
+                action_type=t.actionType,
+                dependencies=t.dependencies or [],
+                order_index=t.orderIndex,
+            )
+        )
+
+    return graph
+
+```
+
+</details>
+
+
+## server/act_v2/context/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-27T22:17:39.817Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/act_v2/context/task_context_builder.py
+
+*Size: 1,359 bytes | Modified: 2025-12-29T21:40:21.137Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from typing import Dict
+from pathlib import Path
+
+
+from server.act_v2.models.execution_task import ExecutionTask
+from .workspace_reader import WorkspaceReader
+
+
+MAX_CONTEXT_CHARS = 12_000
+
+
+def build_task_context(
+    task: ExecutionTask,
+    workspace_root: Path
+) -> Dict:
+    """
+    Builds the minimal deterministic context for ONE task.
+    """
+
+    reader = WorkspaceReader(workspace_root)
+
+    context_files: Dict[str, str] = {}
+
+    # Only the task-declared file is allowed
+    if Path(task.file_path).is_absolute():
+        raise RuntimeError(
+            f"Absolute paths are forbidden: {task.file_path}"
+        )
+
+    try:
+        content = reader.read_file(task.file_path)
+        context_files[task.file_path] = content[:MAX_CONTEXT_CHARS]
+    except FileNotFoundError:
+        # File may not exist yet (create action)
+        context_files[task.file_path] = ""
+    except PermissionError:
+        raise RuntimeError("Illegal file access attempted")
+
+    return {
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "action": task.action_type,
+            "file_path": task.file_path,
+            "dependencies": task.dependencies,
+        },
+        "files": context_files,
+        "rules": {
+            "allowed_files": [task.file_path],
+            "action_type": task.action_type,
+        }
+    }
+
+```
+
+</details>
+
+
+## server/act_v2/context/workspace_reader.py
+
+*Size: 616 bytes | Modified: 2025-12-27T22:18:28.998Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pathlib import Path
+from typing import Dict
+
+
+class WorkspaceReader:
+    """
+    Read-only, allowlist-based workspace access.
+    """
+
+    def __init__(self, workspace_root: Path):
+        self.root = workspace_root.resolve()
+
+    def read_file(self, relative_path: str) -> str:
+        path = (self.root / relative_path).resolve()
+
+        if not path.exists() or not path.is_file():
+            raise FileNotFoundError(relative_path)
+
+        if self.root not in path.parents:
+            raise PermissionError("Path escape attempt detected")
+
+        return path.read_text(encoding="utf-8", errors="ignore")
+
+```
+
+</details>
+
+
+## server/act_v2/diff_validator.py
+
+*Size: 2,040 bytes | Modified: 2025-12-30T20:24:39.214Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import re
+from dataclasses import dataclass
+from typing import List
+from pathlib import Path
+
+from server.act_v2.models.execution_task import ExecutionTask
+from server.act_v2.validation.validation_errors import ContextMismatchViolation
+
+
+@dataclass
+class ValidatedDiff:
+    diff: str
+    files_changed: List[str]
+
+
+class DiffValidationError(Exception):
+    pass
+
+
+class DiffValidator:
+    FILE_RE = re.compile(r"^\+\+\+\s+b/(.+)$", re.MULTILINE)
+
+    def validate(self, diff: str, task: ExecutionTask, workspace: Path) -> ValidatedDiff:
+        # Prevent hallucinated/empty diffs for modify tasks
+        if task.action_type == "modify" and not diff.strip():
+            raise ContextMismatchViolation(
+                "Modify task produced no valid diff against existing file"
+            )
+
+        if not diff.strip():
+            raise DiffValidationError("Empty diff")
+
+        files = self.FILE_RE.findall(diff)
+        if not files:
+            raise DiffValidationError("No files modified")
+
+        for f in files:
+            if f != task.file_path:
+                raise DiffValidationError(
+                    f"Illegal file modification: {f}"
+                )
+
+        if task.action_type == "create" and not any("--- /dev/null" in diff for _ in [0]):
+            raise DiffValidationError("Create task must add new file")
+
+        if task.action_type == "delete" and not any("+++ /dev/null" in diff for _ in [0]):
+            raise DiffValidationError("Delete task must remove file")
+
+        # Workspace-aware checks
+        target = workspace / task.file_path
+        exists = target.exists()
+
+        if task.action_type == "create" and exists:
+            raise DiffValidationError(
+                f"Create task attempted on existing file: {task.file_path}"
+            )
+
+        if task.action_type == "modify" and not exists:
+            raise DiffValidationError(
+                f"Modify task attempted on missing file: {task.file_path}"
+            )
+
+        return ValidatedDiff(diff=diff, files_changed=files)
+
+```
+
+</details>
+
+
+## server/act_v2/errors.py
+
+*Size: 97 bytes | Modified: 2025-12-27T22:07:13.611Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+class ExecutionError(Exception):
+    pass
+
+
+class PlanCompilationError(ExecutionError):
+    pass
+
+```
+
+</details>
+
+
+## server/act_v2/index_hook.py
+
+*Size: 382 bytes | Modified: 2025-12-27T23:17:56.510Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from server.indexing.service import IndexingService
+from server.api.dependencies import get_embedder, get_index_root
+from pathlib import Path
+
+
+def reindex_files(project_id: str, files: list[str], workspace: Path):
+    service = IndexingService(
+        workspace=workspace,
+        index_root=get_index_root() / project_id,
+        embedder=get_embedder(),
+    )
+    service.run()
+
+```
+
+</details>
+
+
+## server/act_v2/ledger/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-27T22:07:11.595Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/act_v2/ledger/execution_ledger.py
+
+*Size: 2,399 bytes | Modified: 2025-12-27T23:07:31.717Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from typing import Dict, Optional
+from threading import Lock
+from server.act_v2.models.execution_state import ExecutionState
+from pathlib import Path
+import json
+import uuid
+from .models import ExecutionLedgerModel, TaskRecord
+
+
+class ExecutionLedger:
+    """
+    In-memory authoritative execution registry.
+    Persistent backend will replace this later.
+    """
+
+    def __init__(self):
+        self._lock = Lock()
+        self._executions: Dict[str, ExecutionState] = {}
+
+    def create(self, state: ExecutionState) -> ExecutionState:
+        with self._lock:
+            self._executions[state.execution_id] = state
+        return state
+
+    def get(self, execution_id: str) -> Optional[ExecutionState]:
+        return self._executions.get(execution_id)
+
+    def update(self, execution_id: str, state: ExecutionState) -> None:
+        with self._lock:
+            self._executions[execution_id] = state
+
+
+# Persistent ledger foundation (Phase 5.9)
+LEDGER_ROOT = Path.home() / ".localpilot" / "executions"
+
+
+class PersistentExecutionLedger:
+    def __init__(self, plan_id: str):
+        self.execution_id = str(uuid.uuid4())
+        self.path = LEDGER_ROOT / f"{self.execution_id}.json"
+        self.model = ExecutionLedgerModel(
+            execution_id=self.execution_id,
+            plan_id=plan_id,
+            status="running",
+        )
+
+    def save(self):
+        LEDGER_ROOT.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(self.model.json(indent=2), encoding="utf-8")
+
+    @classmethod
+    def load(cls, execution_id: str):
+        path = LEDGER_ROOT / f"{execution_id}.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        ledger = cls(data["plan_id"])
+        ledger.execution_id = execution_id
+        ledger.path = path
+        ledger.model = ExecutionLedgerModel(**data)
+        return ledger
+
+    def record_task(
+        self,
+        task_id: str,
+        status: str,
+        diff_hash: str | None = None,
+        files_changed: list[str] | None = None,
+    ):
+        self.model.tasks.append(
+            TaskRecord(
+                task_id=task_id,
+                status=status, 
+                diff_hash=diff_hash,
+                files_changed=files_changed or [],
+            )
+        )
+        self.model.current_task = task_id
+        self.save()
+
+    def complete(self):
+        self.model.status = "completed"
+        self.save()
+
+```
+
+</details>
+
+
+## server/act_v2/ledger/models.py
+
+*Size: 559 bytes | Modified: 2025-12-27T23:06:49.533Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from typing import List, Literal
+from pydantic import BaseModel
+import time
+
+
+TaskStatus = Literal["pending", "done", "failed", "skipped"]
+ExecutionStatus = Literal["running", "paused", "failed", "completed"]
+
+
+class TaskRecord(BaseModel):
+    task_id: str
+    status: TaskStatus
+    diff_hash: str | None = None
+    files_changed: List[str] = []
+    timestamp: float = time.time()
+
+
+class ExecutionLedgerModel(BaseModel):
+    execution_id: str
+    plan_id: str
+    status: ExecutionStatus
+    current_task: str | None = None
+    tasks: List[TaskRecord] = []
+
+```
+
+</details>
+
+
+## server/act_v2/llm/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-27T22:19:20.811Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/act_v2/llm/confined_prompt.py
+
+*Size: 844 bytes | Modified: 2025-12-29T21:08:53.595Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import json
+from typing import Dict, List
+
+
+SYSTEM_PROMPT = """
+You are operating in EXECUTION MODE.
+
+
+Rules:
+- You are executing EXACTLY ONE task.
+- You may modify ONLY the allowed files.
+- Output a VALID unified diff ONLY.
+- Do NOT explain.
+- Do NOT output markdown.
+- Do NOT include JSON.
+- If no changes are required, output an empty diff.
+
+ - If the target file already exists, you MUST use a modify diff.
+ - NEVER use /dev/null for existing files.
+ - NEVER recreate an existing file.
+
+
+Violating any rule is a critical failure.
+""".strip()
+
+
+def build_confined_prompt(context: Dict) -> List[Dict]:
+    """
+    Returns a sealed message list for the LLM.
+    """
+
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": json.dumps(context, indent=2),
+        },
+    ]
+
+```
+
+</details>
+
+
+## server/act_v2/llm/invocation_service.py
+
+*Size: 763 bytes | Modified: 2025-12-29T21:08:20.849Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pathlib import Path
+from server.act_v2.llm.ollama_client import OllamaClient
+from server.act_v2.llm.confined_prompt import build_confined_prompt
+from server.act_v2.validation.diff_parser import extract_diff
+from server.act_v2.diff_validator import DiffValidator
+
+
+class InvocationService:
+    def __init__(self, client: OllamaClient):
+        self.client = client
+
+    def invoke_task(self, task, context: dict) -> str:
+        if not context:
+            raise RuntimeError("Context missing")
+
+        messages = build_confined_prompt(context)
+        raw = self.client.invoke(messages)
+        diff = extract_diff(raw)
+        workspace = Path(context.get("workspace_root", "."))
+        DiffValidator().validate(diff, task, workspace)
+        return diff
+
+```
+
+</details>
+
+
+## server/act_v2/llm/llm_client_stub.py
+
+*Size: 239 bytes | Modified: 2025-12-27T22:19:53.245Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from typing import List, Dict
+
+
+class LLMClientStub:
+    """
+    Placeholder for real LLM invocation (Phase 5.3).
+    """
+
+    def invoke(self, messages: List[Dict]) -> str:
+        raise NotImplementedError("LLM execution not wired yet")
+
+```
+
+</details>
+
+
+## server/act_v2/llm/ollama_client.py
+
+*Size: 779 bytes | Modified: 2025-12-28T18:46:24.303Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import requests
+from typing import List, Dict
+
+
+class OllamaClient:
+    def __init__(self, base_url: str, model: str):
+        self.base_url = base_url.rstrip("/")
+        self.model = model
+
+    def invoke(self, messages: List[Dict]) -> str:
+        r = requests.post(
+            f"{self.base_url}/api/chat",
+            json={
+                "model": self.model,
+                "messages": messages,
+                "stream": False,
+                "options": {
+                    "temperature": 0,
+                    "top_p": 1,
+                    "num_ctx": 8192,
+                    "repeat_penalty": 1.0,
+                }
+            },
+            timeout=180
+        )
+        r.raise_for_status()
+        return (r.json().get("message") or {}).get("content", "")
+
+```
+
+</details>
+
+
+## server/act_v2/models/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-27T22:07:07.894Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/act_v2/models/execution_state.py
+
+*Size: 585 bytes | Modified: 2025-12-29T21:37:01.728Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pydantic import BaseModel
+from typing import List, Optional, Literal, Dict, Any
+from .execution_task import ExecutionTask
+
+
+class ExecutionState(BaseModel):
+    execution_id: str
+    plan_id: str
+    workspace_root: str
+    status: Literal[
+        "pending",
+        "context_ready",
+        "validated",
+        "running",
+        "awaiting_human",
+        "failed",
+        "completed",
+    ]
+    current_task_id: Optional[str]
+    tasks: List[ExecutionTask]
+    context: Optional[Dict[str, Any]] = None
+    last_error: Optional[str] = None
+    last_diff: Optional[str] = None
+
+```
+
+</details>
+
+
+## server/act_v2/models/execution_task.py
+
+*Size: 253 bytes | Modified: 2025-12-27T22:07:08.020Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from pydantic import BaseModel
+from typing import List, Literal
+
+
+class ExecutionTask(BaseModel):
+    task_id: str
+    title: str
+    file_path: str
+    action_type: Literal["create", "modify", "delete"]
+    dependencies: List[str]
+    order_index: int
+
+```
+
+</details>
+
+
+## server/act_v2/validation/__init__.py
+
+*Size: 0 bytes | Modified: 2025-12-27T22:28:14.134Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+
+```
+
+</details>
+
+
+## server/act_v2/validation/diff_parser.py
+
+*Size: 305 bytes | Modified: 2025-12-27T22:28:31.507Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import re
+
+
+DIFF_HEADER = re.compile(r"^---\s+.+\n\+\+\+\s+.+", re.MULTILINE)
+
+
+def extract_diff(diff_text: str) -> str:
+    if not diff_text.strip():
+        return ""
+
+    if not DIFF_HEADER.search(diff_text):
+        raise ValueError("Output is not a valid unified diff")
+
+    return diff_text.strip()
+
+```
+
+</details>
+
+
+## server/act_v2/validation/diff_validator.py
+
+*Size: 920 bytes | Modified: 2025-12-27T22:29:20.254Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+import re
+
+from server.act_v2.models.execution_task import ExecutionTask
+from .validation_errors import (
+    FileScopeViolation,
+    ActionTypeViolation,
+    EmptyDiffNotAllowed,
+)
+
+
+FILE_HEADER = re.compile(r"^\+\+\+\s+b/(.+)", re.MULTILINE)
+
+
+def validate_diff(diff: str, task: ExecutionTask) -> None:
+    if not diff.strip():
+        if task.action_type != "create":
+            raise EmptyDiffNotAllowed("Task requires changes but diff is empty")
+        return
+
+    files = FILE_HEADER.findall(diff)
+    if not files:
+        raise FileScopeViolation("No target files detected")
+
+    for f in files:
+        if f != task.file_path:
+            raise FileScopeViolation(
+                f"Diff modifies unauthorized file: {f}"
+            )
+
+    if task.action_type == "delete":
+        if not re.search(r"^---\s+b/", diff, re.MULTILINE):
+            raise ActionTypeViolation("Delete action missing file removal")
+
+```
+
+</details>
+
+
+## server/act_v2/validation/validation_errors.py
+
+*Size: 287 bytes | Modified: 2025-12-30T20:23:55.572Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+class DiffValidationError(Exception):
+    pass
+
+
+class FileScopeViolation(DiffValidationError):
+    pass
+
+
+class ActionTypeViolation(DiffValidationError):
+    pass
+
+
+class EmptyDiffNotAllowed(DiffValidationError):
+    pass
+
+
+class ContextMismatchViolation(DiffValidationError):
+    pass
 
 ```
 
@@ -4306,7 +6183,7 @@ def get_index_root() -> Path:
 
 ## server/api/plan.py
 
-*Size: 811 bytes | Modified: 2025-12-24T19:15:35.144Z*
+*Size: 1,530 bytes | Modified: 2025-12-30T20:29:40.978Z*
 
 <details>
 <summary>View code</summary>
@@ -4322,6 +6199,7 @@ from pydantic import BaseModel
 from server.api.dependencies import get_index_root
 from server.plan.plan_service import PlanService
 from server.plan.plan_parser import PlanParser
+from server.plan.auto_fix import PlanAutoFixer
 
 
 router = APIRouter()
@@ -4340,6 +6218,30 @@ def generate_plan(request: PlanRequest, index_root: Path = Depends(get_index_roo
     parser = PlanParser()
     result = parser.parse(markdown)
     return result
+
+
+class AutoFixRequest(BaseModel):
+    markdown: str
+
+
+@router.post("/plan/auto-fix")
+def auto_fix_plan(request: AutoFixRequest) -> Dict[str, Any]:
+    parser = PlanParser()
+    parsed = parser.parse(request.markdown)
+    if not parsed.get("plan"):
+        # keep consistent 400 style used above
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Invalid plan JSON")
+
+    workspace = Path.cwd()
+    fixer = PlanAutoFixer(workspace)
+    result = fixer.auto_fix(parsed["plan"])  # type: ignore[arg-type]
+
+    return {
+        "fixedPlan": result.fixed_plan,
+        "warnings": result.warnings,
+        "diff": result.diff,
+    }
 
 ```
 
@@ -4362,13 +6264,14 @@ def generate_plan(request: PlanRequest, index_root: Path = Depends(get_index_roo
 
 ## server/api/routes/chat_ws.py
 
-*Size: 1,024 bytes | Modified: 2025-12-20T23:56:57.481Z*
+*Size: 1,439 bytes | Modified: 2025-12-29T19:01:47.233Z*
 
 <details>
 <summary>View code</summary>
 
 ```python
 from fastapi import APIRouter, WebSocket
+from starlette.websockets import WebSocketDisconnect, WebSocketState
 import json
 
 from server.chat.ollama_chat_client import OllamaChatClient
@@ -4379,12 +6282,12 @@ router = APIRouter()
 @router.websocket("/ws/chat")
 async def chat_ws(websocket: WebSocket):
     await websocket.accept()
-    payload = await websocket.receive_json()
-
-    model = payload.get("model")
-    messages = payload.get("messages")
-
     try:
+        payload = await websocket.receive_json()
+
+        model = payload.get("model")
+        messages = payload.get("messages")
+
         client = OllamaChatClient(
             base_url="http://127.0.0.1:11434",
             model=model,
@@ -4396,18 +6299,23 @@ async def chat_ws(websocket: WebSocket):
                 "value": token
             }))
 
-        await websocket.send_text(json.dumps({ "type": "done" }))
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.send_text(json.dumps({ "type": "done" }))
 
+    except (WebSocketDisconnect, ConnectionResetError):
+        # Client disconnected; nothing to do
+        pass
     except Exception as e:
-        await websocket.send_text(json.dumps({
-            "type": "error",
-            "source": "backend",
-            "message": str(e)
-        }))
-        await websocket.send_text(json.dumps({ "type": "done" }))
-
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.send_text(json.dumps({
+                "type": "error",
+                "source": "backend",
+                "message": str(e)
+            }))
+            await websocket.send_text(json.dumps({ "type": "done" }))
     finally:
-        await websocket.close()
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.close()
 
 ```
 
@@ -5903,7 +7811,7 @@ class VectorStore:
 
 ## server/main.py
 
-*Size: 1,683 bytes | Modified: 2025-12-24T19:15:35.147Z*
+*Size: 2,120 bytes | Modified: 2025-12-29T19:00:02.422Z*
 
 <details>
 <summary>View code</summary>
@@ -5913,12 +7821,22 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 import requests
+import sys
+import asyncio
 
 from server.api.routes import query as query_routes
 from server.api.routes import chat_ws
 from server.api.routes import project as project_routes
 from server.api.routes import index as index_routes
 from server.api import plan as plan_api
+from server.act_v2.api import router as act_v2_router
+
+# Windows: prefer selector event loop to reduce WinError 10054 during client disconnects
+if sys.platform.startswith("win"):
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    except Exception:
+        pass
 
 
 @asynccontextmanager
@@ -5953,6 +7871,7 @@ app.include_router(project_routes.router, prefix="/api")
 app.include_router(chat_ws.router)
 app.include_router(index_routes.router, prefix="/api")
 app.include_router(plan_api.router, prefix="/api")
+app.include_router(act_v2_router)
 
 # --------------------
 # Health endpoints
@@ -5971,6 +7890,7 @@ def ollama_health():
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
+
 ```
 
 </details>
@@ -5985,6 +7905,130 @@ def ollama_health():
 
 ```python
 # Phase 3 Plan package
+
+```
+
+</details>
+
+
+## server/plan/auto_fix/__init__.py
+
+*Size: 62 bytes | Modified: 2025-12-30T20:29:29.817Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from .plan_auto_fixer import PlanAutoFixer, PlanAutoFixResult
+
+```
+
+</details>
+
+
+## server/plan/auto_fix/plan_auto_fixer.py
+
+*Size: 3,606 bytes | Modified: 2025-12-30T20:39:21.240Z*
+
+<details>
+<summary>View code</summary>
+
+```python
+from __future__ import annotations
+from pathlib import Path
+from typing import List, Dict, Any
+from copy import deepcopy
+import json
+import difflib
+
+
+class PlanAutoFixResult:
+    def __init__(self, fixed_plan: Dict[str, Any], warnings: List[str], diff: str):
+        self.fixed_plan = fixed_plan
+        self.warnings = warnings
+        self.diff = diff
+
+
+class PlanAutoFixer:
+    def __init__(self, workspace_root: Path):
+        self.workspace_root = workspace_root.resolve()
+
+    def auto_fix(self, plan: Dict[str, Any]) -> PlanAutoFixResult:
+        original = deepcopy(plan)
+        fixed = deepcopy(plan)
+        warnings: List[str] = []
+
+        tasks = fixed.get("tasks", []) or []
+        for task in tasks:
+            file_path = task.get("filePath")
+            if not file_path:
+                continue
+
+            # Rule A — Absolute Paths → Relative Paths
+            p = Path(file_path)
+            if p.is_absolute():
+                try:
+                    task["filePath"] = str(p.resolve().relative_to(self.workspace_root))
+                except Exception:
+                    warnings.append(
+                        f"Task '{task.get('id', '?')}' uses illegal absolute path: {file_path}"
+                    )
+                    # leave as-is; surfaced to user
+                    continue
+
+            # Normalize separators to POSIX style for consistency
+            task["filePath"] = task["filePath"].replace("\\", "/")
+
+            # Rule C — Directory in filePath → error (no auto-fix)
+            if task["filePath"].endswith("/"):
+                warnings.append(
+                    f"Task '{task.get('id', '?')}' filePath points to a directory"
+                )
+
+            # Rule D — Multi-file paths in single task → warning only
+            if "," in task["filePath"]:
+                warnings.append(
+                    f"Task '{task.get('id', '?')}' filePath appears to reference multiple files"
+                )
+
+            # Rule B — Modify on missing file → Create
+            target = self.workspace_root / task["filePath"]
+            if task.get("actionType") == "modify" and not target.exists():
+                task["actionType"] = "create"
+                warnings.append(
+                    f"Task '{task.get('id', '?')}': actionType changed modify → create (file not found)"
+                )
+
+            # Rule F — Create on existing file → Modify
+            if task.get("actionType") == "create" and target.exists():
+                task["actionType"] = "modify"
+                warnings.append(
+                    f"Task '{task.get('id', '?')}': actionType changed create → modify (file already exists)"
+                )
+
+        # Rule E — Task ordering normalization (contiguous 0..N)
+        try:
+            tasks.sort(key=lambda t: t.get("orderIndex", 0))
+            for i, t in enumerate(tasks):
+                t["orderIndex"] = i
+        except Exception:
+            # if tasks not sortable, leave as-is
+            pass
+
+        diff = self._generate_diff(original, fixed)
+        return PlanAutoFixResult(fixed, warnings, diff)
+
+    def _generate_diff(self, before: Dict[str, Any], after: Dict[str, Any]) -> str:
+        before_json = json.dumps(before, indent=2).splitlines(keepends=True)
+        after_json = json.dumps(after, indent=2).splitlines(keepends=True)
+        return "".join(
+            difflib.unified_diff(
+                before_json,
+                after_json,
+                fromfile="plan.json (original)",
+                tofile="plan.json (auto-fixed)",
+            )
+        )
 
 ```
 
@@ -6063,7 +8107,7 @@ class PlanParser:
 
 ## server/plan/plan_service.py
 
-*Size: 5,456 bytes | Modified: 2025-12-26T21:23:16.303Z*
+*Size: 5,435 bytes | Modified: 2025-12-28T22:16:33.008Z*
 
 <details>
 <summary>View code</summary>
@@ -6079,25 +8123,32 @@ from server.chat.ollama_chat_client import OllamaChatClient
 PLAN_MODE_SYSTEM = (
     "You are operating in PLAN MODE.\n\n"
 
-    "Your job is to produce a VALID IMPLEMENTATION PLAN.\n"
-    "You MUST output ONE and ONLY ONE valid JSON object matching the schema below.\n\n"
+    "Your task is to output ONE VALID IMPLEMENTATION PLAN.\n"
+    "You MUST output EXACTLY ONE JSON object inside a fenced ```json block.\n\n"
 
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    "CRITICAL RULES (NON-NEGOTIABLE)\n"
+    "ABSOLUTE RULES (NO EXCEPTIONS)\n"
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    "1. Output MUST contain EXACTLY ONE JSON object.\n"
+    "1. Output ONE and ONLY ONE JSON object.\n"
     "2. JSON MUST be syntactically valid.\n"
-    "3. ALL fields are REQUIRED.\n"
-    "4. NO extra fields are allowed.\n"
-    "5. Arrays MUST ALWAYS be arrays, even with one item.\n"
-    "6. NEVER output a string where an array is required.\n"
-    "7. NEVER omit required fields.\n"
-    "8. status MUST be \"draft\".\n"
-    "9. orderIndex MUST start at 0 and be sequential.\n"
-    "10. tasks MUST NOT be empty.\n\n"
+    "3. JSON MUST match the schema EXACTLY.\n"
+    "4. ALL fields are REQUIRED.\n"
+    "5. NO extra fields are allowed.\n"
+    "6. status MUST be \"draft\".\n"
+    "7. orderIndex MUST start at 0 and increment by 1.\n"
+    "8. tasks MUST NOT be empty.\n"
+    "9. filePath MUST NEVER be empty.\n"
+    "10. actionType MUST be create | modify | delete.\n\n"
+
+    "STRICT RULES:\n"
+    "- actionType MUST be one of: create | modify | delete\n"
+    "- NEVER use actionType \"run\", \"test\", \"execute\", or similar\n"
+    "- Tasks that describe running tests must be expressed as code changes\n"
+    "  (e.g. adding test files), not execution steps\n"
+    "- filePath MUST NEVER be empty\n\n"
 
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    "STRICT JSON SCHEMA (MANDATORY)\n"
+    "STRICT JSON SCHEMA\n"
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     "{\n"
     "  \"id\": \"string\",\n"
@@ -6119,18 +8170,12 @@ PLAN_MODE_SYSTEM = (
     "}\n\n"
 
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    "SELF-CHECK REQUIREMENT\n"
+    "SELF-CHECK LOOP (MANDATORY)\n"
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    "Before responding:\n"
-    "- Validate your JSON against the schema.\n"
-    "- If ANY field is missing or invalid, FIX IT before output.\n"
-    "- Do NOT explain. Do NOT apologize.\n\n"
-
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    "OUTPUT FORMAT\n"
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    "1. Short Markdown summary.\n"
-    "2. ONE fenced ```json block containing ONLY the JSON.\n"
+    "- Validate JSON against the schema.\n"
+    "- Fix ALL errors BEFORE responding.\n"
+    "- Do NOT explain.\n"
+    "- Do NOT apologize.\n"
 )
 
 
@@ -6189,7 +8234,7 @@ class PlanService:
         messages = self._build_messages(chat_messages)
 
         output = ""
-        for attempt in range(2):  # one retry max
+        for attempt in range(3):  # increase to 3 attempts
             output = client.chat(messages)
 
             # Validate JSON via parser
@@ -6204,8 +8249,9 @@ class PlanService:
             messages.append({
                 "role": "system",
                 "content": (
-                    "The previous JSON was INVALID.\n"
-                    "Fix ALL schema violations and output VALID JSON ONLY."
+                    "The previous output was INVALID.\n"
+                    "You MUST fix ALL schema violations.\n"
+                    "Output ONLY a valid JSON plan."
                 )
             })
 
@@ -6295,415 +8341,6 @@ def add(a, b):
     return a + b
 
 ```
-
-</details>
-
-
-## tools/export-to-md.mjs
-
-*Size: 14,591 bytes | Modified: 2025-12-07T18:23:00.571Z*
-
-<details>
-<summary>View code</summary>
-
-````javascript
-#!/usr/bin/env node
-import fs from 'node:fs/promises';
-import { createWriteStream } from 'node:fs';
-import path from 'node:path';
-// Optional dependency handling
-let ignoreModule = null;
-try {
-  // Dynamic import for the ignore package
-  ignoreModule = await import('ignore').then(m => m.default);
-} catch (error) {
-  console.warn('Warning: "ignore" package not installed. .gitignore support disabled.');
-}
-
-// --- Default Configuration (and other functions like parseArgs, walk, langForExt, etc.) ---
-const DEFAULT_ROOTS = ['.'];
-const DEFAULT_EXCLUDE_DIRS = new Set([
-  '.git', 'node_modules', 'dist', 'build', 'out', 'target', 'vendor',
-  '.idea', '.vscode', '.DS_Store', 'coverage', '.cache', 'bin', 'obj',
-  '.venv', '__pycache__', '.tox',
-  'Pods', 'DerivedData', '.swiftpm', 'Carthage',
-  '.gradle',
-  'Library', 'Temp', 'Logs', 'Packages',
-  'Intermediate', 'Saved',
-]);
-const DEFAULT_ALLOW_EXTS = new Set([
-  '.ts', '.tsx', '.js', '.jsx', '.json', '.mjs', '.cjs', '.html', '.css', '.scss', '.less',
-  '.yml', '.yaml', '.toml', '.ini', '.env', '.config',
-  '.md', '.mdx', '.txt','csv','.json',
-  '.sh', '.bash', '.ps1', 'Dockerfile',
-  '.c', '.cpp', '.h', '.hpp',
-  '.py', '.go', '.rs', '.rb', '.php', '.sql',
-  '.cs', '.gd', '.lua', '.glsl', '.hlsl', '.metal', '.shader', '.tscn', '.tres',
-  '.swift', '.m', '.storyboard', '.xib', '.plist', 'Podfile',
-  '.kt', '.kts', '.java', '.xml', '.gradle', '.gradle.kts',
-  '.dart', '.xaml',
-]);
-const DEFAULT_EXCLUDE_FILE_BASENAMES = new Set([
-  'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'Podfile.lock', 'Cargo.lock',
-  'composer.lock', 'Gemfile.lock' , 'reviewer.md'
-]);
-const langForExt = (ext) => ({
-  '.ts': 'typescript', '.tsx': 'tsx', '.js': 'javascript', '.jsx': 'jsx', '.mjs': 'javascript', '.cjs': 'javascript',
-  '.json': 'json', '.yml': 'yaml', '.yaml': 'yaml', '.toml':'toml', '.ini':'ini',
-  '.md': 'markdown', '.mdx': 'mdx', '.txt': 'text',
-  '.sh': 'bash', '.bash': 'bash', '.ps1': 'powershell', 'Dockerfile':'dockerfile',
-  '.py': 'python', '.go': 'go', '.rs': 'rust',
-  '.java': 'java', '.kt': 'kotlin', '.kts': 'kotlin', '.scala': 'scala', '.gradle': 'groovy', '.gradle.kts': 'kotlin',
-  '.cs': 'csharp', '.c': 'c', '.cpp': 'cpp', '.h': 'c', '.hpp': 'cpp',
-  '.rb': 'ruby', 'Podfile': 'ruby', '.php': 'php', '.sql': 'sql',
-  '.html': 'html', '.css': 'css', '.scss': 'scss', '.less': 'less',
-  '.gd': 'gdscript', '.lua': 'lua', '.glsl': 'glsl', '.hlsl': 'hlsl', '.metal': 'c++', '.shader': 'csharp', '.tscn': 'ini', '.tres': 'ini',
-  '.swift': 'swift', '.m': 'objectivec',
-  '.xml': 'xml', '.storyboard': 'xml', '.xib': 'xml', '.plist': 'xml', '.xaml': 'xml',
-  '.dart': 'dart',
-}[ext] || '');
-
-function parseArgs(argv) {
-  const config = {
-    roots: [], out: '', maxBytes: 524288, help: false,
-    excludeDirs: new Set(DEFAULT_EXCLUDE_DIRS),
-    useGitignore: true,
-    allowExts: new Set(DEFAULT_ALLOW_EXTS),
-    excludeFiles: new Set(DEFAULT_EXCLUDE_FILE_BASENAMES),
-  };
-  const parseList = (arg, prefix) => arg.slice(prefix.length).split(',').filter(Boolean);
-  for (const arg of argv) {
-    if (arg === '-h' || arg === '--help') { config.help = true; continue; }
-    if (arg.startsWith('--out=')) { config.out = arg.slice('--out='.length); continue; }
-    if (arg === '--no-gitignore') { config.useGitignore = false; continue; }
-    if (arg.startsWith('--max-bytes=')) {
-      const n = Number(arg.slice('--max-bytes='.length));
-      if (Number.isFinite(n) && n >= 0) config.maxBytes = Math.trunc(n);
-      continue;
-    }
-    if (arg.startsWith('--exclude-dir=')) { parseList(arg, '--exclude-dir=').forEach(d => config.excludeDirs.add(d)); continue; }
-    if (arg.startsWith('--include-ext=')) {
-      if (config.allowExts === DEFAULT_ALLOW_EXTS) config.allowExts = new Set();
-      parseList(arg, '--include-ext=').forEach(e => config.allowExts.add(e.startsWith('.') ? e : `.${e}`));
-      continue;
-    }
-    if (arg.startsWith('--exclude-file=')) { parseList(arg, '--exclude-file=').forEach(f => config.excludeFiles.add(f)); continue; }
-    if (!arg.startsWith('--')) { config.roots.push(arg); }
-  }
-  if (config.roots.length === 0) { config.roots = DEFAULT_ROOTS; }
-  return config;
-}
-
-/**
- * Load and parse .gitignore file for a given directory
- * @param {string} rootDir - The directory containing the .gitignore file
- * @returns {object|null} An ignore instance that can be used to test paths, or null if not available
- */
-async function loadGitignore(rootDir) {
-  if (!ignoreModule) return null;
-  
-  const ig = ignoreModule();
-  try {
-    const content = await fs.readFile(path.join(rootDir, '.gitignore'), 'utf8');
-    ig.add(content);
-  } catch {
-    // No .gitignore found or couldn't read it
-  }
-  return ig;
-}
-
-async function walk(dir, allowExts, excludeDirs, gitignore = null, rootDir = '', files = []) {
-  try {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const absPath = path.join(dir, entry.name);
-      const relPath = rootDir ? path.relative(rootDir, absPath) : absPath;
-      
-      // Check gitignore if available
-      if (gitignore && gitignore.ignores(relPath.split(path.sep).join('/'))) {
-        continue;
-      }
-      
-      if (entry.isDirectory()) {
-        if (!excludeDirs.has(entry.name)) {
-          await walk(absPath, allowExts, excludeDirs, gitignore, rootDir, files);
-        }
-      } else if (entry.isFile()) {
-        const ext = path.extname(entry.name);
-        if (allowExts.has(ext) || allowExts.has(entry.name)) {
-          files.push(absPath);
-        }
-      }
-    }
-  } catch (error) {
-    console.warn(`Warning: Could not read directory "${dir}": ${error.message}`);
-  }
-  return files;
-}
-
-async function isTextFile(filePath) {
-  try {
-    const fd = await fs.open(filePath, 'r');
-    const buffer = Buffer.alloc(4096);
-    const { bytesRead } = await fd.read(buffer, 0, 4096, 0);
-    await fd.close();
-    
-    // Check for NULL bytes which indicate binary content
-    for (let i = 0; i < bytesRead; i++) {
-      if (buffer[i] === 0) return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Generates a table of contents for easier navigation
- * @param {Array} fileEntries - Array of file entry objects
- * @returns {string} Markdown formatted table of contents
- */
-function generateTableOfContents(fileEntries) {
-  let toc = "## Table of Contents\n\n";
-  fileEntries.forEach(({ rel }) => {
-    // Create markdown heading link using the file path
-    const linkText = rel.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-    toc += `- [${rel}](#${linkText})\n`;
-  });
-  return toc + "\n\n---\n\n";
-}
-
-/**
- * Generates a visually appealing and informative text-based tree structure.
- * - Directories are marked with a trailing '/'
- * - Entries are sorted with directories first, then files, all alphabetically.
- * - Provides a header with the root name and total file count.
- * @param {string[]} files - An array of relative file paths (using '/' as separator).
- * @param {string} rootDisplayName - The name to display for the root of the tree.
- * @returns {string} The formatted tree string.
- */
-function generateTree(files, rootDisplayName = '.') {
-    const tree = {};
-
-    for (const file of files) {
-        // *** THE FIX IS HERE: Using '/' explicitly ***
-        const parts = file.split('/'); 
-        let currentLevel = tree;
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-            const isLast = i === parts.length - 1;
-
-            if (!currentLevel[part]) {
-                currentLevel[part] = {
-                    type: isLast ? 'file' : 'directory',
-                    children: isLast ? null : {},
-                };
-            }
-            currentLevel = currentLevel[part].children;
-        }
-    }
-
-    const buildTreeString = (node, prefix = '') => {
-        let result = '';
-        const entries = Object.entries(node).sort(([aName, aNode], [bName, bNode]) => {
-            if (aNode.type === bNode.type) {
-                return aName.localeCompare(bName);
-            }
-            return aNode.type === 'directory' ? -1 : 1;
-        });
-
-        entries.forEach(([name, childNode], index) => {
-            const isLast = index === entries.length - 1;
-            const connector = isLast ? '└── ' : '├── ';
-            const displayName = childNode.type === 'directory' ? `${name}/` : name;
-            
-            result += `${prefix}${connector}${displayName}\n`;
-
-            if (childNode.children) {
-                const childPrefix = prefix + (isLast ? '    ' : '│   ');
-                result += buildTreeString(childNode.children, childPrefix);
-            }
-        });
-        return result;
-    };
-
-    const fileCount = files.length === 1 ? '1 file' : `${files.length} files`;
-    const header = `${rootDisplayName} (${fileCount})\n`;
-    return header + buildTreeString(tree);
-}
-
-async function main() {
-  const config = parseArgs(process.argv.slice(2));
-
-  if (config.help) {
-    console.log(`
-Usage: export-to-mdnew.mjs [options] [directories...]
-
-Options:
-  --out=FILE               Output file path (default: docs/code-snapshot.md)
-  --max-bytes=N            Skip files larger than N bytes (default: 524288)
-  --exclude-dir=A,B,C      Exclude directories (comma-separated)
-  --include-ext=.a,.b,.c   Include only files with these extensions
-  --exclude-file=A,B,C     Exclude files by name (comma-separated)
-  --no-gitignore           Don't respect .gitignore files
-  -h, --help               Show this help message
-`);
-    return;
-  }
-
-  const roots = config.roots.map((p) => path.resolve(p));
-  const allFiles = [];
-  
-  // Load gitignore for each root if enabled and module is available
-  const gitignores = {};
-  if (config.useGitignore && ignoreModule) {
-    for (const root of roots) {
-      gitignores[root] = await loadGitignore(root);
-    }
-  } else if (config.useGitignore) {
-    console.warn('Warning: .gitignore support is disabled because the "ignore" package is not installed.');
-  }
-  
-  for (const r of roots) {
-    const stat = await fs.stat(r).catch(() => null);
-    if (stat?.isDirectory()) {
-      const gitignore = config.useGitignore ? gitignores[r] : null;
-      await walk(r, config.allowExts, config.excludeDirs, gitignore, r, allFiles);
-    }
-  }
-
-  const filePairs = allFiles.map((abs) => {
-    // This part correctly normalizes paths to use '/'
-    const rel = path.relative(process.cwd(), abs).split(path.sep).join('/');
-    return { abs, rel };
-  }).sort((a, b) => a.rel.localeCompare(b.rel));
-  
-  const rootDisplayNames = roots.map(r => path.relative(process.cwd(), r) || '.').join(', ');
-  const tree = generateTree(filePairs.map(p => p.rel), rootDisplayNames);
-  
-  const header = `# Code Snapshot
-
-**Generated:** ${new Date().toISOString()}
-**Roots:** ${rootDisplayNames}
-**Max file size:** ${config.maxBytes === 0 ? 'unlimited' : config.maxBytes.toLocaleString() + ' bytes'}
-
-## Project Structure
-
-\`\`\`
-${tree}
-\`\`\`
-
----
-`;
-  
-  const fenceFor = (content) => content.includes('```') ? '````' : '```';
-  
-  let skippedLarge = 0;
-  let skippedNamed = 0;
-  let skippedBinary = 0;
-  let included = 0;
-  const fileEntries = [];
-  
-  // Add progress indicator
-  const totalFiles = filePairs.length;
-  console.log(`Processing ${totalFiles} files...`);
-  let processedCount = 0;
-  
-  for (const { abs, rel } of filePairs) {
-    // Update progress
-    processedCount++;
-    if (processedCount % 10 === 0 || processedCount === totalFiles) {
-      process.stdout.write(`\rProcessing: ${processedCount}/${totalFiles} (${Math.round(processedCount/totalFiles*100)}%)`);
-    }
-   
-    const base = path.basename(abs);
-   
-    if (config.excludeFiles.has(base)) { 
-      skippedNamed++; 
-      continue; 
-    }
-   
-    // Check if it's a binary file
-    if (!(await isTextFile(abs))) {
-      skippedBinary++;
-      continue;
-    }
-   
-    if (config.maxBytes > 0) {
-      try {
-        const stats = await fs.stat(abs);
-        if (stats.size > config.maxBytes) {
-          skippedLarge++;
-          continue;
-        }
-      } catch {
-        continue;
-      }
-    }
-    
-    try {
-      const content = await fs.readFile(abs, 'utf8');
-      included++;
-      const lang = langForExt(path.extname(abs) || path.basename(abs));
-      const fence = fenceFor(content);
-      const stats = await fs.stat(abs);
-      fileEntries.push({ 
-        rel, 
-        lang, 
-        fence, 
-        content,
-        size: stats.size,
-        modified: stats.mtime.toISOString()
-      });
-    } catch {
-      // Skip files we can't read
-    }
-  }
-
-  console.log('\nGenerating markdown output...');
-  const target = path.resolve(config.out || 'docs/code-snapshot.md');
-  await fs.mkdir(path.dirname(target), { recursive: true });
-  
-  // Use stream for better performance with large files
-  const writeStream = createWriteStream(target);
-  writeStream.write(header);
-  
-  // Add table of contents
-  writeStream.write(generateTableOfContents(fileEntries));
-  
-  for (const { rel, lang, fence, content, size, modified } of fileEntries) {
-    // Write the file section with collapsible details tag
-    writeStream.write(`## ${rel}\n\n`);
-    writeStream.write(`*Size: ${size.toLocaleString()} bytes | Modified: ${modified}*\n\n`);
-    writeStream.write(`<details>\n<summary>View code</summary>\n\n`);
-    writeStream.write(`${fence}${lang}\n${content}\n${fence}\n\n`);
-    writeStream.write(`</details>\n\n\n`);
-  }
-  
-  // Close the stream
-  writeStream.end();
-  
-  // Wait for the write to complete
-  await new Promise((resolve) => writeStream.on('finish', resolve));
-  
-  const summaryParts = [`${included} files included`]; 
-  if (skippedLarge > 0) summaryParts.push(`${skippedLarge} skipped (> ${config.maxBytes.toLocaleString()} bytes)`);
-  if (skippedNamed > 0) summaryParts.push(`${skippedNamed} skipped by name`);
-  if (skippedBinary > 0) summaryParts.push(`${skippedBinary} skipped (binary files)`);
-
-  console.log(`Wrote to ${target} (${summaryParts.join(', ')})`);
-}
-
-// This is the entry point of the script
-(async function() {
-  try {
-    await main();
-  } catch (e) {
-    console.error('An unexpected error occurred:', e);
-    process.exit(1);
-  }
-})();
-````
 
 </details>
 

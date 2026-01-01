@@ -25,7 +25,7 @@ class PlanSchema(BaseModel):
     id: str
     title: str
     overview: str
-    status: Literal["draft"]
+    status: Literal["draft", "approved"]
     tasks: List[TaskSchema]
 
     class Config:

@@ -80,11 +80,9 @@ export function renderChat(container: HTMLElement) {
       progress.value = 0;
       progress.style.display = "block";
 
-      const es = new EventSource(
-        `http://localhost:8000/api/index/${encodeURIComponent(
-          msg.projectId
-        )}`
-      );
+      const workspaceRoot = (msg.workspaceRoot as string) || "";
+      const url = `http://localhost:8000/api/index/${encodeURIComponent(msg.projectId)}?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+      const es = new EventSource(url);
 
       es.onmessage = (ev) => {
         const data = JSON.parse(ev.data);

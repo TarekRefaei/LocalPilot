@@ -56,12 +56,6 @@ export class PlanViewProvider implements vscode.WebviewViewProvider {
             msg.planId
           );
           break;
-        case 'plan:fixJsonById':
-          vscode.commands.executeCommand(
-            'localpilot.plan.fixJsonById',
-            msg.planId
-          );
-          break;
       }
     });
 
@@ -117,7 +111,7 @@ function render(plans: any[]): string {
         ${p.status === 'approved' && p.plan && (!p.warnings || !p.warnings.length)
           ? `<button data-act="${p.id}" title="Act">⚙</button>`
           : `<button disabled title="Fix plan before acting">⚙</button>`}
-        ${p.warnings && p.warnings.length ? `<button data-fix="${p.id}" title="Fix JSON">🛠</button>` : ''}
+        
       </div>
     </div>
     ${renderJsonError(p)}
@@ -196,11 +190,7 @@ function render(plans: any[]): string {
     });
   });
 
-  document.querySelectorAll('[data-fix]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      vscode.postMessage({ type: 'plan:fixJsonById', planId: btn.dataset.fix });
-    });
-  });
+  
 </script>
 </body>
 </html>

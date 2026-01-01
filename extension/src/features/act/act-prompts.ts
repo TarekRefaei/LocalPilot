@@ -1,3 +1,7 @@
+﻿/**
+ * @deprecated Act v1 is deprecated.
+ * Use Execute (v2) pipeline instead.
+ */
 export const ACT_MODE_SYSTEM_PROMPT = `
 You are operating in ACT MODE.
 
@@ -20,3 +24,4 @@ Rules:
 
 Failure to follow these rules is a critical error.
 `;
+

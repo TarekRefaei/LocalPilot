@@ -33,3 +33,17 @@ export async function isIndexed(projectId: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function autoFixPlanPreview(markdown: string, workspaceRoot: string): Promise<{ fixedPlan: any; warnings: string[]; diff: string }>
+{
+  const res = await fetch('http://localhost:8000/api/plan/auto-fix', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ markdown, workspace_root: workspaceRoot }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`auto_fix_failed: ${res.status} ${text}`);
+  }
+  return await res.json();
+}

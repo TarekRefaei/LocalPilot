@@ -25,6 +25,13 @@ PLAN_MODE_SYSTEM = (
     "9. filePath MUST NEVER be empty.\n"
     "10. actionType MUST be create | modify | delete.\n\n"
 
+    "STRICT RULES:\n"
+    "- actionType MUST be one of: create | modify | delete\n"
+    "- NEVER use actionType \"run\", \"test\", \"execute\", or similar\n"
+    "- Tasks that describe running tests must be expressed as code changes\n"
+    "  (e.g. adding test files), not execution steps\n"
+    "- filePath MUST NEVER be empty\n\n"
+
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     "STRICT JSON SCHEMA\n"
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"

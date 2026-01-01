@@ -78,30 +78,19 @@ export class ActViewProvider implements vscode.WebviewViewProvider {
         <h3>Act Mode</h3>
         <div class="plan"><b>Plan:</b> ${escapeHtml(session.planTitle)}</div>
 
-        <button onclick="runAll()">▶ Run All</button>
+        <em>Act v1 is deprecated. Use Execute (v2).</em>
 
         <ul>
           ${session.tasks.map(t => `
             <li>
               <span class="status">${icon(t.status)}</span>
               <span>${escapeHtml(t.title)}</span>
-              <button onclick="run('${t.id}')" title="Run">▶</button>
-              <button onclick="skip('${t.id}')" title="Skip">⏭</button>
             </li>
           `).join('')}
         </ul>
 
         <script>
-          const vscode = acquireVsCodeApi();
-          function run(id) {
-            vscode.postMessage({ command: 'localpilot.act.runTask', taskId: id });
-          }
-          function skip(id) {
-            vscode.postMessage({ command: 'localpilot.act.skipTask', taskId: id });
-          }
-          function runAll() {
-            vscode.postMessage({ command: 'localpilot.act.runAll' });
-          }
+          // Read-only view: no actions
         </script>
       </body>
       </html>
