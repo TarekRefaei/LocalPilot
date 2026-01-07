@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { normalizeFilePath } from '../../domain/plan.paths';
 
 export interface PlanLintWarning {
   message: string;
@@ -22,16 +22,7 @@ export function normalizePlan(plan: any): {
     if (!task.filePath) continue;
 
     const original = task.filePath;
-
-    // Windows absolute path
-    if (/^[A-Za-z]:[\\/]/.test(task.filePath)) {
-      task.filePath = path.basename(task.filePath);
-    }
-
-    // Unix absolute path
-    if (task.filePath.startsWith('/')) {
-      task.filePath = path.basename(task.filePath);
-    }
+    task.filePath = normalizeFilePath(task.filePath);
 
     if (original !== task.filePath) {
       warnings.push({
@@ -39,6 +30,14 @@ export function normalizePlan(plan: any): {
         field: 'filePath',
         message: `Absolute path normalized to '${task.filePath}'`,
       });
+      changed = true;
+    }
+
+    // Script file safety hint
+    if (task.filePath.endsWith('.py') && task.details) {
+      task.details.push(
+        'If this file is a script, print results instead of returning them.'
+      );
       changed = true;
     }
   }

@@ -9,6 +9,7 @@ from server.api.dependencies import get_index_root
 from server.plan.plan_service import PlanService
 from server.plan.plan_parser import PlanParser
 from server.plan.auto_fix import PlanAutoFixer
+from server.plan.minimizer import minimize_plan
 
 
 router = APIRouter()
@@ -18,14 +19,26 @@ class PlanRequest(BaseModel):
     project_id: str
     model: str
     messages: List[Dict[str, str]]
+    workspace_root: str | None = None
 
 
 @router.post("/plan")
 def generate_plan(request: PlanRequest, index_root: Path = Depends(get_index_root)) -> Dict[str, Any]:
-    service = PlanService(index_root=index_root, project_id=request.project_id, model=request.model)
+    workspace_root = Path(request.workspace_root) if request.workspace_root else None
+    service = PlanService(
+        index_root=index_root,
+        project_id=request.project_id,
+        model=request.model,
+        workspace_root=workspace_root,
+    )
     markdown = service.generate(chat_messages=request.messages)
     parser = PlanParser()
     result = parser.parse(markdown)
+    try:
+        if result.get("plan"):
+            result["plan"] = minimize_plan(result["plan"])  # type: ignore[arg-type]
+    except Exception:
+        pass
     return result
 
 

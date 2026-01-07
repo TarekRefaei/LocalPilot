@@ -1,17 +1,44 @@
 import * as vscode from 'vscode';
+import {
+  PLAN_REFRESH,
+  PLAN_SELECT,
+  PLAN_OPEN,
+  PLAN_VALIDATE_BY_ID,
+  PLAN_APPROVE_BY_ID,
+  PLAN_DISCARD_BY_ID,
+  PLAN_REGENERATE_BY_ID,
+  CHAT_CLEAR,
+  ACT_START,
+  ACT_FOCUS,
+  ACT_REFRESH,
+  ACT_RUN_TASK,
+  ACT_SKIP_TASK,
+  ACT_RUN_ALL,
+  INDEX_SYNC,
+  EXECUTE_START,
+  EXECUTE_APPLY,
+  EXECUTE_RESUME,
+  EXECUTE_SKIP,
+  EXECUTE_RETRY,
+  EXECUTE_REFRESH,
+  WORKBENCH_FOCUS_LOCALPILOT,
+} from './config/commands.config';
+import { MSG_ACTIVATED, MSG_CHAT_CLEARED, MSG_ACT_V1_DEPRECATED } from './config/messages.config';
 import { registerPlanCommands } from './commands/plan.commands';
 import { ChatSessionStore } from './features/chat/chat-session.store';
 import { ChatViewProvider } from './views/chat/chat-view';
 import { PlanViewProvider } from './views/plan/plan-view';
 import { ActViewProvider } from './views/act/act-view';
 import { ExecuteViewProvider } from './views/execute/execute-view';
-import { startPlanExecution, approveAndApply } from './features/execute_v2/execute-controller';
+import { startPlanExecution, approveAndApply, refreshExecution, resumeExecutionAction, skipTaskAction, retryTaskAction } from './features/execute_v2/execute-controller';
+import * as api from './features/execute_v2/execute-client';
+import { executionState } from './features/execute_v2/execute-state';
 import { getAllPlans, selectPlan, openPlan, validatePlanById, approvePlanById, discardPlanById, regeneratePlanById } from './features/plan/plan-controller';
 import { ActPersistence } from './features/act/act-persistence';
 import { actState } from './features/act/act-state';
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('LocalPilot activated');
+  console.log(MSG_ACTIVATED);
   const planViewProvider = new PlanViewProvider();
   const actViewProvider = new ActViewProvider();
   const executeViewProvider = new ExecuteViewProvider();
@@ -35,21 +62,21 @@ export function activate(context: vscode.ExtensionContext) {
   );
   registerPlanCommands(context);
   context.subscriptions.push(
-    vscode.commands.registerCommand('localpilot.plan.refresh', () => {
+    vscode.commands.registerCommand(PLAN_REFRESH, () => {
       const plans = getAllPlans();
       planViewProvider.update(plans);
     }),
-    vscode.commands.registerCommand('localpilot.plan.select', selectPlan),
-    vscode.commands.registerCommand('localpilot.plan.open', openPlan),
-    vscode.commands.registerCommand('localpilot.plan.validateById', validatePlanById),
-    vscode.commands.registerCommand('localpilot.plan.approveById', approvePlanById),
-    vscode.commands.registerCommand('localpilot.plan.discardById', discardPlanById),
-    vscode.commands.registerCommand('localpilot.plan.regenerateById', (planId: string) => regeneratePlanById(planId, ChatSessionStore.getMessages())),
+    vscode.commands.registerCommand(PLAN_SELECT, selectPlan),
+    vscode.commands.registerCommand(PLAN_OPEN, openPlan),
+    vscode.commands.registerCommand(PLAN_VALIDATE_BY_ID, validatePlanById),
+    vscode.commands.registerCommand(PLAN_APPROVE_BY_ID, approvePlanById),
+    vscode.commands.registerCommand(PLAN_DISCARD_BY_ID, discardPlanById),
+    vscode.commands.registerCommand(PLAN_REGENERATE_BY_ID, (planId: string) => regeneratePlanById(planId, ChatSessionStore.getMessages())),
     // Removed: localpilot.plan.fixJsonById — frontend auto-mutation is disallowed
   );
-  const clearChat = vscode.commands.registerCommand('localpilot.chat.clear', () => {
+  const clearChat = vscode.commands.registerCommand(CHAT_CLEAR, () => {
     ChatSessionStore.clear();
-    vscode.window.showInformationMessage('LocalPilot chat cleared.');
+    vscode.window.showInformationMessage(MSG_CHAT_CLEARED);
   });
   context.subscriptions.push(clearChat);
 
@@ -61,45 +88,57 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      'localpilot.act.start',
+      ACT_START,
       () => {
-        vscode.window.showErrorMessage('Act v1 is deprecated and disabled. Use Execute (v2).');
+        vscode.window.showErrorMessage(MSG_ACT_V1_DEPRECATED);
       }
     ),
     vscode.commands.registerCommand(
-      'localpilot.act.focus',
-      () => vscode.commands.executeCommand('workbench.view.extension.localpilot')
+      ACT_FOCUS,
+      () => vscode.commands.executeCommand(WORKBENCH_FOCUS_LOCALPILOT)
     ),
     vscode.commands.registerCommand(
-      'localpilot.act.refresh',
+      ACT_REFRESH,
       () => actViewProvider.render()
     ),
     vscode.commands.registerCommand(
-      'localpilot.act.runTask',
-      () => vscode.window.showErrorMessage('Act v1 is deprecated and disabled. Use Execute (v2).')
+      ACT_RUN_TASK,
+      () => vscode.window.showErrorMessage(MSG_ACT_V1_DEPRECATED)
     ),
     vscode.commands.registerCommand(
-      'localpilot.act.skipTask',
-      () => vscode.window.showErrorMessage('Act v1 is deprecated and disabled. Use Execute (v2).')
+      ACT_SKIP_TASK,
+      () => vscode.window.showErrorMessage(MSG_ACT_V1_DEPRECATED)
     ),
     vscode.commands.registerCommand(
-      'localpilot.act.runAll',
-      () => vscode.window.showErrorMessage('Act v1 is deprecated and disabled. Use Execute (v2).')
+      ACT_RUN_ALL,
+      () => vscode.window.showErrorMessage(MSG_ACT_V1_DEPRECATED)
     ),
     vscode.commands.registerCommand(
-      'localpilot.index.sync',
+      INDEX_SYNC,
       async () => { /* no-op placeholder */ }
     ),
     vscode.commands.registerCommand(
-      'localpilot.execute.start',
+      EXECUTE_START,
       startPlanExecution
     ),
     vscode.commands.registerCommand(
-      'localpilot.execute.apply',
+      EXECUTE_APPLY,
       approveAndApply
     ),
     vscode.commands.registerCommand(
-      'localpilot.execute.refresh',
+      EXECUTE_RESUME,
+      resumeExecutionAction
+    ),
+    vscode.commands.registerCommand(
+      EXECUTE_SKIP,
+      skipTaskAction
+    ),
+    vscode.commands.registerCommand(
+      EXECUTE_RETRY,
+      retryTaskAction
+    ),
+    vscode.commands.registerCommand(
+      EXECUTE_REFRESH,
       () => executeViewProvider.render()
     )
   );

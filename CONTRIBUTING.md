@@ -30,7 +30,7 @@ Each layer has strict responsibility boundaries. Violations will be rejected.
 
 ---
 
-## 3. Branching Model
+### 3. Branching Model
 
 Do not commit directly to `main`.
 
