@@ -1,6 +1,7 @@
 import type { Plan } from '../../core/entities/plan.entity';
 import type { Task } from '../../core/entities/task.entity';
 import type { PlanSchema, TaskSchema } from '../../core/schemas/plan.schema';
+import { isValidActionType } from '../../domain/plan.validation';
 
 export interface ParseResult {
   markdown: string;
@@ -56,7 +57,7 @@ function isValidTaskSchema(t: any): t is TaskSchema {
     typeof t.title === 'string' &&
     typeof t.description === 'string' &&
     typeof t.filePath === 'string' &&
-    (t.actionType === 'create' || t.actionType === 'modify' || t.actionType === 'delete') &&
+    isValidActionType(t.actionType) &&
     Array.isArray(t.details) && t.details.every((d: any) => typeof d === 'string') &&
     Array.isArray(t.dependencies) && t.dependencies.every((d: any) => typeof d === 'string')
   );

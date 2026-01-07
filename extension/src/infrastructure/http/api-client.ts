@@ -1,11 +1,13 @@
+import { SERVER_BASE_URL, API } from '../../config/server.config';
+
 export async function checkServerHealth(): Promise<boolean> {
-  const res = await fetch('http://localhost:8000/health');
+  const res = await fetch(`${SERVER_BASE_URL}${API.HEALTH}`);
   return res.ok;
 }
 
 export async function checkOllamaHealth(): Promise<boolean> {
   try {
-    const res = await fetch('http://localhost:8000/health/ollama');
+    const res = await fetch(`${SERVER_BASE_URL}${API.OLLAMA_HEALTH}`);
     const json = await res.json();
     return json.status === 'ok';
   } catch {
@@ -14,7 +16,7 @@ export async function checkOllamaHealth(): Promise<boolean> {
 }
 
 export async function getProjectSummary(projectId: string): Promise<any> {
-  const res = await fetch(`http://localhost:8000/api/project/${encodeURIComponent(projectId)}/summary`);
+  const res = await fetch(`${SERVER_BASE_URL}${API.PROJECT_SUMMARY(projectId)}`);
   if (res.status === 404) {
     throw new Error('summary_not_found');
   }
@@ -36,7 +38,8 @@ export async function isIndexed(projectId: string): Promise<boolean> {
 
 export async function autoFixPlanPreview(markdown: string, workspaceRoot: string): Promise<{ fixedPlan: any; warnings: string[]; diff: string }>
 {
-  const res = await fetch('http://localhost:8000/api/plan/auto-fix', {
+  const res = await fetch(`${SERVER_BASE_URL}${API.PLAN_AUTO_FIX}`,
+  {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ markdown, workspace_root: workspaceRoot }),

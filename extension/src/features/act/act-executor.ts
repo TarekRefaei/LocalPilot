@@ -1,10 +1,10 @@
-﻿/**
+/**
  * @deprecated Act v1 is deprecated.
  * Use Execute (v2) pipeline instead.
  */
 import * as vscode from 'vscode';
 import { OllamaChatClient, type ChatMessage } from '../../ollama/ollama-chat-client.js';
-import { ACT_MODE_SYSTEM_PROMPT } from './act-prompts.js';
+import { ACT_MODE_SYSTEM_PROMPT } from '../../prompts/act_v1/act.prompt.js';
 import type { Task } from '../../core/entities/task.entity';
 
 export async function executeTask(

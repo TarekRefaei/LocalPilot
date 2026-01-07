@@ -1,9 +1,29 @@
+import type { ExecutionStatus } from '../../domain/execution.status';
+
 export interface ExecutionUIState {
   executionId: string;
   planTitle: string;
-  status: 'idle' | 'ready' | 'awaiting_human' | 'applied' | 'error';
-  currentTask?: string;
-  diff?: string;
+
+  /** Backend execution status (authoritative) */
+  status: ExecutionStatus;
+
+  currentTaskIndex?: number;
+  tasks?: ExecutionTaskUI[];
+
+  /** UI-derived capabilities (NOT backend state) */
+  canApply?: boolean;
+  canSkip?: boolean;
+  isMutating?: boolean;
+}
+
+export interface ExecutionTaskUI {
+  executionTaskId: string;
+  title: string;
+  filePath: string;
+  actionType: string;
+  status: 'pending' | 'running' | 'done' | 'failed' | 'skipped';
+  lastDiff?: string;
+  error?: string;
 }
 
 let state: ExecutionUIState | null = null;

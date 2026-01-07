@@ -4,6 +4,51 @@ import { executionState, type ExecutionUIState } from './execute-state';
 import { planRegistry } from '../plan/plan-registry';
 import { validatePlan, isPlanActReady } from '../plan/plan-validator';
 
+let pollTimer: NodeJS.Timeout | undefined;
+let pollStartedAt = 0;
+const POLL_CAP_MS = 10 * 60 * 1000; // 10 minutes
+let isMutating = false;
+
+export function startExecutionPolling(executionId: string) {
+  stopExecutionPolling();
+
+  pollStartedAt = Date.now();
+  pollTimer = setInterval(async () => {
+    try {
+      const s = executionState.get();
+      if (!s) return;
+
+      // Stop polling on terminal states
+      if ((['completed', 'failed'] as any).includes(s.status as any)) {
+        stopExecutionPolling();
+        return;
+      }
+
+      // UI no longer uses invented states; polling strategy remains time-capped and mutation-guarded.
+
+      // Cap polling duration in case of a stall
+      if (Date.now() - pollStartedAt > POLL_CAP_MS) {
+        stopExecutionPolling();
+        return;
+      }
+
+      // Avoid racing with user-triggered mutations
+      if (isMutating) return;
+
+      await refreshExecution(executionId);
+    } catch {
+      // silent: avoid UI spam
+    }
+  }, 1500);
+}
+
+export function stopExecutionPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = undefined;
+  }
+}
+
 export async function startPlanExecution(planId?: string) {
   try {
     let targetId = planId;
@@ -66,62 +111,166 @@ export async function startPlanExecution(planId?: string) {
     }
     const exec = await api.startExecution({
       planId: stored.id,
-      plan: stored.plan,
+      markdown: stored.markdown,
       workspaceRoot: workspace,
     });
 
-
-    const allowed: ExecutionUIState['status'][] = ['idle','ready','awaiting_human','applied','error'];
-    const status = (allowed as readonly string[]).includes(exec.status as any)
-      ? (exec.status as ExecutionUIState['status'])
-      : 'ready';
     executionState.set({
       executionId: exec.execution_id,
       planTitle: stored.title || 'Plan',
-      status,
+      status: 'running',
     });
     vscode.commands.executeCommand('localpilot.execute.refresh');
 
-    // Auto-advance: prepare and invoke the first task so we have a diff for approval
-    try {
-      const full = await api.getExecution(exec.execution_id);
-      const tasks: any[] = Array.isArray(full?.tasks) ? full.tasks : [];
-      const first = tasks[0];
-      const firstId: string | undefined = first?.task_id || first?.id;
-      if (firstId) {
-        await api.prepareTask(exec.execution_id, firstId);
-        const res = await api.invokeTask(exec.execution_id, firstId);
-        const current = executionState.get();
-        if (current) {
-          executionState.set({
-            ...current,
-            status: 'awaiting_human',
-            currentTask: firstId,
-            diff: typeof res?.diff === 'string' ? res.diff : JSON.stringify(res?.diff ?? '', null, 2),
-          });
-        }
-        vscode.commands.executeCommand('localpilot.execute.refresh');
-      }
-    } catch (e: any) {
-      vscode.window.showErrorMessage(`Failed to prepare/invoke first task: ${e?.message ?? e}`);
-    }
+    await runNext(exec.execution_id);
+    startExecutionPolling(exec.execution_id);
+    await refreshExecution(exec.execution_id);
   } catch (err: any) {
     vscode.window.showErrorMessage(`Failed to start execution: ${err?.message ?? err}`);
   }
 }
 
 export async function approveAndApply() {
+  if (isMutating) return;
+  isMutating = true;
   try {
+    const prev0 = executionState.get();
+    if (prev0) executionState.set({ ...prev0, isMutating: true });
     const s = executionState.get();
     if (!s) return;
 
     await api.applyDiff(s.executionId);
     await api.reindex(s.executionId);
 
-    vscode.window.showInformationMessage('Changes applied & indexed');
-    executionState.clear();
-    vscode.commands.executeCommand('localpilot.execute.refresh');
+    vscode.window.showInformationMessage('Changes applied');
+    await runNext(s.executionId);
+    await refreshExecution(s.executionId);
   } catch (err: any) {
     vscode.window.showErrorMessage(`Apply failed: ${err?.message ?? err}`);
+  } finally {
+    isMutating = false;
+    const prev1 = executionState.get();
+    if (prev1) executionState.set({ ...prev1, isMutating: false });
+  }
+}
+
+async function runNext(executionId: string) {
+  const res = await api.nextTask(executionId);
+
+  if (res.status === 'completed') {
+    executionState.set({
+      executionId,
+      planTitle: executionState.get()?.planTitle ?? '',
+      status: 'completed' as any,
+    });
+    vscode.commands.executeCommand('localpilot.execute.refresh');
+    return;
+  }
+
+  // Awaiting approval path: backend remains 'running'; capabilities will be set on refresh
+  executionState.set({
+    executionId,
+    planTitle: executionState.get()?.planTitle ?? '',
+    status: 'running' as any,
+  });
+
+  vscode.commands.executeCommand('localpilot.execute.refresh');
+}
+
+export async function refreshExecution(executionId: string) {
+  const data = await api.getExecution(executionId);
+
+  const normalizedTasks = Array.isArray(data.tasks)
+    ? data.tasks.map((t: any) => ({
+        executionTaskId: t.executionTaskId ?? t.execution_task_id,
+        title: t.title,
+        filePath: t.filePath ?? t.file_path,
+        actionType: t.actionType ?? t.action_type,
+        status: t.status,
+        lastDiff: t.lastDiff ?? t.last_diff,
+        error: t.error,
+      }))
+    : [];
+
+  const prev = executionState.get();
+  const idx = (data.currentTaskIndex ?? data.current_task_index) as number;
+  const backendStatus = (data.status ?? 'running') as any;
+  const currentTask = Array.isArray(normalizedTasks) ? normalizedTasks[idx] : undefined;
+  const hasDiff = !!currentTask?.lastDiff;
+  const isTerminalTask =
+    currentTask?.status === 'done' || currentTask?.status === 'skipped' || currentTask?.status === 'failed';
+
+  const state: ExecutionUIState = {
+    executionId: data.executionId ?? data.execution_id ?? executionId,
+    planTitle: data.planTitle ?? data.plan_title ?? '',
+    status: backendStatus,
+    currentTaskIndex: idx,
+    tasks: normalizedTasks,
+    isMutating: prev?.isMutating ?? false,
+    canApply: backendStatus === 'running' && hasDiff && !isTerminalTask,
+    canSkip: backendStatus === 'running' && !isTerminalTask,
+  };
+
+  executionState.set(state);
+
+  vscode.commands.executeCommand('localpilot.execute.refresh');
+}
+
+export async function resumeExecutionAction() {
+  if (isMutating) return;
+  isMutating = true;
+  try {
+    const prev0 = executionState.get();
+    if (prev0) executionState.set({ ...prev0, isMutating: true });
+    const s = executionState.get();
+    if (!s) return;
+    await api.resumeExecution(s.executionId);
+    await refreshExecution(s.executionId);
+  } catch (err: any) {
+    vscode.window.showErrorMessage(`Resume failed: ${err?.message ?? err}`);
+  } finally {
+    isMutating = false;
+    const prev1 = executionState.get();
+    if (prev1) executionState.set({ ...prev1, isMutating: false });
+  }
+}
+
+export async function skipTaskAction() {
+  if (isMutating) return;
+  isMutating = true;
+  try {
+    const prev0 = executionState.get();
+    if (prev0) executionState.set({ ...prev0, isMutating: true });
+    const s = executionState.get();
+    if (!s) return;
+    await api.skipTask(s.executionId);
+    await api.nextTask(s.executionId);
+    await refreshExecution(s.executionId);
+  } catch (err: any) {
+    vscode.window.showErrorMessage(`Skip failed: ${err?.message ?? err}`);
+  } finally {
+    isMutating = false;
+    const prev1 = executionState.get();
+    if (prev1) executionState.set({ ...prev1, isMutating: false });
+  }
+}
+
+export async function retryTaskAction() {
+  if (isMutating) return;
+  isMutating = true;
+  try {
+    const prev0 = executionState.get();
+    if (prev0) executionState.set({ ...prev0, isMutating: true });
+    const s = executionState.get();
+    if (!s) return;
+    await api.retryTask(s.executionId);
+    await api.nextTask(s.executionId);
+    await refreshExecution(s.executionId);
+  } catch (err: any) {
+    vscode.window.showErrorMessage(`Retry failed: ${err?.message ?? err}`);
+  } finally {
+    isMutating = false;
+    const prev1 = executionState.get();
+    if (prev1) executionState.set({ ...prev1, isMutating: false });
   }
 }

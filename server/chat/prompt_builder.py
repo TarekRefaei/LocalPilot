@@ -1,4 +1,5 @@
 from typing import List, Dict
+from server.prompts.chat import CHAT_SYSTEM_PROMPT
 
 
 class PromptBuilder:
@@ -9,20 +10,13 @@ class PromptBuilder:
     No planning, no execution, no file writes.
     """
 
-    SYSTEM_PROMPT = (
-        "You are a helpful AI assistant answering questions about a codebase.\n"
-        "You must base your answers ONLY on the provided code context.\n"
-        "If the answer is not in the context, say you don't know.\n"
-        "Do NOT suggest code changes or plans."
-    )
-
     def build(
         self,
         user_message: str,
         chunks: List[Dict]
     ) -> List[Dict]:
         messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT}
+            {"role": "system", "content": CHAT_SYSTEM_PROMPT}
         ]
 
         if chunks:
