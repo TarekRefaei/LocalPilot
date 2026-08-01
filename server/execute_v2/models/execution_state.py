@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from time import time
 
@@ -17,6 +17,8 @@ class ExecutionState(BaseModel):
     tasks: List[ExecutionTask]
 
     context: Dict[str, Any]
+
+    proof: Optional[Dict[str, Any]] = None
 
     created_at: float = time()
     updated_at: float = time()

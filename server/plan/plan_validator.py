@@ -24,6 +24,9 @@ from server.plan.path_rules import (
     is_multi_file_reference,
 )
 
+from pydantic import ValidationError
+from server.plan.plan_parser import PlanSchema
+
 
 def validate_plan(plan: Dict[str, Any]) -> List[Dict[str, Any]]:
     issues: List[Dict[str, Any]] = []
@@ -144,6 +147,17 @@ def validate_plan(plan: Dict[str, Any]) -> List[Dict[str, Any]]:
         pass
 
     return issues
+
+
+def validate_plan_schema(plan: Dict[str, Any]) -> List[Dict[str, Any]]:
+    try:
+        PlanSchema(**(plan or {}))
+        return []
+    except ValidationError as e:
+        try:
+            return e.errors()
+        except Exception:
+            return [{"message": str(e)}]
 
 
 class PlanValidationError(Exception):

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { canAct, canRepair } from '../../domain/plan.lifecycle';
 
 export class PlanViewProvider implements vscode.WebviewViewProvider {
   static readonly viewId = 'localpilot.plan';
@@ -50,6 +51,12 @@ export class PlanViewProvider implements vscode.WebviewViewProvider {
             msg.planId
           );
           break;
+        case 'plan:fixById':
+          vscode.commands.executeCommand(
+            'localpilot.plan.fixById',
+            msg.planId
+          );
+          break;
         case 'plan:act':
           vscode.commands.executeCommand(
             'localpilot.act.start',
@@ -79,6 +86,15 @@ function render(plans: any[]): string {
   }
   function renderJsonError(p: any): string {
     if (!p.warnings || !p.warnings.length) return '';
+    const repairSummary = Array.isArray(p.repairSummary) && p.repairSummary.length
+      ? `
+      <div class="repair-summary">
+        🛠 AI Repair Summary:
+        <ul>
+          ${p.repairSummary.map((s: any) => `<li>${s}</li>`).join('')}
+        </ul>
+      </div>`
+      : '';
     return `
     <div class="json-error">
       ⚠ Plan issues detected:
@@ -89,6 +105,29 @@ function render(plans: any[]): string {
           <li>
             <b>${w.path ?? (w.taskId ? `task ${w.taskId}` : 'task')}</b>: ${w.message}
             ${w.suggestion ? `<em>→ ${w.suggestion}</em>` : ''}
+          </li>`
+          )
+          .join('')}
+      </ul>
+      ${repairSummary}
+    </div>`;
+  }
+
+  function renderStructuralIssues(p: any): string {
+    const issues = p.structuralIssues || [];
+    if (!issues.length) return '';
+
+    return `
+    <div class="json-error">
+      🧱 Structural issues detected:
+      <ul>
+        ${issues
+          .map(
+            (i: any) => `
+          <li>
+            <b>${i.code}</b>
+            ${i.taskId ? ` (task ${i.taskId})` : ''}:
+            ${i.message}
           </li>`
           )
           .join('')}
@@ -108,13 +147,16 @@ function render(plans: any[]): string {
         <button data-approve="${p.id}" title="Approve">🔐</button>
         <button data-regenerate="${p.id}" title="Regenerate">🔄</button>
         <button data-discard="${p.id}" title="Discard">🗑</button>
-        ${p.status === 'approved' && p.plan && (!p.warnings || !p.warnings.length)
+        ${canAct(p.status, !!(p.warnings && p.warnings.length))
           ? `<button data-act="${p.id}" title="Act">⚙</button>`
-          : `<button disabled title="Fix plan before acting">⚙</button>`}
+          : (canRepair(p.status) && p.structuralIssues && p.structuralIssues.length)
+            ? `<button data-fix="${p.id}" title="Fix structural issues with AI">⚙</button>`
+            : `<button disabled title="Fix plan before acting">⚙</button>`}
         
       </div>
     </div>
     ${renderJsonError(p)}
+    ${renderStructuralIssues(p)}
   `
     )
     .join('');
@@ -181,6 +223,12 @@ function render(plans: any[]): string {
   document.querySelectorAll('[data-discard]').forEach(btn => {
     btn.addEventListener('click', () => {
       vscode.postMessage({ type: 'plan:discardById', planId: btn.dataset.discard });
+    });
+  });
+
+  document.querySelectorAll('[data-fix]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      vscode.postMessage({ type: 'plan:fixById', planId: btn.dataset.fix });
     });
   });
 

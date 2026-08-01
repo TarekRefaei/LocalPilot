@@ -19,6 +19,7 @@ export class ExecuteViewProvider implements vscode.WebviewViewProvider {
     if (!this.view) return;
 
     const s = executionState.get();
+    const repairs = (s as any).repairProposals || [];
 
     if (!s) {
       this.view.webview.html = '<em>No active execution</em>';
@@ -39,6 +40,18 @@ export class ExecuteViewProvider implements vscode.WebviewViewProvider {
       <div style="font-size: 11px; color: #888; margin-bottom: 8px;">ID: ${escapeHtml(s.executionId)}</div>
 
       <p>Status: <b>${s.status}</b></p>
+
+      ${s.status === 'failed' && repairs.length ? `
+        <h4>Suggested Plan Repairs</h4>
+        <ul>
+          ${repairs.map((r: any) => `
+            <li>
+              <b>${escapeHtml(r.kind)}</b> — ${escapeHtml(r.reason)}
+            </li>
+          `).join('')}
+        </ul>
+        <p><em>Apply repairs to generate a new draft plan.</em></p>
+      ` : ''}
 
       <ul>
         ${tasks.map((t: any, i: number) => `
@@ -64,7 +77,7 @@ export class ExecuteViewProvider implements vscode.WebviewViewProvider {
               </details>
             ` : ''}
 
-            ${t.error ? `<div style=\"color:red;\">${escapeHtml(t.error)}</div>` : ''}
+            ${renderTaskError(t)}
           </li>
         `).join('')}
       </ul>
@@ -90,7 +103,7 @@ export class ExecuteViewProvider implements vscode.WebviewViewProvider {
       </script>
     `;
 
-    this.view.webview.onDidReceiveMessage(msg => {
+    this.view.webview.onDidReceiveMessage((msg: any) => {
       if (msg.command === 'apply') {
         vscode.commands.executeCommand('localpilot.execute.apply');
       }
@@ -101,10 +114,28 @@ export class ExecuteViewProvider implements vscode.WebviewViewProvider {
         vscode.commands.executeCommand('localpilot.execute.skip');
       }
       if (msg.command === 'resume') {
+        if (executionState.get()?.status === 'failed') {
+          vscode.window.showErrorMessage(
+            'Execution failed due to semantic errors and cannot be resumed.'
+          );
+          return;
+        }
         vscode.commands.executeCommand('localpilot.execute.resume');
       }
     });
   }
+}
+
+function renderTaskError(task: any): string {
+  const err = task?.error;
+  if (!err) return '';
+
+  if (typeof err === 'object' && err.type === 'semantic' && Array.isArray(err.messages)) {
+    const lines = err.messages.map((m: any) => `- ${escapeHtml(String(m))}`).join('<br/>');
+    return `<div style="color:red; white-space:pre-wrap;">❌ Semantic validation failed:<br/>${lines}</div>`;
+  }
+
+  return `<div style="color:red;">${escapeHtml(String(err))}</div>`;
 }
 
 function escapeHtml(str: string): string {

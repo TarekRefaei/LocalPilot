@@ -13,6 +13,18 @@ def verify_execution_proof(state: ExecutionState):
     - Are ordered correctly (order_index equals position)
     - (Extension point) Respect dependencies — not enforced here due to plan schema locality
     """
+    proof = getattr(state, "proof", None)
+    if not proof:
+        raise ValueError("Execution proof missing")
+    if proof.get("plan_id") != state.plan_id:
+        raise ValueError("Execution proof mismatch")
+
+    proof_task_ids = proof.get("task_ids") or []
+    if len(state.tasks) != len(proof_task_ids):
+        raise ExecutionProofError(
+            "Execution task count does not match plan task count"
+        )
+
     plan_ids: List[str] = [t.plan_task_id for t in state.tasks]
 
     if len(plan_ids) != len(set(plan_ids)):

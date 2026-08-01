@@ -3,6 +3,7 @@ import * as api from './execute-client';
 import { executionState, type ExecutionUIState } from './execute-state';
 import { planRegistry } from '../plan/plan-registry';
 import { validatePlan, isPlanActReady } from '../plan/plan-validator';
+import { canAct } from '../../domain/plan.lifecycle';
 
 let pollTimer: NodeJS.Timeout | undefined;
 let pollStartedAt = 0;
@@ -86,6 +87,11 @@ export async function startPlanExecution(planId?: string) {
 
     if (stored.status !== 'approved') {
       vscode.window.showErrorMessage(`Plan ${targetId} must be approved before execution.`);
+      return;
+    }
+
+    if (!canAct(stored.status as any, !!(stored.warnings && stored.warnings.length))) {
+      vscode.window.showErrorMessage('Plan is not ready for execution. Resolve plan issues first.');
       return;
     }
 

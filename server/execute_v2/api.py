@@ -22,6 +22,8 @@ from server.execute_v2.index_hook import reindex_files
 from server.execute_v2.validation.diff_validator import DiffValidator
 from server.execute_v2.validation.validation_errors import DiffValidationError
 
+from server.plan.repair_diagnostics import diagnose_execution_failure
+
 
 router = APIRouter(prefix="/api/execute_v2", tags=["execute_v2"])
 
@@ -76,6 +78,13 @@ def get_execution_state(execution_id: str):
                 }
                 for t in state.tasks
             ],
+            "repairProposals": (
+                diagnose_execution_failure(state.tasks[state.current_task_index].error)
+                if state.status == "failed"
+                and state.current_task_index < len(state.tasks)
+                and state.tasks[state.current_task_index].error
+                else []
+            ),
         }
     )
 
@@ -122,7 +131,7 @@ def execute_next(execution_id: str):
         save_execution(state)
         return {
             "status": "task_failed",
-            "error": str(e),
+            "error": task.error,
             "task": {
                 "id": task.execution_task_id,
                 "title": task.title,
@@ -204,7 +213,14 @@ def resume_execution(execution_id: str):
     except KeyError:
         raise HTTPException(status_code=404, detail="Execution not found")
 
-    if state.status in ("completed", "failed"):
+    # Semantic failures are terminal
+    if state.status == "failed":
+        raise HTTPException(
+            status_code=400,
+            detail="Execution failed due to semantic errors and cannot be resumed",
+        )
+
+    if state.status in ("completed",):
         return {"status": state.status}
 
     state.status = "running"
@@ -245,6 +261,13 @@ def retry_task(execution_id: str):
     task = state.tasks[idx]
     if task.status != "failed":
         raise HTTPException(status_code=400, detail="Task is not failed")
+
+    if isinstance(task.error, dict):
+        if task.error.get("type") == "semantic":
+            raise HTTPException(
+                status_code=400,
+                detail="Semantic failure cannot be retried. Regenerate or repair the plan.",
+            )
 
     task.status = "pending"
     task.error = None

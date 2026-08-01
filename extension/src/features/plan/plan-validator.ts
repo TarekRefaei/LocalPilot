@@ -8,6 +8,7 @@ export interface ValidationWarning {
   path?: string;
   taskId?: string;
   suggestion?: string;
+  blocking?: boolean;
 }
 
 export function validatePlan(plan: Plan | null | undefined): ValidationWarning[] {
@@ -54,6 +55,10 @@ export function validatePlan(plan: Plan | null | undefined): ValidationWarning[]
   const order = plan.tasks.map(t => t.orderIndex);
   const sorted = [...order].sort((a, b) => a - b);
   const same = order.every((v, i) => v === sorted[i]);
+
+  // P0 CONTRACT:
+  // orderIndex is the single source of truth for execution order.
+  // Array order MUST match ascending orderIndex.
   if (!same) {
     warnings.push({ code: ValidationCode.INVALID_ORDER, message: 'Task orderIndex values are not in ascending order.' });
   }

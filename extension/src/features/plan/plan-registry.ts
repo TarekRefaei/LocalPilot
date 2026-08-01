@@ -1,6 +1,13 @@
 import type { Plan } from '../../core/entities/plan.entity';
 import type { ValidationWarning } from './plan-validator';
 
+/**
+ * PLAN REGISTRY CONTRACT
+ * - Only plan-controller.ts may mutate plans
+ * - No execution logic may update plans
+ * - No UI may auto-modify plans
+ */
+
 export interface StoredPlan {
   id: string;
   title: string;
@@ -8,6 +15,14 @@ export interface StoredPlan {
   plan: Plan | null;
   status: 'draft' | 'approved' | 'acting';
   warnings: ValidationWarning[];
+  structuralIssues?: {
+    code: string;
+    message: string;
+    level: 'error' | 'warning';
+    taskId?: string;
+  }[];
+  repairAttempts?: number;
+  repairSummary?: any[];
   createdAt: number;
 }
 
@@ -55,9 +70,9 @@ class PlanRegistry {
   }
 
   update(id: string, patch: Partial<StoredPlan>) {
-    const p = this.getPlan(id);
-    if (!p) return;
-    Object.assign(p, patch);
+    this.state.plans = this.state.plans.map((p) =>
+      p.id === id ? { ...p, ...patch } : p
+    );
   }
 
   clear() {
