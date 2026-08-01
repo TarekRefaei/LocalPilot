@@ -7,6 +7,7 @@ import {
   PLAN_APPROVE_BY_ID,
   PLAN_DISCARD_BY_ID,
   PLAN_REGENERATE_BY_ID,
+  PLAN_FIX_BY_ID,
   CHAT_CLEAR,
   ACT_START,
   ACT_FOCUS,
@@ -33,7 +34,7 @@ import { ExecuteViewProvider } from './views/execute/execute-view';
 import { startPlanExecution, approveAndApply, refreshExecution, resumeExecutionAction, skipTaskAction, retryTaskAction } from './features/execute_v2/execute-controller';
 import * as api from './features/execute_v2/execute-client';
 import { executionState } from './features/execute_v2/execute-state';
-import { getAllPlans, selectPlan, openPlan, validatePlanById, approvePlanById, discardPlanById, regeneratePlanById } from './features/plan/plan-controller';
+import { getAllPlans, selectPlan, openPlan, validatePlanById, approvePlanById, discardPlanById, regeneratePlanById, fixPlanById } from './features/plan/plan-controller';
 import { ActPersistence } from './features/act/act-persistence';
 import { actState } from './features/act/act-state';
 
@@ -72,6 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(PLAN_APPROVE_BY_ID, approvePlanById),
     vscode.commands.registerCommand(PLAN_DISCARD_BY_ID, discardPlanById),
     vscode.commands.registerCommand(PLAN_REGENERATE_BY_ID, (planId: string) => regeneratePlanById(planId, ChatSessionStore.getMessages())),
+    vscode.commands.registerCommand(PLAN_FIX_BY_ID, fixPlanById),
     // Removed: localpilot.plan.fixJsonById — frontend auto-mutation is disallowed
   );
   const clearChat = vscode.commands.registerCommand(CHAT_CLEAR, () => {

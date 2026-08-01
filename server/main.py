@@ -27,6 +27,8 @@ try:
     from server.api.routes import project as project_routes
     from server.api.routes import index as index_routes
     from server.api import plan as plan_api
+    from server.api import plan_structure as plan_structure_api
+    from server.api import plan_refine as plan_refine_api
     from server.execute_v2.api import router as execute_v2_router
     from server.execute_v2.store import load_all_executions
 except ModuleNotFoundError:
@@ -42,6 +44,8 @@ except ModuleNotFoundError:
     from api.routes import project as project_routes
     from api.routes import index as index_routes
     from api import plan as plan_api
+    from api import plan_structure as plan_structure_api
+    from api import plan_refine as plan_refine_api
     from execute_v2.api import router as execute_v2_router
     from execute_v2.store import load_all_executions
 
@@ -89,6 +93,8 @@ app.include_router(project_routes.router, prefix="/api")
 app.include_router(chat_ws.router)
 app.include_router(index_routes.router, prefix="/api")
 app.include_router(plan_api.router, prefix="/api")
+app.include_router(plan_structure_api.router)
+app.include_router(plan_refine_api.router)
 app.include_router(execute_v2_router)
 
 # --------------------

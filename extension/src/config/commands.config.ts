@@ -5,6 +5,7 @@ export const PLAN_VALIDATE_BY_ID = 'localpilot.plan.validateById';
 export const PLAN_APPROVE_BY_ID = 'localpilot.plan.approveById';
 export const PLAN_DISCARD_BY_ID = 'localpilot.plan.discardById';
 export const PLAN_REGENERATE_BY_ID = 'localpilot.plan.regenerateById';
+export const PLAN_FIX_BY_ID = 'localpilot.plan.fixById';
 
 export const CHAT_CLEAR = 'localpilot.chat.clear';
 

@@ -10,6 +10,7 @@ from server.plan.plan_service import PlanService
 from server.plan.plan_parser import PlanParser
 from server.plan.auto_fix import PlanAutoFixer
 from server.plan.minimizer import minimize_plan
+from server.plan.repair import repair_plan
 
 
 router = APIRouter()
@@ -47,6 +48,17 @@ class AutoFixRequest(BaseModel):
     workspace_root: str
 
 
+class PlanRepairWorkspace(BaseModel):
+    existingFiles: List[str] = []
+
+
+class PlanRepairRequest(BaseModel):
+    plan: Dict[str, Any]
+    markdown: str
+    blockingWarnings: List[Dict[str, Any]]
+    workspace: PlanRepairWorkspace
+
+
 @router.post("/plan/auto-fix")
 def auto_fix_plan(request: AutoFixRequest) -> Dict[str, Any]:
     parser = PlanParser()
@@ -66,3 +78,8 @@ def auto_fix_plan(request: AutoFixRequest) -> Dict[str, Any]:
         "warnings": result.warnings,
         "diff": result.diff,
     }
+
+
+@router.post("/plan/repair")
+def repair_plan_endpoint(request: PlanRepairRequest) -> Dict[str, Any]:
+    return repair_plan(request.dict())

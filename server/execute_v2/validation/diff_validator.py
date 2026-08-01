@@ -6,6 +6,9 @@ from pathlib import Path
 from server.execute_v2.models.execution_task import ExecutionTask
 from server.execute_v2.validation.validation_errors import ContextMismatchViolation, DiffValidationError
 
+from server.semantic.file_snapshot import snapshot_python_file
+from server.execute_v2.validation.idempotency_validator import IdempotencyValidator
+
 
 @dataclass
 class ValidatedDiff:
@@ -71,6 +74,11 @@ class DiffValidator:
         target = workspace / task.file_path
         exists = target.exists()
 
+        # P6.1 enforcement: unverified anchors must fail
+        anchor = getattr(task, "anchor", None)
+        if isinstance(anchor, dict) and anchor.get("verified") is False:
+            raise DiffValidationError("Unverified anchor")
+
         if task.action_type == "create" and exists:
             raise DiffValidationError(
                 f"Create task attempted on existing file: {task.file_path}"
@@ -80,6 +88,13 @@ class DiffValidator:
             raise DiffValidationError(
                 f"Modify task attempted on missing file: {task.file_path}"
             )
+
+        # P6.2 idempotency validation (best-effort for Python)
+        try:
+            snapshot = snapshot_python_file(str(target)) if exists else {"functions": [], "imports": []}
+            IdempotencyValidator().validate(diff, snapshot)
+        except ValueError as e:
+            raise DiffValidationError(str(e))
         # Structural sanity checks
         if task.action_type == "modify" and task.file_path == "app.py":
             if re.search(r"^\+\s*return\b", diff, re.MULTILINE):

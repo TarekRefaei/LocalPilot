@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { planRegistry } from './plan-registry';
+import { updatePlanMarkdownById } from './plan-controller';
 
 let panel: vscode.WebviewPanel | undefined;
 let currentPlanId: string | undefined;
@@ -27,13 +28,11 @@ export async function openPlanView(markdown: string, planId?: string) {
       const markdown: string = msg.markdown || '';
       const targetId: string | undefined = msg.planId || currentPlanId;
       if (targetId) {
-        planRegistry.update(targetId, { markdown, plan: null, status: 'draft' });
-        await vscode.commands.executeCommand('localpilot.plan.refresh');
+        await updatePlanMarkdownById(targetId, markdown);
       } else {
         const selected = planRegistry.getSelected();
         if (selected.length === 1) {
-          planRegistry.update(selected[0].id, { markdown, plan: null, status: 'draft' });
-          await vscode.commands.executeCommand('localpilot.plan.refresh');
+          await updatePlanMarkdownById(selected[0].id, markdown);
         }
       }
     }

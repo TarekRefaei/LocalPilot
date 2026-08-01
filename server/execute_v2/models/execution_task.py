@@ -16,6 +16,7 @@ class ExecutionTask(BaseModel):
     status: TASK_STATUS = "pending"
 
     last_diff: Optional[str] = None
-    error: Optional[str] = None
+    error: Optional[Any] = None
     changed_files: Optional[List[str]] = None
     insertion: Optional[Dict[str, Any]] = None
+    anchor: Optional[Dict[str, Any]] = None

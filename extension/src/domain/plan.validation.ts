@@ -8,6 +8,18 @@ export enum ValidationCode {
   INVALID_ACTION_TYPE = 'invalid_action_type',
   INVALID_ORDER = 'invalid_order',
   DUPLICATE_TASK_ID = 'duplicate_task_id',
+  FILE_ALREADY_EXISTS = 'file_already_exists',
+  FILE_NOT_FOUND = 'file_not_found',
+  FILE_NOT_INDEXED = 'file_not_indexed',
+  PATH_OUTSIDE_WORKSPACE = 'path_outside_workspace',
+}
+
+export function isBlockingValidationCode(code: ValidationCode): boolean {
+  return [
+    ValidationCode.FILE_ALREADY_EXISTS,
+    ValidationCode.FILE_NOT_FOUND,
+    ValidationCode.PATH_OUTSIDE_WORKSPACE,
+  ].includes(code);
 }
 
 export function isValidActionType(value: string): value is ActionType {
